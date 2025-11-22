@@ -1,0 +1,35 @@
+# .gitignore - Updated
+node_modules
+.env
+dist
+build
+.DS_Store
+.vscode
+
+# Chặn các file Media nặng
+*.mp4
+*.mov
+*.avi
+*.webm
+*.mkv
+*.wmv
+
+# Chặn file nén và thực thi
+*.zip
+*.rar
+*.7z
+*.exe
+*.dmg
+
+# Chặn file 3D và thiết kế
+*.glb
+*.gltf
+*.obj
+*.blend
+*.fbx
+
+# Chặn các thư mục chứa file nặng cụ thể
+media-server/uploads/
+frontend/public/course-video/
+frontend/public/models/
+frontend/public/document/

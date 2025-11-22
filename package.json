@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:media": "npm run dev --prefix media-server",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:media\""
+  },
+  "dependencies": {
+    "lucide-react": "^0.554.0",
+    "react-activation": "^0.13.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

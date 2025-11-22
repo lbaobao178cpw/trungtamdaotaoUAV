@@ -1,0 +1,309 @@
+/* === GLOBAL VARIABLES & RESET === */
+:root {
+  --primary-color: #0066cc;      
+  --primary-hover: #0052a3;      
+  --accent-color: #ff9800;       
+  --success-color: #28a745;      
+  --text-dark: #333333;          
+  --text-gray: #666666;          
+  --bg-gray: #f8f9fa;            
+  --border-color: #e0e0e0;       
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --font-family: 'Roboto', sans-serif;
+}
+
+.about-page {
+  width: 100%;
+  font-family: var(--font-family);
+  color: var(--text-dark);
+  line-height: 1.6;
+  background-color: white;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* === SECTIONS === */
+.section { padding: 60px 0; }
+.section-white { background: white; }
+.section-gray { background: var(--bg-gray); }
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: var(--primary-color);
+}
+
+/* Class tiện ích cho tiêu đề con trong Grid */
+.sub-title {
+  text-align: center; /* Căn giữa cho cân đối với FAQ */
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+/* === 1. HERO SECTION === */
+.about-hero {
+  background: linear-gradient(135deg, rgba(0, 102, 204, 0.9) 0%, rgba(0, 82, 163, 0.8) 100%), url("/images/hero_background.webp") no-repeat center center/cover;
+  padding: 100px 20px;
+  text-align: center;
+  color: white;
+}
+
+.about-hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.about-hero-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* === 2. OBJECTIVES GRID === */
+.objectives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.objective-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.objective-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.objective-icon {
+  width: 70px; height: 70px;
+  background: #f0f7ff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  color: var(--primary-color);
+}
+
+.objective-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.objective-list {
+  list-style: none; padding: 0;
+}
+.objective-list li {
+  padding: 5px 0 5px 25px;
+  position: relative;
+  color: var(--text-gray);
+  font-size: 0.95rem;
+}
+.objective-list li:before {
+  content: "✓";
+  position: absolute; left: 0;
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+/* === 3. LEGAL TABS === */
+.legal-tabs {
+  display: flex; justify-content: center; gap: 10px;
+  margin-bottom: 30px; flex-wrap: wrap;
+}
+
+.legal-tab {
+  padding: 10px 30px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  font-weight: 600; color: var(--text-gray);
+  cursor: pointer; transition: all 0.3s;
+}
+.legal-tab:hover, .legal-tab.active {
+  background: var(--primary-color);
+  color: white; border-color: var(--primary-color);
+}
+
+.legal-tab-content {
+  background: white; border-radius: 8px;
+  padding: 40px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* Legal Items */
+.legal-doc-item { padding-bottom: 20px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+.legal-doc-item:last-child { border: none; padding-bottom: 0; margin: 0; }
+
+.legal-doc-item h4 { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+.legal-date { font-style: italic; font-size: 0.85rem; color: #999; margin-bottom: 5px; }
+.legal-link { color: var(--primary-color); font-weight: 600; text-decoration: none; }
+
+/* Authority */
+.authority-item {
+  padding: 20px; background: var(--bg-gray);
+  border-radius: 8px; border-left: 4px solid var(--primary-color);
+  margin-bottom: 15px;
+}
+.authority-item h4 { color: var(--primary-color); font-weight: 700; margin-bottom: 5px; }
+
+/* Forms */
+.forms-list { display: flex; flex-direction: column; gap: 10px; }
+.form-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px; background: var(--bg-gray);
+  border-radius: 6px; transition: 0.3s;
+}
+.form-item:hover { background: #f0f7ff; }
+.form-item h4 { font-size: 1rem; font-weight: 500; margin: 0; flex: 1; }
+.form-download { color: var(--primary-color); font-weight: 600; text-decoration: none; white-space: nowrap; }
+
+/* === 4. GRID ORGANIZATION & REQUIREMENTS (Đã sửa lỗi lệch) === */
+.grid-2-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: stretch; /* Quan trọng: Kéo giãn chiều cao bằng nhau */
+    margin-bottom: 60px; /* Thêm khoảng cách dưới để không dính vào FAQ */
+}
+
+/* Đảm bảo cột con chiếm hết chiều cao */
+.grid-2-cols > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.organization-card, .requirement-card {
+    background: white;
+    border-radius: 8px;
+    padding: 40px 30px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    flex: 1; /* Kéo giãn nội dung card để bằng nhau */
+    display: flex;
+    flex-direction: column;
+}
+
+.organization-icon {
+    width: 60px; height: 60px;
+    background: #f0f7ff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.organization-card h3 {
+    font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;
+}
+.requirement-card h3 {
+    font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; 
+    border-bottom: 2px solid #eee; padding-bottom: 10px;
+}
+
+.org-subtitle { 
+    color: var(--primary-color); font-weight: 600; margin-bottom: 15px; font-size: 0.95rem; 
+}
+
+.requirement-list { list-style: none; padding: 0; margin-top: 10px; }
+.requirement-list li {
+    padding: 10px 0 10px 30px;
+    position: relative;
+    border-bottom: 1px solid #f9f9f9;
+    color: var(--text-gray);
+}
+.requirement-list li:last-child { border-bottom: none; }
+
+.requirement-list li:before {
+    content: "✓"; position: absolute; left: 0;
+    color: var(--primary-color); font-weight: bold;
+}
+
+/* === 5. FAQ SECTION (Mũi tên xoay) === */
+.faq-container { max-width: 800px; margin: 0 auto; }
+.faq-item {
+  background: white; border: 1px solid var(--border-color);
+  border-radius: 8px; margin-bottom: 15px; overflow: hidden;
+}
+.faq-question {
+  width: 100%; padding: 20px;
+  background: white; border: none;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 1rem; font-weight: 600; color: var(--text-dark);
+  cursor: pointer; text-align: left; font-family: var(--font-family);
+  transition: background 0.3s;
+}
+.faq-question:hover { background: #f9f9f9; color: var(--primary-color); }
+.faq-question.active { background: #f0f7ff; color: var(--primary-color); }
+
+/* Icon Mũi tên */
+.faq-arrow {
+  width: 20px; height: 20px;
+  color: #999;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+.faq-question.active .faq-arrow {
+  transform: rotate(180deg);
+  color: var(--primary-color);
+}
+
+.faq-answer {
+  padding: 0 20px 20px 20px;
+  color: var(--text-gray);
+  font-size: 0.95rem;
+  border-top: 1px solid #eee;
+  background: #fff;
+  animation: slideDown 0.3s ease-out;
+}
+.faq-answer ul { margin: 10px 0 10px 20px; list-style: disc; }
+.faq-answer .note { font-style: italic; font-size: 0.85rem; margin-top: 10px; color: #888; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === 6. CTA SECTION === */
+.cta-section {
+  padding: 80px 20px; text-align: center;
+  background: var(--bg-gray);
+  border-top: 1px solid var(--border-color);
+}
+.cta-title { font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 10px; }
+.cta-subtitle { color: var(--text-gray); margin-bottom: 30px; font-size: 1.1rem; }
+.cta-buttons { display: flex; justify-content: center; gap: 20px; }
+
+/* Buttons */
+.btn { padding: 12px 30px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; transition: 0.3s; }
+.btn-primary { background: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-2px); }
+.btn-secondary { background: white; color: var(--primary-color); border: 2px solid var(--primary-color); }
+.btn-secondary:hover { background: #f0f7ff; transform: translateY(-2px); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .about-hero-title { font-size: 2rem; }
+    .grid-2-cols { grid-template-columns: 1fr; gap: 30px; }
+    .cta-buttons { flex-direction: column; width: 100%; }
+    .btn { width: 100%; }
+    .sub-title { text-align: center; }
+}
