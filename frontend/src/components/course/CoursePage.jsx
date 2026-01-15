@@ -84,7 +84,7 @@ function CoursesPage() {
         .slice(0, 4);
 
     const featuredCourses = [...courses]
-        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0))
         .slice(0, 4);
 
     const renderCourseCard = (course) => {
@@ -111,7 +111,7 @@ function CoursesPage() {
                         <div className="stars">
                             {[...Array(5)].map((_, i) => <StarIcon key={i} />)}
                         </div>
-                        <span style={{color: '#b0b0b0'}}>{course.rating || '5.0'} ({course.views || 0} lượt xem)</span>
+                        <span style={{color: '#b0b0b0'}}>{course.rating || '5.0'} ({course.totalViews || 0} lượt xem)</span>
                     </div>
                 </div>
             </div>

@@ -3,6 +3,101 @@ const router = express.Router();
 const db = require('../config/db');
 const verifyToken = require('../middleware/verifyToken');
 
+// --- GET: Lấy tổng lượt xem khóa học ---
+router.get("/:id/view-stats", async (req, res) => {
+  try {
+    const courseId = req.params.id;
+
+    // Kiểm tra xem khóa học có tồn tại không
+    const [courseExists] = await db.query(
+      "SELECT id FROM courses WHERE id = ?",
+      [courseId]
+    );
+
+    if (courseExists.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy khóa học" });
+    }
+
+    // Lấy thống kê lượt xem (đếm số bản ghi = tổng lượt xem)
+    const [stats] = await db.query(
+      `SELECT 
+        COUNT(DISTINCT user_id) as unique_viewers,
+        COUNT(*) as total_views,
+        MAX(last_viewed_at) as last_viewed_at
+       FROM course_views 
+       WHERE course_id = ?`,
+      [courseId]
+    );
+
+    res.json({
+      message: "Lấy thống kê lượt xem thành công",
+      courseId: courseId,
+      uniqueViewers: stats[0].unique_viewers || 0,
+      totalViews: stats[0].total_views || 0,
+      lastViewedAt: stats[0].last_viewed_at || null
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy thống kê lượt xem:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy thống kê lượt xem" });
+  }
+});
+
+// --- POST: Ghi nhận lượt xem khóa học (Debounce 10 giây, không yêu cầu đăng nhập) ---
+router.post("/:id/record-view", async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    // Lấy user.id từ token nếu có, không thì dùng NULL (anonymous user)
+    const userId = req.user?.id || null;
+
+    // Kiểm tra xem khóa học có tồn tại không
+    const [courseExists] = await db.query(
+      "SELECT id FROM courses WHERE id = ?",
+      [courseId]
+    );
+
+    if (courseExists.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy khóa học" });
+    }
+
+    // Kiểm tra view gần nhất của user (hoặc anonymous) cho khóa học này
+    const [lastView] = await db.query(
+      `SELECT id, last_viewed_at FROM course_views 
+       WHERE course_id = ? AND user_id <=> ? 
+       ORDER BY last_viewed_at DESC LIMIT 1`,
+      [courseId, userId]
+    );
+
+    const now = new Date();
+    const tenSecondsAgo = new Date(now.getTime() - 10 * 1000);
+
+    // Nếu chưa có view hoặc view cuối cùng cách đây > 10 giây, thì ghi nhận
+    if (lastView.length === 0 || new Date(lastView[0].last_viewed_at) < tenSecondsAgo) {
+      // Insert hàng mới (không cập nhật cái cũ)
+      await db.query(
+        `INSERT INTO course_views (course_id, user_id, last_viewed_at)
+         VALUES (?, ?, ?)`,
+        [courseId, userId, now]
+      );
+
+      return res.json({ 
+        message: "Ghi nhận lượt xem thành công",
+        recorded: true 
+      });
+    } else {
+      // View đã được ghi nhận trong 10 giây gần đây
+      return res.json({ 
+        message: "Lượt xem đã được ghi nhận gần đây, không ghi nhận lại",
+        recorded: false 
+      });
+    }
+
+  } catch (error) {
+    console.error("Lỗi ghi nhận lượt xem:", error);
+    res.status(500).json({ error: "Lỗi server khi ghi nhận lượt xem" });
+  }
+});
+
 // --- GET: Lấy danh sách khóa học liên quan theo LEVEL ---
 router.get("/related/level/:id", async (req, res) => {
   try {
@@ -61,8 +156,17 @@ router.get("/related/level/:id", async (req, res) => {
 // --- GET: Lấy danh sách tất cả khóa học (Hiển thị trang chủ/danh sách) ---
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM courses ORDER BY created_at DESC");
-    res.json(rows);
+    const [courses] = await db.query(`
+      SELECT 
+        c.*,
+        COUNT(*) as totalViews,
+        COUNT(DISTINCT cv.user_id) as uniqueViewers
+      FROM courses c
+      LEFT JOIN course_views cv ON c.id = cv.course_id
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `);
+    res.json(courses);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi server khi lấy danh sách khóa học" });
@@ -102,8 +206,6 @@ router.get("/lesson/:id", async (req, res) => {
 });
 
 
-// --- GET: Lấy chi tiết 1 KHÓA HỌC (Bao gồm Chương và Bài học lồng nhau) ---
-// ⭐ YÊU CẦU ĐĂNG NHẬP
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const courseId = req.params.id;
