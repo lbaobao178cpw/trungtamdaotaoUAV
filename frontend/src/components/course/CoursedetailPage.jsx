@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 const API_BASE = "http://localhost:5000/api/courses";
+const COMMENTS_API = "http://localhost:5000/api/comments";
 const MEDIA_BASE = "http://localhost:5000";
 
 function CourseDetailPage() {
@@ -34,18 +35,90 @@ function CourseDetailPage() {
     const [quizSubmitted, setQuizSubmitted] = useState(false);
     const [score, setScore] = useState(0);
 
-    // ... (Phần logic fetch API giữ nguyên như cũ, chỉ thay đổi Render UI) ...
-    // Copy lại phần useEffect fetch data và các helper function từ file cũ của bạn
-    // ...
-    // ... (Giả sử logic fetch data ở đây)
-    
+    // === COMMENT STATE ===
+    const [comments, setComments] = useState([]);
+    const [commentContent, setCommentContent] = useState('');
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [token, setToken] = useState(localStorage.getItem('token'));
+
+    // === FETCH COMMENTS ===
+    const fetchComments = async () => {
+        try {
+            setLoadingComments(true);
+            const res = await fetch(`${COMMENTS_API}/course/${id}?limit=6`);
+            if (res.ok) {
+                const data = await res.json();
+                setComments(data.comments || []);
+            }
+        } catch (err) {
+            console.error("Lỗi tải comments:", err);
+        } finally {
+            setLoadingComments(false);
+        }
+    };
+
+    // === POST COMMENT ===
+    const handlePostComment = async () => {
+        if (!commentContent.trim()) {
+            alert('Vui lòng nhập nội dung bình luận');
+            return;
+        }
+        if (!token) {
+            alert('Vui lòng đăng nhập để bình luận');
+            navigate('/dang-nhap');
+            return;
+        }
+
+        try {
+            const res = await fetch(COMMENTS_API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    course_id: parseInt(id),
+                    content: commentContent.trim()
+                })
+            });
+
+            if (res.ok) {
+                setCommentContent('');
+                fetchComments();
+                alert('Bình luận thành công!');
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Lỗi khi bình luận');
+            }
+        } catch (err) {
+            console.error("Lỗi post comment:", err);
+            alert('Lỗi server');
+        }
+    };
+
     // --- MÔ PHỎNG LẠI PHẦN LOGIC ĐỂ CODE CHẠY ĐƯỢC ---
     useEffect(() => {
         const fetchAllData = async () => {
             try {
                 setLoading(true);
-                const resCourse = await fetch(`${API_BASE}/${id}`);
-                if (!resCourse.ok) throw new Error("Lỗi tải khóa học");
+                
+                // Chuẩn bị headers với token nếu có
+                const headers = token ? {
+                    'Authorization': `Bearer ${token}`
+                } : {};
+
+                // Gọi API chi tiết khóa học (giờ yêu cầu đăng nhập)
+                const resCourse = await fetch(`${API_BASE}/${id}`, { headers });
+                
+                if (!resCourse.ok) {
+                    if (resCourse.status === 401) {
+                        alert('Vui lòng đăng nhập để xem chi tiết khóa học');
+                        navigate('/dang-nhap');
+                        return;
+                    }
+                    throw new Error("Lỗi tải khóa học");
+                }
+                
                 const data = await resCourse.json();
 
                 let processedChapters = [];
@@ -80,11 +153,15 @@ function CourseDetailPage() {
                     }
                 }
 
-                const resAll = await fetch(API_BASE);
-                if (resAll.ok) {
-                    const allCourses = await resAll.json();
-                    setRelatedCourses(allCourses.filter(c => c.id !== parseInt(id) && c.id !== id).slice(0, 3));
+                // Fetch related courses by level (limit 6)
+                const resRelated = await fetch(`${API_BASE}/related/level/${id}?limit=6`);
+                if (resRelated.ok) {
+                    const relatedData = await resRelated.json();
+                    setRelatedCourses(relatedData.courses || []);
                 }
+
+                // Fetch comments
+                fetchComments();
 
             } catch (err) {
                 console.error("Lỗi fetch detail:", err);
@@ -93,7 +170,7 @@ function CourseDetailPage() {
             }
         };
         if (id) fetchAllData();
-    }, [id]);
+    }, [id, token, navigate]);
 
     const formatLessonData = (l) => {
         let parsedQuestions = [];
@@ -341,9 +418,101 @@ function CourseDetailPage() {
                                     </div>
                                 </>
                             ) : (
-                                <div className="comments-placeholder">
-                                    <MessageSquare size={48} color="#0050b8" />
-                                    <p>Chưa có bình luận nào</p>
+                                <div className="comments-section">
+                                    {/* Form thêm bình luận */}
+                                    {token ? (
+                                        <div className="comment-form" style={{marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333'}}>
+                                            <h4 style={{color: '#FFCA05', marginBottom: '10px'}}>Viết bình luận</h4>
+                                            <textarea 
+                                                value={commentContent}
+                                                onChange={(e) => setCommentContent(e.target.value)}
+                                                placeholder="Chia sẻ ý kiến của bạn..." 
+                                                style={{
+                                                    width: '100%',
+                                                    minHeight: '100px',
+                                                    padding: '10px',
+                                                    backgroundColor: '#222',
+                                                    color: '#fff',
+                                                    border: '1px solid #444',
+                                                    borderRadius: '6px',
+                                                    fontFamily: 'inherit',
+                                                    marginBottom: '10px',
+                                                    resize: 'vertical'
+                                                }}
+                                            />
+                                            <button 
+                                                onClick={handlePostComment}
+                                                style={{
+                                                    backgroundColor: '#FFCA05',
+                                                    color: '#000',
+                                                    padding: '10px 20px',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.95rem'
+                                                }}
+                                            >
+                                                Gửi bình luận
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div style={{padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', color: '#aaa', marginBottom: '20px'}}>
+                                            <p>Vui lòng <span onClick={() => navigate('/dang-nhap')} style={{color: '#FFCA05', cursor: 'pointer', fontWeight: 'bold'}}>đăng nhập</span> để bình luận</p>
+                                        </div>
+                                    )}
+
+                                    {/* Danh sách bình luận */}
+                                    {loadingComments ? (
+                                        <div style={{textAlign: 'center', color: '#aaa', padding: '20px'}}>Đang tải bình luận...</div>
+                                    ) : comments.length > 0 ? (
+                                        <div className="comments-list" style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                                            {comments.map(comment => (
+                                                <div 
+                                                    key={comment.id} 
+                                                    className="comment-item"
+                                                    style={{
+                                                        padding: '15px',
+                                                        backgroundColor: '#1a1a1a',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #333'
+                                                    }}
+                                                >
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+                                                        <div 
+                                                            style={{
+                                                                width: '40px',
+                                                                height: '40px',
+                                                                borderRadius: '50%',
+                                                                backgroundColor: '#FFCA05',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                color: '#000',
+                                                                fontWeight: 'bold'
+                                                            }}
+                                                        >
+                                                            {comment.full_name?.charAt(0).toUpperCase() || 'U'}
+                                                        </div>
+                                                        <div>
+                                                            <div style={{color: '#fff', fontWeight: 'bold'}}>{comment.full_name}</div>
+                                                            <div style={{color: '#999', fontSize: '0.85rem'}}>
+                                                                {new Date(comment.created_at).toLocaleDateString('vi-VN')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{color: '#ddd', lineHeight: '1.5', marginLeft: '50px'}}>
+                                                        {comment.content}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div style={{textAlign: 'center', color: '#aaa', padding: '30px'}}>
+                                            <MessageSquare size={48} color="#666" style={{marginBottom: '15px'}} />
+                                            <p>Chưa có bình luận nào. Hãy là người bình luận đầu tiên!</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -352,20 +521,35 @@ function CourseDetailPage() {
                     {/* Sidebar Right */}
                     <div className="intro-right-col">
                         <div className="sidebar-card related-card">
-                            <h4>Khóa học khác</h4>
+                            <h4>Khóa học liên quan</h4>
                             {relatedCourses.length > 0 ? (
-                                relatedCourses.map(rc => (
-                                    <div key={rc.id} className="related-item" onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}>
-                                        <img 
-                                            src={getFullMediaPath(rc.image)} 
-                                            alt={rc.title} 
-                                            onError={(e) => e.target.src='https://placehold.co/100x60/333/fff?text=Course'}
-                                        />
-                                        <div className="related-info"><div className="r-title">{rc.title}</div></div>
-                                    </div>
-                                ))
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                    {relatedCourses.map(rc => (
+                                        <div 
+                                            key={rc.id} 
+                                            className="related-item" 
+                                            onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}
+                                            style={{cursor: 'pointer', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s'}}
+                                            onMouseEnter={(e) => {e.currentTarget.style.borderColor = '#FFCA05'; e.currentTarget.style.backgroundColor = '#222'}}
+                                            onMouseLeave={(e) => {e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.backgroundColor = '#1a1a1a'}}
+                                        >
+                                            <div style={{display: 'flex', gap: '10px'}}>
+                                                <img 
+                                                    src={getFullMediaPath(rc.image)} 
+                                                    alt={rc.title} 
+                                                    style={{width: '60px', height: '40px', borderRadius: '4px', objectFit: 'cover'}}
+                                                    onError={(e) => e.target.src='https://placehold.co/60x40/333/fff?text=Course'}
+                                                />
+                                                <div style={{flex: 1}}>
+                                                    <div style={{color: '#fff', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px'}}>{rc.title}</div>
+                                                    <div style={{color: '#FFCA05', fontSize: '0.8rem', fontWeight: 'bold'}}>Cấp độ: {rc.level}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <p style={{color: '#aaa', fontSize: '0.9rem'}}>Không có khóa học liên quan.</p>
+                                <p style={{color: '#aaa', fontSize: '0.9rem'}}>Không có khóa học cùng cấp độ.</p>
                             )}
                         </div>
                     </div>
