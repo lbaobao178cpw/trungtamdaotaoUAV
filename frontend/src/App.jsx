@@ -17,7 +17,8 @@ import CourseDetailPage from "./components/course/CoursedetailPage";
 import ExamBookingPage from "./components/exam/ExamBookingPage";
 
 /* === IMPORT COMPONENT GIẢI PHÁP ĐỘNG === */
-import SolutionDetail from "./components/solutions/SolutionDetail"; 
+import SolutionDetail from "./components/solutions/SolutionDetail";
+import UserProfile from "./components/user/UserProfile";
 // Import Component 404 (Nếu có) hoặc dùng tạm div
 const NotFound = () => <div className="p-20 text-center">404 - Không tìm thấy trang</div>;
 
@@ -55,6 +56,9 @@ function App() {
             {/* Route Khóa học */}
             <Route path="/khoa-hoc" element={<CoursesPage />} />
             <Route path="/khoa-hoc/:id" element={<CourseDetailPage />} />
+
+            {/* Route Thông tin user */}
+            <Route path="/profile/:id" element={<UserProfile />} />
 
             {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
                - Lưu ý: Vì SQL bạn lưu link là "/khai-khoang", "/lam-nghiep"... 
