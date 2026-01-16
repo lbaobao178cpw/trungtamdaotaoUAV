@@ -6,6 +6,8 @@ import {
     Clock, Target, CheckCircle, List
 } from 'lucide-react';
 import MediaSelector from '../mediaSelector/MediaSelector';
+import MediaUploader from '../MediaUploader';
+import { uploadImage } from '../../lib/cloudinaryService';
 import "./CourseManager.css";
 
 // CẤU HÌNH API
@@ -21,6 +23,7 @@ export default function CourseManager() {
     // Modal States
     const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     
     // Form States
     const [courseFormData, setCourseFormData] = useState({
@@ -95,6 +98,28 @@ export default function CourseManager() {
         e.preventDefault();
         
         try {
+            let thumbnailUrl = courseFormData.thumbnail;
+
+            // Nếu thumbnail là local URL (localhost), upload lên Cloudinary
+            if (thumbnailUrl && thumbnailUrl.includes('localhost')) {
+                try {
+                    const response = await fetch(thumbnailUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'course-thumbnail.jpg', { type: blob.type });
+                    
+                    const result = await uploadImage(file);
+                    if (result.success) {
+                        thumbnailUrl = result.url;
+                    } else {
+                        throw new Error('Lỗi upload ảnh: ' + result.error);
+                    }
+                } catch (err) {
+                    console.error('Error uploading thumbnail:', err);
+                    alert('Lỗi upload ảnh lên Cloudinary: ' + err.message);
+                    return;
+                }
+            }
+
             let currentChapters = [];
 
             // QUAN TRỌNG: Nếu đang sửa (PUT), cần lấy chapters cũ để không bị mất dữ liệu
@@ -121,7 +146,7 @@ export default function CourseManager() {
             const payload = {
                 title: courseFormData.title,
                 description: courseFormData.description,
-                image: courseFormData.thumbnail,
+                image: thumbnailUrl,
                 level: courseFormData.type, // Gửi "A" hoặc "B" vào trường level
                 price: 0,
                 // Nếu là tạo mới thì mảng rỗng, nếu là sửa thì gửi kèm chapters cũ
@@ -340,9 +365,14 @@ export default function CourseManager() {
 
     // --- Media Logic ---
     const openMediaSelector = (target) => { setMediaTarget(target); setIsMediaModalOpen(true); };
+    
     const handleMediaSelect = (url) => {
-        if (mediaTarget === 'thumbnail') setCourseFormData(prev => ({ ...prev, thumbnail: url }));
-        else if (mediaTarget === 'lesson-content') setLessonFormData(prev => ({ ...prev, content: url }));
+        // Chỉ set thumbnail, không upload ngay
+        if (mediaTarget === 'thumbnail') {
+            setCourseFormData(prev => ({ ...prev, thumbnail: url }));
+        } else if (mediaTarget === 'lesson-content') {
+            setLessonFormData(prev => ({ ...prev, content: url }));
+        }
         setIsMediaModalOpen(false);
     };
 
@@ -537,9 +567,24 @@ export default function CourseManager() {
                             <div className="cm-form-group">
                                 <label className="cm-form-label">Ảnh bìa</label>
                                 <div className="cm-media-input-group">
-                                    <input className="cm-form-input" value={courseFormData.thumbnail} readOnly placeholder="Chọn ảnh..." />
-                                    <button type="button" onClick={() => openMediaSelector('thumbnail')} className="cm-btn cm-btn-secondary">Chọn</button>
+                                    <button type="button" onClick={() => openMediaSelector('thumbnail')} className="cm-btn cm-btn-secondary">📁 Chọn ảnh</button>
                                 </div>
+                                {courseFormData.thumbnail && (
+                                    <div style={{marginTop: '15px', textAlign: 'center'}}>
+                                        <img 
+                                            src={courseFormData.thumbnail} 
+                                            alt="Preview" 
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '300px',
+                                                borderRadius: '8px',
+                                                border: '1px solid #e0e0e0',
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                            }}
+                                            onError={(e) => e.target.src = 'https://placehold.co/400x300?text=Image+Error'}
+                                        />
+                                    </div>
+                                )}
                             </div>
                             <div className="cm-modal-footer">
                                 <button type="submit" className="cm-btn cm-btn-primary">Lưu thông tin</button>
@@ -646,6 +691,29 @@ export default function CourseManager() {
                 <div className="cm-modal-overlay">
                     <div className="cm-modal cm-modal-large">
                         <MediaSelector onClose={() => setIsMediaModalOpen(false)} onSelect={handleMediaSelect} mediaBaseUrl={MEDIA_BASE_URL} />
+                    </div>
+                </div>
+            )}
+
+            {isUploadModalOpen && (
+                <div className="cm-modal-overlay">
+                    <div className="cm-modal cm-modal-upload">
+                        <div className="cm-modal-header">
+                            <h2>Upload Ảnh Bìa Khóa Học</h2>
+                            <button onClick={() => setIsUploadModalOpen(false)} className="cm-modal-close"><X size={20}/></button>
+                        </div>
+                        <div style={{ padding: '20px' }}>
+                            <MediaUploader 
+                                type="image" 
+                                onUploadSuccess={(result) => {
+                                    if (result.success) {
+                                        setCourseFormData(prev => ({ ...prev, thumbnail: result.url }));
+                                        setIsUploadModalOpen(false);
+                                        alert('Upload ảnh thành công!');
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

@@ -53,6 +53,7 @@ const coursesRoute = require("./api/courses");
 const authRoute = require("./api/auth"); 
 const usersRouter = require("./api/users");
 const commentRoute = require("./api/comment");
+const cloudinaryRoute = require("./api/cloudinary");
 
 app.use("/api/users", usersRouter);
 app.use("/api", filesRoute);
@@ -65,6 +66,7 @@ app.use('/api/exams', examsRouter);
 app.use("/api/courses", coursesRoute); 
 app.use("/api/comments", commentRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/cloudinary", cloudinaryRoute);
 
 // --- KHỞI ĐỘNG SERVER & KIỂM TRA DB ---
 const startServer = async () => {

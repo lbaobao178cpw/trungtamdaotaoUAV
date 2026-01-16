@@ -13,6 +13,7 @@
     "@react-three/drei": "^9.105.6",
     "@react-three/fiber": "^8.16.6",
     "lucide-react": "^0.554.0",
+    "next-cloudinary": "^6.17.5",
     "react": "^18.3.1",
     "react-activation": "^0.12.4",
     "react-dom": "^18.3.1",
