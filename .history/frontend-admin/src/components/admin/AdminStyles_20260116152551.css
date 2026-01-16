@@ -597,7 +597,7 @@ a:hover {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7) !important;
-
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1030,7 +1030,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-
+  backdrop-filter: blur(4px);
 }
 
 /* --- 2. MODAL CONTENT (Khung chứa Map) --- */

@@ -8,16 +8,12 @@
   --secondary-blue: #0050b8 !important;
 
 
-  --bg-body: #e5e5e5 !important;
-  /* nền trang */
-  --bg-card: #ffffff !important;
-  /* nền card */
+  --bg-body: #e5e5e5 !important;        /* nền trang */
+  --bg-card: #ffffff !important;        /* nền card */
   --bg-card-hover: #f5f5f5;
 
-  --text-white: #111111 !important;
-  /* chữ chính */
-  --text-gray: #555555 !important;
-  /* chữ phụ */
+  --text-white: #111111 !important;     /* chữ chính */
+  --text-gray: #555555 !important;      /* chữ phụ */
   --text-black: #111111 !important;
 
   --border-color: #e5e5e5;
@@ -25,8 +21,7 @@
 
 /* === GLOBAL RESET & SETTINGS === */
 * {
-  box-sizing: border-box;
-  /* Quan trọng: Ngăn padding làm vỡ khung */
+  box-sizing: border-box; /* Quan trọng: Ngăn padding làm vỡ khung */
 }
 
 html {
@@ -37,8 +32,7 @@ body {
   font-family: "Roboto", sans-serif;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  /* Ngăn cuộn ngang toàn trang */
+  overflow-x: hidden; /* Ngăn cuộn ngang toàn trang */
   background-color: var(--bg-body);
   color: var(--text-white);
   width: 100%;
@@ -49,7 +43,6 @@ a {
   color: var(--primary-yellow);
   transition: color 0.3s;
 }
-
 a:hover {
   color: #e6b804;
 }
@@ -64,7 +57,6 @@ a:hover {
   z-index: 1000;
   border-bottom: 1px solid var(--border-color);
 }
-
 .nav-container {
   max-width: 1200px;
   margin: -20px auto;
@@ -73,35 +65,29 @@ a:hover {
   justify-content: space-between;
   align-items: center;
 }
-
 .logo img {
   height: 70px;
   width: auto;
 }
-
 .nav-menu {
   display: flex;
   list-style: none;
   gap: 30px;
   align-items: center;
 }
-
 .nav-menu a {
   color: var(--text-white);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
 }
-
 .nav-menu a:hover {
   color: var(--primary-yellow);
 }
-
 .nav-buttons {
   display: flex;
   gap: 10px;
 }
-
 .btn {
   padding: 8px 20px;
   border-radius: 5px;
@@ -112,21 +98,18 @@ a:hover {
   cursor: pointer;
   font-size: 14px;
 }
-
 /* Nút chính */
 body {
   background-color: var(--bg-body);
   color: var(--text-white);
 }
-
 body .btn-primary,
-.btn-primary.btn-primary {
+.btn-primary.btn-primary { 
   background: var(--primary-yellow) !important;
   color: var(--text-black) !important;
   box-shadow: 0 0 10px rgba(255, 202, 5, 0.3);
-  border: none !important;
+  border: none !important; 
 }
-
 body .btn-primary:hover,
 .btn-primary.btn-primary:hover {
   background: #e6b804 !important;
@@ -134,10 +117,8 @@ body .btn-primary:hover,
   box-shadow: 0 0 20px rgba(255, 202, 5, 0.6);
   transform: translateY(-2px);
 }
-
 .btn-register1 {
-  background-color: #e6b804;
-  /* vàng neon */
+  background-color: #e6b804; /* vàng neon */
   color: var(--text-black);
   font-weight: 700;
   padding: 10px 26px;
@@ -150,54 +131,52 @@ body .btn-primary:hover,
 }
 
 .btn-register1:hover {
-  background-color: #e6b804;
-  /* vàng đậm hơn */
+  background-color: #e6b804; /* vàng đậm hơn */
   color: var(--text-black);
   transform: translateY(-2px);
   box-shadow: 0 0 22px rgba(255, 202, 5, 0.75);
 }
-
 /* =========================
    AUTH BUTTONS
    ========================= */
 
 .btn-login {
-  display: inline-block !important;
-  text-decoration: none !important;
-  background-color: #0050b8;
-  color: #fff;
-  width: 110px !important;
-  height: 34px;
-  line-height: 34px;
-  text-align: center;
-  font-size: 12px !important;
-  font-weight: 600;
-  border-radius: 20px;
-  box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
-  transition: background-color 0.25s ease;
+    display: inline-block !important;
+    text-decoration: none !important; 
+    background-color: #0050b8;
+    color: #fff;
+    width: 110px !important;
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    font-size: 12px !important;
+    font-weight: 600;
+    border-radius: 20px;
+    box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
+    transition: background-color 0.25s ease;
 }
 
 .btn-login:hover {
-  background-color: #003b8e;
+    background-color: #003b8e;
 }
 
 
 /* ===================== */
 
 .btn-register {
-  display: inline-block;
-  text-decoration: none;
-  background-color: #0050b8;
-  color: #fff;
-  width: 110px;
-  height: 34px;
-  line-height: 34px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 20px;
-  box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
-  transition: background-color 0.25s ease;
+    display: inline-block;
+    text-decoration: none;
+    background-color: #0050b8;
+    color: #fff;
+    width: 110px;
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
+    transition: background-color 0.25s ease;
 }
 
 .btn-register:hover {
@@ -215,7 +194,6 @@ body .btn-primary:hover,
   color: var(--primary-yellow);
   border: 2px solid var(--primary-yellow);
 }
-
 .btn-secondary:hover {
   background: var(--primary-yellow);
   color: var(--text-black);
@@ -230,7 +208,7 @@ body .btn-primary:hover,
   position: relative;
   overflow: hidden;
 } */
-.hero {
+ .hero {
   background-color: #006eff;
   color: white;
   padding: 20px 20px;
@@ -247,31 +225,27 @@ body .btn-primary:hover,
   right: 0;
   bottom: 0;
   background: rgba(0, 40, 120, 0.25);
-
+  backdrop-filter: blur(2px);
   z-index: 1;
 }
-
-.hero>.container {
+.hero > .container {
   position: relative;
   z-index: 2;
 }
-
 .hero-logo img {
   height: 180px;
   width: auto;
   margin-bottom: 20px;
 }
-
 .hero h1 {
   font-size: 3.5rem;
   margin-bottom: 5px;
   margin-top: -50px;
   font-weight: 700;
   line-height: 1.3;
-  color: #fff !important;
+  color:#fff !important ;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
-
 .hero p {
   font-size: 1.1rem;
   margin-bottom: 30px;
@@ -288,28 +262,22 @@ body .btn-primary:hover,
   margin: 0 auto;
   padding: 0 20px;
 }
-
 .section {
   padding: 60px 20px;
 }
-
 .section-white {
   background: #f1f1f1 !important;
 }
-
 section.section-white {
   background: #fff !important;
 }
-
 .section-gray {
   background: #ffffff !important;
 }
-
 .section-gray .section-title,
 .section-gray h2 {
   color: var(--secondary-blue) !important;
 }
-
 .section-title {
   text-align: center;
   font-size: 2rem;
@@ -319,7 +287,6 @@ section.section-white {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
 h2.section-title,
 h3.section-title {
   color: var(--secondary-blue) !important;
@@ -330,21 +297,18 @@ h3.section-title {
   background: var(--bg-card) !important;
   padding: 80px 20px;
   text-align: center;
-
+  
 }
-
 .intro-title {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--secondary-blue) !important;
   margin-bottom: 40px;
 }
-
 .intro-content {
   max-width: 900px;
   margin: 0 auto 60px;
 }
-
 .intro-description {
   font-size: 1rem;
   line-height: 1.8;
@@ -352,12 +316,10 @@ h3.section-title {
   text-align: center;
   margin-bottom: 25px;
 }
-
 .intro-description strong {
   font-weight: 600;
   color: var(--primary-yellow);
 }
-
 .intro-stats {
   display: flex;
   justify-content: center;
@@ -366,12 +328,10 @@ h3.section-title {
   margin: 0 auto;
   flex-wrap: wrap;
 }
-
 .intro-stat-item {
   text-align: center;
   min-width: 200px;
 }
-
 .intro-stat-number {
   font-size: 3.5rem;
   font-weight: 700;
@@ -380,7 +340,6 @@ h3.section-title {
   line-height: 1;
   text-shadow: 0 0 15px rgba(255, 202, 5, 0.2);
 }
-
 .intro-stat-label {
   font-size: 1rem;
   color: var(--text-gray);
@@ -391,28 +350,25 @@ h3.section-title {
   background-color: #e1e1e1 !important;
 }
 
-.steps-section h2 {
+.steps-section h2{
   font-size: 2.25rem !important;
   font-weight: 800;
   color: #ffffff !important;
   padding: 50px 10px;
   margin-bottom: 80px;
 }
-
 .steps-section .section-title,
 .steps-section .step-title {
   color: var(--primary-yellow) !important;
   font-size: 1.1rem;
   font-weight: 600;
 }
-
 .steps-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-top: 50px;
 }
-
 .step-item {
   display: flex;
   flex-direction: column;
@@ -423,12 +379,10 @@ h3.section-title {
   position: relative;
   z-index: 2;
 }
-
 .step-icon {
   width: 80px;
   height: 80px;
-  background-color: var(--secondary-blue);
-  /* ✅ nền xanh dương */
+  background-color: var(--secondary-blue); /* ✅ nền xanh dương */
   border: 2px solid var(--secondary-blue);
   border-radius: 50%;
   display: flex;
@@ -442,8 +396,7 @@ h3.section-title {
 
 .step-item:hover .step-icon {
   transform: scale(1.05);
-  background-color: transparent;
-  /* ❗ KHÔNG đổ nền */
+  background-color: transparent; /* ❗ KHÔNG đổ nền */
 }
 
 .step-icon img {
@@ -452,40 +405,36 @@ h3.section-title {
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
-
 .step-item:hover .step-icon img {
-  filter: invert(30%) sepia(96%) saturate(2000%) hue-rotate(200deg) brightness(95%) contrast(105%);
+  filter: invert(30%) sepia(96%) saturate(2000%)
+          hue-rotate(200deg) brightness(95%) contrast(105%);
 }
 
 .step-title {
-  font-size: 0.9rem;
-  /* ✅ nhỏ lại */
-  font-weight: 600;
-  /* nhẹ hơn */
+  font-size: 0.9rem;        /* ✅ nhỏ lại */
+  font-weight: 600;         /* nhẹ hơn */
   color: var(--secondary-blue) !important;
   margin-bottom: 10px;
   line-height: 1.3;
-  min-height: 36px;
-  /* ✅ giảm chiều cao */
+  min-height: 36px;         /* ✅ giảm chiều cao */
 }
 
 .step-desc {
   font-size: 0.9rem;
   color: var(--text-gray);
   line-height: 1.5;
-  margin-top: -30px;
+    margin-top: -30px;
 }
-
 .step-arrow-img {
-  width: 50px;
-  height: 20px;
+  width: 50px; 
+  height: 20px; 
   object-fit: contain;
-  transform: scale(4.0) translateX(3px);
+  transform: scale(4.0) translateX(3px); 
   transform-origin: center center;
-  margin-top: 35px;
+  margin-top: 35px; 
   filter: brightness(0.35) opacity(0.5);
-  z-index: 1;
-  position: relative;
+  z-index: 1; 
+  position: relative; 
 }
 
 /* === CERTIFICATES SECTION === */
@@ -493,26 +442,21 @@ h3.section-title {
   background-color: var(--bg-body);
   padding: 60px 20px;
 }
-
 .uav-cert-section .section-title,
 .uav-cert-section h2 {
   color: var(--secondary-blue) !important;
 }
-
 .uav-cert-section .container {
   max-width: 1600px !important;
 }
-
 .uav-cert-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* Mặc định Desktop 2 cột */
+  grid-template-columns: 1fr 1fr; /* Mặc định Desktop 2 cột */
   gap: 30px;
   max-width: 2340px;
   margin: 40px auto 0;
   padding: 0 20px;
 }
-
 .uav-cert-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -525,7 +469,6 @@ h3.section-title {
   height: 100%;
   color: var(--text-white);
 }
-
 .uav-cert-badge {
   display: inline-block;
   padding: 6px 16px;
@@ -535,26 +478,22 @@ h3.section-title {
   margin-bottom: 15px;
   width: fit-content;
 }
-
 .badge-a {
   background-color: rgba(255, 202, 5, 0.15);
   color: var(--primary-yellow);
   border: 1px solid var(--primary-yellow);
 }
-
 .badge-b {
   background-color: rgba(76, 175, 80, 0.15);
   color: #81c784;
   border: 1px solid #81c784;
 }
-
 .uav-cert-title {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--primary-yellow);
   margin: 0 0 15px 0;
 }
-
 .uav-cert-desc {
   font-size: 0.95rem;
   color: var(--text-white);
@@ -562,21 +501,18 @@ h3.section-title {
   margin-bottom: 20px;
   text-align: justify;
 }
-
 .uav-cert-note {
   font-style: italic;
   color: var(--text-gray);
   margin-bottom: 15px;
   font-size: 0.9rem;
 }
-
 .uav-cert-list {
   margin: 10px 0 25px 0;
   padding-left: 0;
   list-style: none;
   counter-reset: item;
 }
-
 .uav-cert-list li {
   position: relative;
   padding-left: 25px;
@@ -585,7 +521,6 @@ h3.section-title {
   color: var(--text-white);
   line-height: 1.5;
 }
-
 .uav-cert-list li::before {
   content: counter(item) ". ";
   counter-increment: item;
@@ -594,7 +529,6 @@ h3.section-title {
   font-weight: 700;
   color: var(--primary-yellow);
 }
-
 .uav-duration-box {
   background: #ffffff;
   border: 1px solid #444;
@@ -606,7 +540,6 @@ h3.section-title {
   margin-top: 10px;
   margin-bottom: 20px;
 }
-
 .uav-cert-btn,
 .uav-cert-btn-detail {
   width: 100%;
@@ -621,7 +554,6 @@ h3.section-title {
   transition: all 0.3s;
   margin-top: 10px;
 }
-
 .uav-cert-btn:hover,
 .uav-cert-btn-detail:hover {
   background: var(--primary-yellow);
@@ -634,7 +566,6 @@ h3.section-title {
   padding-top: 15px;
   border-top: 1px solid #444;
 }
-
 .cert-tabs-label {
   font-weight: 700;
   margin-bottom: 10px;
@@ -642,7 +573,6 @@ h3.section-title {
   color: var(--text-white);
   font-size: 1rem;
 }
-
 .cert-tabs-header {
   display: flex;
   gap: 5px;
@@ -652,7 +582,6 @@ h3.section-title {
   padding: 5px;
   border-radius: 6px;
 }
-
 .cert-tab-btn {
   border: none;
   background: transparent;
@@ -663,28 +592,24 @@ h3.section-title {
   transition: all 0.2s;
   border-radius: 4px;
   text-align: center;
-
+  min-width: fit-content;
   font-weight: 600;
   color: var(--text-gray);
 }
-
 .cert-tab-btn.active {
   font-weight: 700;
   color: #fff !important;
   background-color: var(--primary-yellow);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
-
 .cert-tab-content {
   padding: 5px 0 0 0;
 }
-
 .sub-list-arrow {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .sub-list-arrow li {
   position: relative;
   padding-left: 25px;
@@ -694,7 +619,6 @@ h3.section-title {
   line-height: 1.5;
   font-weight: 500;
 }
-
 .sub-list-arrow li::before {
   content: "›";
   position: absolute;
@@ -709,7 +633,6 @@ h3.section-title {
 .solutions-section-title {
   color: var(--primary-yellow) !important;
 }
-
 .solutions-grid {
   display: flex;
   flex-wrap: wrap;
@@ -720,7 +643,6 @@ h3.section-title {
   margin: 40px auto 0;
   padding-bottom: 20px;
 }
-
 .service-card {
   display: flex;
   flex-direction: column;
@@ -729,11 +651,9 @@ h3.section-title {
   align-items: center;
   transition: transform 0.3s ease;
 }
-
 .service-card:hover {
   transform: translateY(-5px);
 }
-
 .service-image-wrapper {
   width: 100%;
   height: 260px;
@@ -742,14 +662,12 @@ h3.section-title {
   justify-content: center;
   margin-bottom: 20px;
 }
-
 .service-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.5));
 }
-
 .service-title {
   font-size: 1.4rem !important;
   font-weight: 800;
@@ -762,7 +680,6 @@ h3.section-title {
   align-items: flex-start;
   justify-content: center;
 }
-
 .service-desc {
   font-size: 0.9rem;
   color: var(--text-gray);
@@ -773,7 +690,6 @@ h3.section-title {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 .service-btn {
   background-color: transparent;
   color: var(--primary-yellow);
@@ -786,7 +702,6 @@ h3.section-title {
   margin-bottom: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
-
 .service-btn:hover {
   background-color: var(--primary-yellow);
   color: var(--text-black);
@@ -795,32 +710,29 @@ h3.section-title {
 
 /* === MAP 3D (DESKTOP) === */
 .point-image-marker {
-  --marker-size: 150px;
-  /* Kích thước mặc định PC */
+  --marker-size: 150px; /* Kích thước mặc định PC */
   --marker-padding: 8px;
   --marker-border-radius: 20px;
-
+  
   width: var(--marker-size);
   height: var(--marker-size);
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(61, 61, 61, 0.85);
+  background: rgba(61, 61, 61, 0.85); 
   border: 2px solid var(--primary-yellow);
   padding: var(--marker-padding);
   border-radius: var(--marker-border-radius);
   box-shadow: 0 4px 15px rgba(255, 202, 5, 0.3);
-
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .point-image-marker:hover {
   transform: translateY(-5px);
   box-shadow: 0 6px 20px rgba(255, 202, 5, 0.6);
   background: var(--primary-yellow);
 }
-
 .point-image-marker img {
   width: calc(var(--marker-size) - var(--marker-padding) * 2);
   height: calc(var(--marker-size) - var(--marker-padding) * 2);
@@ -834,18 +746,15 @@ h3.section-title {
   padding: 0;
   position: relative;
 }
-
 .map-3d-section .section-title,
 .map-3d-section h2 {
   color: var(--primary-yellow) !important;
 }
-
 .map-3d-header {
   background: var(--bg-body);
   padding: 40px 20px;
   text-align: center;
 }
-
 .map-3d-container {
   position: relative;
   width: 100%;
@@ -857,7 +766,6 @@ h3.section-title {
   overflow: hidden;
   z-index: 1;
 }
-
 .map-3d-container.fullscreen {
   position: fixed !important;
   top: 0;
@@ -867,7 +775,6 @@ h3.section-title {
   z-index: 999999 !important;
   border-radius: 0;
 }
-
 .fullscreen-btn {
   position: absolute;
   top: 20px;
@@ -884,7 +791,6 @@ h3.section-title {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
-
 .map-info-panel {
   position: absolute;
   right: -600px;
@@ -898,11 +804,9 @@ h3.section-title {
   overflow-y: auto;
   z-index: 2000;
 }
-
 .map-info-panel.active {
   right: 0;
 }
-
 .map-info-header {
   padding: 20px;
   border-bottom: 1px solid #555;
@@ -913,7 +817,6 @@ h3.section-title {
   background: var(--bg-card);
   z-index: 20;
 }
-
 .close-btn {
   cursor: pointer;
   font-size: 1.5rem;
@@ -921,24 +824,20 @@ h3.section-title {
   background: none;
   border: none;
 }
-
 .map-info-body {
   padding-top: 20px;
   font-size: 14px;
   line-height: 1.5;
 }
-
 .map-info-content {
   padding: 20px;
 }
-
 .map-info-title-new {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--primary-yellow);
   margin-bottom: 8px;
 }
-
 .map-info-description-new {
   background: #ffffff;
   padding: 16px;
@@ -947,13 +846,11 @@ h3.section-title {
   margin: 16px 0;
   color: #ddd;
 }
-
 .info-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
-
 .info-table td,
 .info-table th {
   padding: 12px 10px;
@@ -965,12 +862,10 @@ h3.section-title {
 /* === COURSES GRID === */
 .courses-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* Mặc định PC 4 cột */
+  grid-template-columns: repeat(4, 1fr); /* Mặc định PC 4 cột */
   gap: 25px;
   margin-top: 40px;
 }
-
 .course-card {
   background: var(--bg-card);
   border-radius: 8px;
@@ -979,18 +874,15 @@ h3.section-title {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transition: all 0.3s;
 }
-
 .course-image-wrapper {
   position: relative;
   height: 160px;
 }
-
 .course-image-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .course-badge {
   position: absolute;
   bottom: 10px;
@@ -1002,11 +894,9 @@ h3.section-title {
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 .course-content {
   padding: 20px;
 }
-
 .course-title {
   font-size: 0.95rem;
   font-weight: 600;
@@ -1014,7 +904,6 @@ h3.section-title {
   color: var(--text-white);
   min-height: 42px;
 }
-
 .course-rating {
   display: flex;
   align-items: center;
@@ -1033,7 +922,6 @@ h3.section-title {
   margin-left: auto;
   margin-right: auto;
 }
-
 .news-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -1041,7 +929,6 @@ h3.section-title {
   overflow: hidden;
   transition: all 0.3s;
 }
-
 .news-badge {
   background: var(--primary-yellow);
   color: var(--text-black);
@@ -1049,28 +936,24 @@ h3.section-title {
   font-size: 0.85rem;
   font-weight: 600;
 }
-
 .news-content {
   padding: 25px;
 }
-
 .news-date {
   font-size: 0.85rem;
   color: #888;
   margin-bottom: 10px;
 }
-
 .news-title {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 15px;
   color: var(--text-white);
 }
-
 .link-button {
-  color: var(--primary-yellow);
-  text-decoration: none;
-  font-weight: bold;
+    color: var(--primary-yellow);
+    text-decoration: none;
+    font-weight: bold;
 }
 
 /* === FOOTER === */
@@ -1080,7 +963,6 @@ h3.section-title {
   padding: 50px 20px 30px;
   border-top: 2px solid var(--primary-yellow);
 }
-
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -1089,14 +971,12 @@ h3.section-title {
   gap: 40px;
   margin-bottom: 30px;
 }
-
 .footer-section h4 {
   font-size: 1.1rem;
   margin-bottom: 20px;
   font-weight: 600;
   color: #fff !important;
 }
-
 .footer-section p,
 .footer-section a {
   color: #fff !important;
@@ -1105,7 +985,6 @@ h3.section-title {
   margin-bottom: 10px;
   font-size: 0.95rem;
 }
-
 .footer-bottom {
   text-align: center;
   padding-top: 20px;
@@ -1118,13 +997,11 @@ h3.section-title {
    ========================================================= */
 
 @media (max-width: 992px) {
-
   /* Tablet Mode: Layout linh hoạt, vẫn dùng 2 cột */
   .uav-cert-grid {
     grid-template-columns: 1fr 1fr;
     max-width: 100%;
   }
-
   .courses-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1135,20 +1012,16 @@ h3.section-title {
 
   /* 1. Global Scale Down */
   html {
-    font-size: 11px;
-    /* Font gốc rất nhỏ để mọi thứ scale down theo */
+    font-size: 11px; /* Font gốc rất nhỏ để mọi thứ scale down theo */
   }
-
   .container {
     padding: 0 4px !important;
     width: 100% !important;
     overflow: hidden;
   }
-
   .section {
     padding: 20px 0 !important;
   }
-
   .section-title {
     font-size: 1.3rem !important;
     word-wrap: break-word;
@@ -1159,21 +1032,18 @@ h3.section-title {
   .header {
     padding: 10px 0 !important;
   }
-
   .nav-container {
     flex-direction: column !important;
     gap: 12px !important;
     padding: 0 10px !important;
   }
-
   /* Logo cân đối */
   .logo img {
-    height: 49px !important;
+    height: 49px !important; 
     width: auto;
     display: block;
     margin: 0 auto;
   }
-
   /* Menu gọn gàng */
   .nav-menu {
     display: flex !important;
@@ -1184,7 +1054,6 @@ h3.section-title {
     padding: 0 !important;
     width: 100%;
   }
-
   .nav-menu a {
     font-size: 11px !important;
     font-weight: 600 !important;
@@ -1192,7 +1061,6 @@ h3.section-title {
     letter-spacing: 0.5px;
     padding: 2px 0;
   }
-
   /* Nút bấm tinh tế */
   .nav-buttons {
     display: flex !important;
@@ -1201,7 +1069,6 @@ h3.section-title {
     width: 100%;
     margin-top: 5px;
   }
-
   .btn {
     font-size: 11px !important;
     padding: 6px 20px !important;
@@ -1214,49 +1081,40 @@ h3.section-title {
   /* 3. CÁC BƯỚC THỰC HIỆN (STEPS) - ÉP NGANG */
   .steps-container {
     display: flex !important;
-    flex-direction: row !important;
-    /* Luôn ngang */
+    flex-direction: row !important; /* Luôn ngang */
     justify-content: space-between;
     align-items: flex-start;
     gap: 2px;
     margin-top: 20px;
   }
-
   .step-item {
-    width: 22% !important;
-    /* Mỗi bước chiếm khoảng 1/4 */
+    width: 22% !important; /* Mỗi bước chiếm khoảng 1/4 */
     max-width: none;
     padding: 0;
     margin: 0;
   }
-
   .step-icon {
     width: 35px;
     height: 35px;
     margin-bottom: 5px;
     border-width: 1px;
   }
-
   .step-icon img {
     width: 18px;
     height: 18px;
   }
-
   .step-title {
     font-size: 1.1rem;
     line-height: 1.2;
     min-height: 25px;
     margin-bottom: 2px;
   }
-
   /* Ẩn mô tả dài để giữ bố cục ngang đẹp */
   .step-desc {
     display: none;
   }
-
   .step-arrow-img {
-    transform: rotate(0deg) scale(1) !important;
-    /* Mũi tên nằm ngang */
+    transform: rotate(0deg) scale(1) !important; /* Mũi tên nằm ngang */
     width: 10px !important;
     height: auto;
     margin-top: 15px;
@@ -1267,20 +1125,16 @@ h3.section-title {
   .uav-cert-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 5px !important;
-    /* Gap cực nhỏ để tiết kiệm chỗ */
+    gap: 5px !important; /* Gap cực nhỏ để tiết kiệm chỗ */
     margin: 20px 0 !important;
     width: 100% !important;
   }
-
   .uav-cert-card {
     width: 100% !important;
-    padding: 10px 4px !important;
-    /* Padding cực nhỏ */
+    padding: 10px 4px !important; /* Padding cực nhỏ */
     margin: 0 !important;
     min-height: auto;
   }
-
   .uav-cert-title {
     font-size: 0.85rem !important;
     line-height: 1.2;
@@ -1288,40 +1142,32 @@ h3.section-title {
     margin-bottom: 5px !important;
     word-break: break-word;
   }
-
   .uav-cert-desc {
     font-size: 0.7rem !important;
     line-height: 1.3;
     margin-bottom: 8px !important;
-    display: block;
-    /* Hiện lại mô tả nhưng nhỏ */
+    display: block; /* Hiện lại mô tả nhưng nhỏ */
   }
-
   .uav-cert-list {
     margin: 5px 0 10px 0 !important;
   }
-
   .uav-cert-list li {
     font-size: 0.7rem !important;
     line-height: 1.2;
     padding-left: 12px !important;
     margin-bottom: 3px !important;
   }
-
   .uav-cert-badge {
     font-size: 8px !important;
     padding: 2px 6px !important;
     margin-bottom: 5px !important;
   }
-
   .uav-duration-box {
     padding: 5px !important;
     font-size: 0.7rem !important;
     margin: 5px 0 10px 0 !important;
   }
-
-  .uav-cert-btn,
-  .uav-cert-btn-detail {
+  .uav-cert-btn, .uav-cert-btn-detail {
     padding: 6px !important;
     font-size: 0.75rem !important;
   }
@@ -1335,11 +1181,9 @@ h3.section-title {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .cert-tabs-header::-webkit-scrollbar {
     display: none;
   }
-
   .cert-tab-btn {
     font-size: 8px !important;
     padding: 4px 6px !important;
@@ -1355,50 +1199,41 @@ h3.section-title {
     width: 100% !important;
     margin: 20px 0 !important;
   }
-
   .service-card {
     width: 100% !important;
     margin: 0 !important;
   }
-
   .service-image-wrapper {
     height: 90px !important;
     margin-bottom: 10px !important;
   }
-
   .service-title {
     font-size: 0.8rem !important;
     min-height: 35px !important;
     margin-bottom: 5px !important;
   }
-
   .service-desc {
-    display: none;
-    /* Ẩn mô tả để gọn */
+    display: none; /* Ẩn mô tả để gọn */
   }
-
+  
   .course-image-wrapper {
     height: 90px !important;
   }
-
   .course-content {
     padding: 8px !important;
   }
-
   .course-title {
     font-size: 0.8rem !important;
     min-height: 30px !important;
   }
-
+  
   /* 7. HERO */
   .hero {
     padding: 50px 10px;
   }
-
   .hero h1 {
     font-size: 1.2rem !important;
   }
-
   .hero-logo img {
     height: 80px;
   }
@@ -1407,12 +1242,10 @@ h3.section-title {
   .map-3d-container {
     height: 400px;
   }
-
   .map-info-panel {
     width: 100%;
     right: -100%;
   }
-
   .map-info-panel.active {
     right: 0;
   }
@@ -1422,12 +1255,10 @@ h3.section-title {
     padding: 15px 5px !important;
     text-align: center;
   }
-
   .map-3d-header .section-title {
     font-size: 1.2rem !important;
     margin-bottom: 5px !important;
   }
-
   .map-3d-header p {
     font-size: 0.75rem !important;
     line-height: 1.4;
@@ -1438,16 +1269,11 @@ h3.section-title {
 
   /* FIX: ICON (MARKER) TRÊN MAP 3D BỊ QUÁ TO */
   .point-image-marker {
-    --marker-size: 60px !important;
-    /* Giảm mạnh từ 150px xuống 60px */
-    --marker-padding: 3px !important;
-    /* Viền mỏng lại */
-    --marker-border-radius: 8px !important;
-    /* Bo góc nhỏ lại */
-    border-width: 1px !important;
-    /* Nét viền mảnh hơn */
+    --marker-size: 60px !important; /* Giảm mạnh từ 150px xuống 60px */
+    --marker-padding: 3px !important; /* Viền mỏng lại */
+    --marker-border-radius: 8px !important; /* Bo góc nhỏ lại */
+    border-width: 1px !important; /* Nét viền mảnh hơn */
   }
-
   .point-image-marker img {
     width: 100% !important;
     height: 100% !important;
@@ -1459,7 +1285,6 @@ h3.section-title {
     text-align: center;
   }
 }
-
 /* =========================================================
    FIX LOADING PANORAMA
    ========================================================= */
@@ -1490,8 +1315,7 @@ h3.section-title {
   border: 4px solid rgba(255, 202, 5, 0.3);
   border-top: 4px solid #0050b8;
   border-radius: 50%;
-  margin-bottom: 15px;
-  /* Tạo khoảng cách với chữ */
+  margin-bottom: 15px; /* Tạo khoảng cách với chữ */
   animation: spin 1s linear infinite;
 }
 
@@ -1506,23 +1330,17 @@ h3.section-title {
 .cert-tabs-header {
   display: flex;
   gap: 21px;
-  overflow-x: auto;
-  /* bật trượt ngang */
-  white-space: nowrap;
-  /* không xuống dòng */
+  overflow-x: auto;        /* bật trượt ngang */
+  white-space: nowrap;     /* không xuống dòng */
   padding-bottom: 8px;
-  scrollbar-width: none;
-  /* Firefox */
+  scrollbar-width: none;   /* Firefox */
 }
 
 .cert-tabs-header::-webkit-scrollbar {
-  display: none;
-  /* Chrome / Safari */
+  display: none;           /* Chrome / Safari */
 }
-
 .cert-tab-btn {
-  flex-shrink: 0;
-  /* QUAN TRỌNG */
+  flex-shrink: 0;          /* QUAN TRỌNG */
   padding: 6px 14px !important;
   border-radius: 20px;
   border: 1px solid var(--primary-yellow);

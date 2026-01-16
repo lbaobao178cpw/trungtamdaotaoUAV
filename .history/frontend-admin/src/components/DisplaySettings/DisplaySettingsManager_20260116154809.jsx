@@ -255,14 +255,13 @@ export default function DisplaySettingsManager() {
     alignItems: 'center',
     width: '100%',
     marginBottom: '25px',
-    paddingBottom: '8px',
-    paddingLeft: '10px',
+    paddingBottom: '12px',
     borderBottom: '2px solid #0066cc'
   };
 
   const headerTitleStyle = {
     margin: 0,
-    fontSize: '1.3rem',
+    fontSize: '1.5rem',
     fontWeight: 'bold',
     color: '#0066cc'
   };
@@ -277,7 +276,6 @@ export default function DisplaySettingsManager() {
     fontWeight: 'bold',
     fontSize: '14px',
     transition: 'all 0.2s',
-    paddingRight: '20px',
     ':hover': {
       opacity: 0.9
     }

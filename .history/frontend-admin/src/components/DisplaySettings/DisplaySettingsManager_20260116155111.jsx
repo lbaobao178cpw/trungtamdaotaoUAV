@@ -268,7 +268,7 @@ export default function DisplaySettingsManager() {
   };
 
   const headerButtonStyle = (color = '#0066cc') => ({
-    padding: '8px 16px',
+    padding: '6px 12px',
     background: color,
     color: 'white',
     border: 'none',
@@ -277,7 +277,6 @@ export default function DisplaySettingsManager() {
     fontWeight: 'bold',
     fontSize: '14px',
     transition: 'all 0.2s',
-    paddingRight: '20px',
     ':hover': {
       opacity: 0.9
     }

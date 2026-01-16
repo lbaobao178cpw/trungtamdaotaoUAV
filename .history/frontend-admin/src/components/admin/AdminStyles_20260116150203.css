@@ -169,17 +169,12 @@ a:hover {
   grid-template-columns: 320px 1fr;
   gap: 24px;
   align-items: stretch;
-  min-height: calc(100vh - var(--header-height) - 48px);
+  min-height: calc(100vh - 150px);
+  /* Thêm chiều cao tối thiểu */
+  grid-auto-rows: 1fr;
+  /* QUAN TRỌNG: Đảm bảo cả 2 bên bằng nhau */
 }
 
-/* Sidebar panel */
-.split-layout>aside.panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  /* QUAN TRỌNG */
-}
 
 
 .panel {
@@ -190,10 +185,11 @@ a:hover {
   overflow: hidden;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
   height: 100%;
+  /* THÊM: Chiếm toàn bộ chiều cao */
   display: flex;
+  /* THÊM: Sử dụng flex */
   flex-direction: column;
-  min-height: 0;
-  /* Thêm dòng này - QUAN TRỌNG */
+  /* THÊM: Sắp xếp theo cột */
 }
 
 .panel:hover {
@@ -290,12 +286,6 @@ a:hover {
 .form-section {
   padding: 24px;
   background: var(--bg-white);
-  flex: 1;
-  /* Thêm dòng này để chiếm không gian còn lại */
-  display: flex;
-  /* Thêm */
-  flex-direction: column;
-  /* Thêm */
 }
 
 .section-title {
@@ -597,7 +587,7 @@ a:hover {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7) !important;
-
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1030,7 +1020,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-
+  backdrop-filter: blur(4px);
 }
 
 /* --- 2. MODAL CONTENT (Khung chứa Map) --- */
@@ -1317,20 +1307,4 @@ input:checked+.toggle-slider:before {
 
 .toggle-status-label.on {
   color: var(--success);
-}
-
-/* Thêm vào cuối file CSS */
-.form-section {
-  flex: 1;
-  /* Chiếm không gian còn lại */
-  padding: 24px;
-  background: var(--bg-white);
-  overflow-y: auto;
-  /* Cho phép cuộn nếu nội dung dài */
-}
-
-.list-group {
-  flex: 1;
-  /* Cho sidebar */
-  overflow-y: auto;
 }

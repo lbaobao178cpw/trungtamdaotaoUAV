@@ -594,11 +594,11 @@
 }
 
 .input-error {
-    border: 1px solid red;
+  border: 1px solid red;
 }
 
 .error-text {
-    color: red;
-    font-size: 13px;
-    margin-top: 4px;
+  color: red;
+  font-size: 13px;
+  margin-top: 4px;
 }

@@ -277,7 +277,7 @@ export default function DisplaySettingsManager() {
     fontWeight: 'bold',
     fontSize: '14px',
     transition: 'all 0.2s',
-    paddingRight: '20px',
+    paddingright: '20px',
     ':hover': {
       opacity: 0.9
     }

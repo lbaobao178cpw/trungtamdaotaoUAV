@@ -6,19 +6,15 @@
 /* 1. VARIABLES & COLOR PALETTE (Đã chỉnh sang Xanh/Cam) */
 :root {
   /* UAV Brand Colors */
-  --primary: #0066cc;
-  /* ĐỔI TỪ: #2563eb */
-  --primary-dark: #0052a3;
-  /* ĐỔI TỪ: #1e40af */
+  --primary: #0066cc;          /* ĐỔI TỪ: #2563eb */
+  --primary-dark: #0052a3;     /* ĐỔI TỪ: #1e40af */
   --primary-light: #3b82f6;
-  --primary-lighter: #f0f7ff;
-  /* Nền xanh rất nhạt */
-
+  --primary-lighter: #f0f7ff;  /* Nền xanh rất nhạt */
+  
   /* Accent Colors (Cam) */
-  --accent: #ff6407;
-  /* ĐỔI TỪ: #8b5cf6 (Tím) sang Cam */
+  --accent: #ff6407;           /* ĐỔI TỪ: #8b5cf6 (Tím) sang Cam */
   --accent-light: #ff8534;
-
+  
   /* Status Colors */
   --success: #10b981;
   --success-light: #d1fae5;
@@ -28,40 +24,39 @@
   --danger-light: #fee2e2;
   --info: #06b6d4;
   --info-light: #cffafe;
-
+  
   /* Neutrals */
-  --bg-body: #f4f6f9;
-  /* Xám nhạt sạch sẽ thay vì Gradient */
+  --bg-body: #f4f6f9;          /* Xám nhạt sạch sẽ thay vì Gradient */
   --bg-white: #ffffff;
   --bg-gray-50: #f9fafb;
   --bg-gray-100: #f3f4f6;
   --bg-gray-200: #e5e7eb;
-
+  
   /* Text Colors */
   --text-primary: #e1e1e1;
   --text-secondary: #64748b;
   --text-light: #94a3b8;
   --text-inverse: #ffffff;
-
+  
   /* Borders */
   --border-light: #e2e8f0;
   --border-medium: #cbd5e1;
   --border-dark: #94a3b8;
-
+  
   /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-
+  
   /* Sizes */
   --header-height: 70px;
   --radius-sm: 4px;
   --radius: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-
+  
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -78,8 +73,7 @@
 body {
   /* Đổi Font sang Roboto */
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  background: var(--bg-body);
-  /* Bỏ background gradient cũ */
+  background: var(--bg-body); /* Bỏ background gradient cũ */
   color: var(--text-primary);
   font-size: 14px;
   line-height: 1.6;
@@ -121,8 +115,7 @@ a:hover {
   font-size: 20px;
   font-weight: 700;
   margin: 0;
-  color: var(--primary);
-  /* Xanh DJI */
+  color: var(--primary); /* Xanh DJI */
   text-transform: uppercase;
 }
 
@@ -166,34 +159,18 @@ a:hover {
 
 .split-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px 1fr; /* Điều chỉnh cột trái nhỏ lại chút */
   gap: 24px;
-  align-items: stretch;
-  min-height: calc(100vh - var(--header-height) - 48px);
+  align-items: start;
 }
-
-/* Sidebar panel */
-.split-layout>aside.panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  /* QUAN TRỌNG */
-}
-
 
 .panel {
   background: var(--bg-white);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md); /* Bóng nhẹ hơn */
   overflow: hidden;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  /* Thêm dòng này - QUAN TRỌNG */
 }
 
 .panel:hover {
@@ -217,8 +194,7 @@ a:hover {
   content: '';
   width: 4px;
   height: 24px;
-  background: var(--accent);
-  /* Màu cam */
+  background: var(--accent); /* Màu cam */
   border-radius: 2px;
 }
 
@@ -290,12 +266,6 @@ a:hover {
 .form-section {
   padding: 24px;
   background: var(--bg-white);
-  flex: 1;
-  /* Thêm dòng này để chiếm không gian còn lại */
-  display: flex;
-  /* Thêm */
-  flex-direction: column;
-  /* Thêm */
 }
 
 .section-title {
@@ -321,8 +291,7 @@ a:hover {
   color: var(--text-secondary);
 }
 
-.form-control,
-.form-input {
+.form-control, .form-input {
   width: 100%;
   padding: 10px 15px;
   border: 1px solid var(--border-medium);
@@ -335,8 +304,7 @@ a:hover {
   margin-bottom: 8px;
 }
 
-.form-control:focus,
-.form-input:focus {
+.form-control:focus, .form-input:focus {
   border-color: var(--primary);
   outline: 0;
   box-shadow: 0 0 0 3px var(--primary-lighter);
@@ -352,8 +320,7 @@ a:hover {
   cursor: pointer;
   padding: 10px 20px;
   font-size: 14px;
-  border-radius: 5px;
-  /* Bo góc 5px chuẩn UAV */
+  border-radius: 5px; /* Bo góc 5px chuẩn UAV */
   border: 2px solid transparent;
   transition: all var(--transition-base);
   white-space: nowrap;
@@ -364,7 +331,6 @@ a:hover {
   color: white;
   box-shadow: var(--shadow-sm);
 }
-
 .btn-primary:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
@@ -375,33 +341,20 @@ a:hover {
   color: var(--primary);
   border: 1px solid var(--border-medium);
 }
-
 .btn-secondary:hover {
   background: var(--primary-lighter);
   border-color: var(--primary);
 }
 
-.btn-success {
-  background: var(--success);
-  color: white;
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-warning {
-  background: var(--warning);
-  color: white;
-}
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
 
 /* Nút Accent bây giờ là màu Cam */
 .btn-accent {
   background: var(--accent);
   color: white;
 }
-
 .btn-accent:hover {
   background: #e05500;
 }
@@ -417,7 +370,6 @@ a:hover {
   border-radius: var(--radius);
   cursor: pointer;
 }
-
 .btn-upload:hover {
   background: var(--primary-lighter);
   border-color: var(--primary);
@@ -434,18 +386,8 @@ a:hover {
   border-left: 4px solid;
   box-shadow: var(--shadow-sm);
 }
-
-.msg-success {
-  background: var(--success-light);
-  color: #065f46;
-  border-color: var(--success);
-}
-
-.msg-error {
-  background: var(--danger-light);
-  color: #991b1b;
-  border-color: var(--danger);
-}
+.msg-success { background: var(--success-light); color: #065f46; border-color: var(--success); }
+.msg-error { background: var(--danger-light); color: #991b1b; border-color: var(--danger); }
 
 /* Loading Spinner */
 .loading-spinner {
@@ -457,12 +399,7 @@ a:hover {
   border-top-color: white;
   animation: spin 0.8s linear infinite;
 }
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* =========================================
    POINT PREVIEW COMPONENT
@@ -472,23 +409,14 @@ a:hover {
   width: 100%;
   animation: fadeInUp 0.4s ease;
 }
-
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .preview-card {
   background: var(--bg-white);
-  border: 1px solid var(--border-light);
-  /* Viền mỏng hơn */
+  border: 1px solid var(--border-light); /* Viền mỏng hơn */
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
@@ -514,18 +442,12 @@ a:hover {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
 }
-
-.preview-logo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
+.preview-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
 
 .preview-point-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary-dark);
-  /* Màu xanh đậm */
+  color: var(--primary-dark); /* Màu xanh đậm */
   margin: 0 0 6px 0;
 }
 
@@ -543,12 +465,7 @@ a:hover {
   max-height: 300px;
   overflow: hidden;
 }
-
-.preview-main-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.preview-main-image { width: 100%; height: 100%; object-fit: cover; }
 
 .preview-section-title {
   color: var(--primary);
@@ -561,12 +478,10 @@ a:hover {
 
 .preview-lead-wrapper {
   background: #f0f4ff;
-  border-left: 4px solid var(--accent);
-  /* Viền cam */
+  border-left: 4px solid var(--accent); /* Viền cam */
   padding: 16px;
   border-radius: var(--radius);
 }
-
 .preview-lead {
   font-style: italic;
   color: #333;
@@ -597,7 +512,7 @@ a:hover {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7) !important;
-
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -668,7 +583,6 @@ a:hover {
   background: #fffbeb;
   border-color: #fcd34d;
 }
-
 .media-item.media-folder:hover {
   background: #fef3c7;
   border-color: var(--accent);
@@ -685,7 +599,6 @@ a:hover {
   overflow: hidden;
   margin-bottom: 8px;
 }
-
 .media-preview img {
   width: 100%;
   height: 100%;
@@ -720,11 +633,7 @@ a:hover {
   justify-content: center;
   z-index: 3;
 }
-
-.media-del-btn:hover {
-  background: var(--danger);
-  transform: scale(1.1);
-}
+.media-del-btn:hover { background: var(--danger); transform: scale(1.1); }
 
 .media-footer {
   padding: 16px 24px;
@@ -745,12 +654,10 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .btn-select-confirm:hover:not(:disabled) {
   background: var(--primary-dark);
   transform: translateY(-2px);
 }
-
 .btn-select-confirm:disabled {
   background: var(--bg-gray-200);
   color: var(--text-light);
@@ -764,76 +671,25 @@ a:hover {
   margin-top: 24px;
   flex-direction: row-reverse;
 }
-
-.admin-left-panel {
-  flex: 2;
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-.admin-right-panel {
-  flex: 1;
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
+.admin-left-panel { flex: 2; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border-light); }
+.admin-right-panel { flex: 1; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border-light); }
 
 /* Animations */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
+@keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Responsive Media Selector */
 @media (max-width: 992px) {
-  .media-modal-content {
-    width: 98vw !important;
-    height: 95vh !important;
-  }
-
-  .solution-manager-container,
-  .split-layout {
-    flex-direction: column;
-    grid-template-columns: 1fr;
-  }
-
-  .admin-right-panel {
-    order: -1;
-  }
+  .media-modal-content { width: 98vw !important; height: 95vh !important; }
+  .solution-manager-container, .split-layout { flex-direction: column; grid-template-columns: 1fr; }
+  .admin-right-panel { order: -1; }
 }
-
 @media (max-width: 768px) {
-  .media-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
+  .media-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
-
 @media (max-width: 480px) {
-  .media-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+  .media-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
-
 /* =========================================
    NEW STYLES EXTRACTED FROM ADMIN.JSX
    ========================================= */
@@ -848,10 +704,8 @@ a:hover {
   display: grid;
   grid-template-columns: 1fr 520px;
   gap: 24px;
-  align-items: stretch;
-  /* ⭐ BẮT BUỘC */
+  align-items: start;
 }
-
 
 /* Header của Panel Form */
 .panel-header-actions {
@@ -951,14 +805,14 @@ a:hover {
 .preview-header-gradient {
   /* Đổi sang nền Trắng (Giống Header Menu) */
   background: #ffffff;
-
+  
   /* Chữ màu Xanh DJI */
   color: #0066cc;
   font-weight: 700;
-
+  
   /* Thêm viền dưới để tách biệt nội dung */
   border-bottom: 2px solid #f0f7ff;
-
+  
   /* Giữ nguyên vị trí */
   position: sticky;
   top: 0;
@@ -967,7 +821,7 @@ a:hover {
   align-items: center;
   gap: 10px;
   padding: 15px 20px;
-
+  
   /* Bo góc trên */
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
@@ -998,26 +852,24 @@ a:hover {
   .split-layout {
     grid-template-columns: 1fr !important;
   }
-
+  
   /* Reset layout grid về 1 cột trên mobile */
   .admin-layout-grid {
     grid-template-columns: 1fr !important;
   }
-
+  
   /* Ẩn sidebar preview trên màn hình nhỏ */
   .preview-sticky-sidebar {
     display: none !important;
   }
 }
-
 /* =========================================
    MAP PICKER & MODAL FIX (Thêm vào cuối file)
    ========================================= */
 
 /* --- 1. MODAL OVERLAY (Sửa lỗi hiển thị dưới cùng) --- */
 .modal-overlay {
-  position: fixed !important;
-  /* Bắt buộc cố định */
+  position: fixed !important; /* Bắt buộc cố định */
   top: 0;
   left: 0;
   right: 0;
@@ -1025,12 +877,11 @@ a:hover {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.75);
-  z-index: 99999 !important;
-  /* Đảm bảo cao nhất */
+  z-index: 99999 !important; /* Đảm bảo cao nhất */
   display: flex;
   align-items: center;
   justify-content: center;
-
+  backdrop-filter: blur(4px);
 }
 
 /* --- 2. MODAL CONTENT (Khung chứa Map) --- */
@@ -1050,8 +901,7 @@ a:hover {
 
 /* --- 3. MAP WRAPPER (Để Canvas full chiều cao) --- */
 .map-picker-wrapper {
-  flex: 1;
-  /* Chiếm hết phần còn lại của modal */
+  flex: 1; /* Chiếm hết phần còn lại của modal */
   position: relative;
   width: 100%;
   height: 100%;
@@ -1072,7 +922,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   z-index: 10;
   border: 1px solid white;
 }
@@ -1092,7 +942,6 @@ a:hover {
   height: 100% !important;
   outline: none;
 }
-
 /* =========================================
    CONTEXT MENU (GOOGLE DRIVE STYLE)
    Thêm vào cuối file AdminStyles.css
@@ -1118,8 +967,7 @@ a:hover {
   box-shadow: var(--shadow-sm);
   font-size: 18px;
   line-height: 1;
-  opacity: 0;
-  /* Mặc định ẩn để giao diện sạch */
+  opacity: 0; /* Mặc định ẩn để giao diện sạch */
   transform: scale(0.9);
 }
 
@@ -1144,10 +992,8 @@ a:hover {
   background: var(--bg-white);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-xl);
-  /* Bóng đổ đậm để nổi lên trên */
-  z-index: 1000;
-  /* Cao hơn mọi thứ khác trong item */
+  box-shadow: var(--shadow-xl); /* Bóng đổ đậm để nổi lên trên */
+  z-index: 1000; /* Cao hơn mọi thứ khác trong item */
   padding: 6px 0;
   transform-origin: top right;
   animation: scaleIn 0.1s ease-out;
@@ -1210,7 +1056,6 @@ a:hover {
     opacity: 0;
     transform: scale(0.95) translateY(-5px);
   }
-
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1221,7 +1066,7 @@ a:hover {
 /* Đảm bảo z-index hoạt động đúng khi menu mở */
 .media-item {
   /* Giữ nguyên các thuộc tính cũ */
-  transition: transform 0.2s, box-shadow 0.2s, z-index 0s;
+  transition: transform 0.2s, box-shadow 0.2s, z-index 0s; 
 }
 
 /* Khi menu mở, item này phải nổi lên trên các item khác */
@@ -1230,7 +1075,6 @@ a:hover {
   border-color: var(--primary);
   box-shadow: var(--shadow-md);
 }
-
 /* =========================================
    TOGGLE SWITCH STYLES
    Thêm vào cuối file AdminStyles.css
@@ -1248,10 +1092,8 @@ a:hover {
 }
 
 .section-header-toggle .section-title {
-  margin: 0;
-  /* Reset margin cũ */
-  border-bottom: none;
-  /* Bỏ viền cũ vì đã có viền container */
+  margin: 0; /* Reset margin cũ */
+  border-bottom: none; /* Bỏ viền cũ vì đã có viền container */
   padding-bottom: 0;
 }
 
@@ -1291,19 +1133,18 @@ a:hover {
   background-color: white;
   transition: .4s;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-input:checked+.toggle-slider {
-  background-color: var(--success);
-  /* Màu xanh khi bật */
+input:checked + .toggle-slider {
+  background-color: var(--success); /* Màu xanh khi bật */
 }
 
-input:focus+.toggle-slider {
+input:focus + .toggle-slider {
   box-shadow: 0 0 1px var(--success);
 }
 
-input:checked+.toggle-slider:before {
+input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
 
@@ -1314,23 +1155,4 @@ input:checked+.toggle-slider:before {
   margin-right: 12px;
   color: var(--text-secondary);
 }
-
-.toggle-status-label.on {
-  color: var(--success);
-}
-
-/* Thêm vào cuối file CSS */
-.form-section {
-  flex: 1;
-  /* Chiếm không gian còn lại */
-  padding: 24px;
-  background: var(--bg-white);
-  overflow-y: auto;
-  /* Cho phép cuộn nếu nội dung dài */
-}
-
-.list-group {
-  flex: 1;
-  /* Cho sidebar */
-  overflow-y: auto;
-}
+.toggle-status-label.on { color: var(--success); }

@@ -18,7 +18,6 @@ import ExamBookingPage from "./components/exam/ExamBookingPage";
 /* === IMPORT COMPONENT GIẢI PHÁP ĐỘNG === */
 import SolutionDetail from "./components/solutions/SolutionDetail";
 import PrivacyPolicyPage from './components/privacy-policy/PrivacyPolicyPage';
-import TermsOfServicePage from './components/TermsOfServicePage/TermsOfServicePage';
 // Import Component 404 (Nếu có) hoặc dùng tạm div
 const NotFound = () => <div className="p-20 text-center">404 - Không tìm thấy trang</div>;
 
@@ -53,7 +52,6 @@ function App() {
               <Route path="/dang-ky" element={<RegisterPage />} />
               <Route path="/dat-lich-thi" element={<ExamBookingPage />} />
               <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicyPage />} />
-              <Route path="/dieu-khoan-su-dung" element={<TermsOfServicePage />} />
 
               {/* Route Khóa học */}
               <Route path="/khoa-hoc" element={<CoursesPage />} />

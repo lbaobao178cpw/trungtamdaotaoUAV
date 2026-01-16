@@ -255,8 +255,8 @@ export default function DisplaySettingsManager() {
     alignItems: 'center',
     width: '100%',
     marginBottom: '25px',
-    paddingBottom: '8px',
-    paddingLeft: '10px',
+    paddingBottom: '12px',
+    paddingLeft: '5px',
     borderBottom: '2px solid #0066cc'
   };
 
@@ -277,7 +277,6 @@ export default function DisplaySettingsManager() {
     fontWeight: 'bold',
     fontSize: '14px',
     transition: 'all 0.2s',
-    paddingRight: '20px',
     ':hover': {
       opacity: 0.9
     }

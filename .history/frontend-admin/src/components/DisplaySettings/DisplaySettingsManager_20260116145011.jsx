@@ -248,40 +248,38 @@ export default function DisplaySettingsManager() {
     backgroundColor: isActive ? '#0066cc' : '#f8f9fa', color: isActive ? '#ffffff' : '#333', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px'
   });
 
-  // HEADER STYLE ĐỒNG BỘ
-  const headerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: '25px',
-    paddingBottom: '8px',
-    paddingLeft: '10px',
-    borderBottom: '2px solid #0066cc'
-  };
+  // Hàm render header thống nhất cho tất cả các tab
+  const renderHeader = (title, subtitle = null, actionButton = null) => (
+    <div
+      className="panel-header"
+      style={{
+        minHeight: '80px',        // ⭐ QUAN TRỌNG
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          gap: '15px'
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0 }}>{title}</h2>
+          {subtitle && <p style={{ margin: '4px 0 0' }}>{subtitle}</p>}
+        </div>
 
-  const headerTitleStyle = {
-    margin: 0,
-    fontSize: '1.3rem',
-    fontWeight: 'bold',
-    color: '#0066cc'
-  };
+        {/* Giữ chỗ kể cả khi không có button */}
+        <div style={{ minWidth: '150px', textAlign: 'right' }}>
+          {actionButton || null}
+        </div>
+      </div>
+    </div>
+  );
 
-  const headerButtonStyle = (color = '#0066cc') => ({
-    padding: '8px 16px',
-    background: color,
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '14px',
-    transition: 'all 0.2s',
-    paddingRight: '20px',
-    ':hover': {
-      opacity: 0.9
-    }
-  });
 
   return (
     <div className="split-layout">
@@ -333,22 +331,27 @@ export default function DisplaySettingsManager() {
         {/* TAB FOOTER */}
         {activeTab === 'footer' && (
           <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>Chỉnh Sửa Nội Dung Footer</h2>
+            {renderHeader(
+              "Cấu hình Footer",
+              "Chỉnh sửa toàn bộ nội dung hiển thị ở chân trang website",
               <button
-                onClick={handleSaveFooter}
-                disabled={loading}
+                type="submit"
+                form="footer-form"
+                className="btn btn-primary"
                 style={{
-                  ...headerButtonStyle('#28a745'),
-                  opacity: loading ? 0.7 : 1,
-                  cursor: loading ? 'not-allowed' : 'pointer'
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  minWidth: '150px'
                 }}
+                disabled={loading}
               >
                 {loading ? "Đang lưu..." : "Lưu cấu hình"}
               </button>
-            </div>
+            )}
+
             <div className="form-section">
-              <form onSubmit={handleSaveFooter}>
+              <form id="footer-form" onSubmit={handleSaveFooter}>
 
                 {/* 1. THÔNG TIN LIÊN HỆ */}
                 <h5 style={{ borderBottom: '2px solid #0066cc', paddingBottom: '8px', marginBottom: '15px', color: '#0066cc', fontWeight: '600' }}>1. Thông tin liên hệ</h5>
@@ -429,11 +432,11 @@ export default function DisplaySettingsManager() {
         {/* TAB NOTIFICATIONS */}
         {activeTab === 'notifications' && (
           <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>
-                {isEditingNoti ? "Chỉnh sửa Thông báo" : "Tạo Thông báo Mới"}
-              </h2>
-            </div>
+            {renderHeader(
+              isEditingNoti ? "Chỉnh sửa Thông báo" : "Tạo Thông báo Mới",
+              isEditingNoti ? "Cập nhật thông tin thông báo hiện tại" : "Thêm thông báo mới vào hệ thống"
+            )}
+
             <div className="form-section">
               <form onSubmit={handleSubmitNoti}>
                 <div className="form-group"><label className="form-label">Tiêu đề</label><input type="text" className="form-control" value={notiForm.title} onChange={e => setNotiForm({ ...notiForm, title: e.target.value })} /></div>
@@ -445,9 +448,7 @@ export default function DisplaySettingsManager() {
                   </div>
                 </div>
                 <div className="form-group"><label className="form-label">Link</label><input type="text" className="form-control" value={notiForm.link} onChange={e => setNotiForm({ ...notiForm, link: e.target.value })} /></div>
-                <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '10px' }} disabled={loading}>
-                  {loading ? "Đang xử lý..." : (isEditingNoti ? "CẬP NHẬT" : "ĐĂNG")}
-                </button>
+                <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '10px' }}>{isEditingNoti ? "CẬP NHẬT" : "ĐĂNG"}</button>
               </form>
             </div>
           </>
@@ -456,134 +457,165 @@ export default function DisplaySettingsManager() {
         {/* TAB POLICIES - CHÍNH SÁCH & ĐIỀU KHOẢN */}
         {activeTab === 'policies' && (
           <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>Quản lý Chính sách & Điều khoản</h2>
+            {renderHeader(
+              "Quản lý Chính sách & Điều khoản",
+              "Chỉnh sửa nội dung Chính sách bảo mật và Điều khoản sử dụng",
               <button
                 onClick={handleSaveAllPolicies}
                 disabled={savingPrivacy || savingTerms || policyLoading}
                 style={{
-                  ...headerButtonStyle('#28a745'),
-                  opacity: (savingPrivacy || savingTerms || policyLoading) ? 0.7 : 1,
-                  cursor: (savingPrivacy || savingTerms || policyLoading) ? 'not-allowed' : 'pointer'
+                  padding: '10px 20px',
+                  background: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: (savingPrivacy || savingTerms) ? 'not-allowed' : 'pointer',
+                  opacity: (savingPrivacy || savingTerms) ? 0.7 : 1,
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  minWidth: '150px'
                 }}
               >
                 {(savingPrivacy || savingTerms) ? 'Đang lưu...' : 'Lưu tất cả'}
               </button>
-            </div>
-
-            {policyLoading ? (
-              <div style={{ textAlign: 'center', padding: '40px' }}>
-                <div style={{ fontSize: '14px', color: '#666' }}>Đang tải nội dung...</div>
-              </div>
-            ) : (
-              <div className="form-section">
-                {/* CHÍNH SÁCH BẢO MẬT */}
-                <div style={{ marginBottom: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{
-                    background: '#28a745',
-                    color: 'white',
-                    padding: '12px 20px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span>Chính sách Bảo mật</span>
-                    <button
-                      onClick={handleSavePrivacyPolicy}
-                      disabled={savingPrivacy}
-                      style={{
-                        padding: '6px 12px',
-                        background: 'white',
-                        color: '#28a745',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: savingPrivacy ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '13px'
-                      }}
-                    >
-                      {savingPrivacy ? 'Đang lưu...' : 'Lưu'}
-                    </button>
-                  </div>
-                  <div style={{ padding: '20px', background: '#f8f9fa' }}>
-                    <textarea
-                      value={privacyPolicy}
-                      onChange={(e) => setPrivacyPolicy(e.target.value)}
-                      rows={15}
-                      style={{
-                        width: '100%',
-                        padding: '15px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontFamily: 'monospace',
-                        fontSize: '14px',
-                        lineHeight: '1.6',
-                        resize: 'vertical',
-                        background: 'white'
-                      }}
-                      placeholder="Nhập nội dung Chính sách bảo mật... (hỗ trợ Markdown: # Tiêu đề, **in đậm**, *nghiêng*)"
-                    />
-                    <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-                      <strong>Ghi chú:</strong> Hỗ trợ định dạng Markdown. Sử dụng # cho tiêu đề, **text** cho in đậm, *text* cho nghiêng.
-                    </div>
-                  </div>
-                </div>
-
-                {/* ĐIỀU KHOẢN SỬ DỤNG */}
-                <div style={{ marginBottom: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{
-                    background: '#17a2b8',
-                    color: 'white',
-                    padding: '12px 20px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span>Điều khoản Sử dụng</span>
-                    <button
-                      onClick={handleSaveTermsOfService}
-                      disabled={savingTerms}
-                      style={{
-                        padding: '6px 12px',
-                        background: 'white',
-                        color: '#17a2b8',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: savingTerms ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '13px'
-                      }}
-                    >
-                      {savingTerms ? 'Đang lưu...' : 'Lưu'}
-                    </button>
-                  </div>
-                  <div style={{ padding: '20px', background: '#f8f9fa' }}>
-                    <textarea
-                      value={termsOfService}
-                      onChange={(e) => setTermsOfService(e.target.value)}
-                      rows={15}
-                      style={{
-                        width: '100%',
-                        padding: '15px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontFamily: 'monospace',
-                        fontSize: '14px',
-                        lineHeight: '1.6',
-                        resize: 'vertical',
-                        background: 'white'
-                      }}
-                      placeholder="Nhập nội dung Điều khoản sử dụng... (hỗ trợ Markdown: # Tiêu đề, **in đậm**, *nghiêng*)"
-                    />
-                    <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-                      <strong>Ghi chú:</strong> Hỗ trợ định dạng Markdown. Sử dụng # cho tiêu đề, **text** cho in đậm, *text* cho nghiêng.
-                    </div>
-                  </div>
-                </div>
-              </div>
             )}
+
+            <div className="form-section">
+              {policyLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div style={{ fontSize: '14px', color: '#666' }}>Đang tải nội dung...</div>
+                </div>
+              ) : (
+                <>
+                  {/* CHÍNH SÁCH BẢO MẬT */}
+                  <div style={{ marginBottom: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div style={{
+                      background: '#28a745',
+                      color: 'white',
+                      padding: '12px 20px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>Chính sách Bảo mật</span>
+                      <button
+                        onClick={handleSavePrivacyPolicy}
+                        disabled={savingPrivacy}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'white',
+                          color: '#28a745',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: savingPrivacy ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {savingPrivacy ? 'Đang lưu...' : 'Lưu'}
+                      </button>
+                    </div>
+                    <div style={{ padding: '20px', background: '#f8f9fa' }}>
+                      <textarea
+                        value={privacyPolicy}
+                        onChange={(e) => setPrivacyPolicy(e.target.value)}
+                        rows={15}
+                        style={{
+                          width: '100%',
+                          padding: '15px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontFamily: 'monospace',
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          resize: 'vertical',
+                          background: 'white'
+                        }}
+                        placeholder="Nhập nội dung Chính sách bảo mật... (hỗ trợ Markdown: # Tiêu đề, **in đậm**, *nghiêng*)"
+                      />
+                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                        <strong>Ghi chú:</strong> Hỗ trợ định dạng Markdown. Sử dụng # cho tiêu đề, **text** cho in đậm, *text* cho nghiêng.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ĐIỀU KHOẢN SỬ DỤNG */}
+                  <div style={{ marginBottom: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div style={{
+                      background: '#17a2b8',
+                      color: 'white',
+                      padding: '12px 20px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>Điều khoản Sử dụng</span>
+                      <button
+                        onClick={handleSaveTermsOfService}
+                        disabled={savingTerms}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'white',
+                          color: '#17a2b8',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: savingTerms ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {savingTerms ? 'Đang lưu...' : 'Lưu'}
+                      </button>
+                    </div>
+                    <div style={{ padding: '20px', background: '#f8f9fa' }}>
+                      <textarea
+                        value={termsOfService}
+                        onChange={(e) => setTermsOfService(e.target.value)}
+                        rows={15}
+                        style={{
+                          width: '100%',
+                          padding: '15px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontFamily: 'monospace',
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          resize: 'vertical',
+                          background: 'white'
+                        }}
+                        placeholder="Nhập nội dung Điều khoản sử dụng... (hỗ trợ Markdown: # Tiêu đề, **in đậm**, *nghiêng*)"
+                      />
+                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+                        <strong>Ghi chú:</strong> Hỗ trợ định dạng Markdown. Sử dụng # cho tiêu đề, **text** cho in đậm, *text* cho nghiêng.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* XEM TRƯỚC */}
+                  <div style={{ marginBottom: '30px' }}>
+                    <h5 style={{ borderBottom: '2px solid #6c757d', paddingBottom: '8px', marginBottom: '15px', color: '#6c757d', fontWeight: '600' }}>
+                      Xem trước
+                    </h5>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', background: '#f8f9fa', maxHeight: '300px', overflowY: 'auto' }}>
+                        <h4>Chính sách Bảo mật</h4>
+                        <div style={{ whiteSpace: 'pre-line', fontSize: '14px' }}>
+                          {privacyPolicy}
+                        </div>
+                      </div>
+                      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', background: '#f8f9fa', maxHeight: '300px', overflowY: 'auto' }}>
+                        <h4>Điều khoản Sử dụng</h4>
+                        <div style={{ whiteSpace: 'pre-line', fontSize: '14px' }}>
+                          {termsOfService}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </>
         )}
       </main>

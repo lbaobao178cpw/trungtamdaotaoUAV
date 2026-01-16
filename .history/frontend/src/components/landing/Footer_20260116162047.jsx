@@ -51,15 +51,7 @@ const Footer = () => {
                                 href={doc.url || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{
-                                    display: 'block',
-                                    marginBottom: '8px',
-                                    color: '#ffffff',
-                                    textDecoration: 'none',
-                                    transition: 'color 0.3s ease'
-                                }}
-                                onMouseEnter={(e) => e.target.style.color = '#ffcc00'}
-                                onMouseLeave={(e) => e.target.style.color = '#ffffff'}
+                                style={{ display: 'block', marginBottom: '8px' }}
                             >
                                 {doc.title}
                             </a>
@@ -78,64 +70,21 @@ const Footer = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     gap: '20px',
-                    flexWrap: 'wrap',
-                    alignItems: 'center'
+                    flexWrap: 'wrap'
                 }}>
                     {/* Chính sách bảo mật */}
-                    <Link
-                        to="/chinh-sach-bao-mat"
-                        className="footer-link"
-                        style={{
-                            color: '#ffffff',
-                            textDecoration: 'none',
-                            transition: 'all 0.3s ease',
-                            padding: '5px 10px',
-                            borderRadius: '4px'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.target.style.color = '#ffcc00';
-                            e.target.style.textDecoration = 'underline';
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.color = '#ffffff';
-                            e.target.style.textDecoration = 'none';
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.backgroundColor = 'transparent';
-                        }}
-                    >
+                    <Link to="/chinh-sach-bao-mat" className="footer-link" style={{ color: '#ffff' }}>
                         Chính sách bảo mật
                     </Link>
-
                     <span style={{ color: '#666' }}>|</span>
 
                     {/* Điều khoản sử dụng */}
-                    <Link
-                        to="/dieu-khoan-su-dung"
-                        className="footer-link"
-                        style={{
-                            color: '#ffffff',
-                            textDecoration: 'none',
-                            transition: 'all 0.3s ease',
-                            padding: '5px 10px',
-                            borderRadius: '4px'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.target.style.color = '#ffcc00';
-                            e.target.style.textDecoration = 'underline';
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.color = '#ffffff';
-                            e.target.style.textDecoration = 'none';
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.backgroundColor = 'transparent';
-                        }}
-                    >
+                    <Link to="/dieu-khoan-su-dung" className="footer-link" style={{ color: '#ffff' }}>
                         Điều khoản sử dụng
                     </Link>
+
+
+
                 </div>
             </div>
         </footer>

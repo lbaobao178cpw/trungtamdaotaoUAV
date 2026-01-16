@@ -247,7 +247,7 @@ body .btn-primary:hover,
   right: 0;
   bottom: 0;
   background: rgba(0, 40, 120, 0.25);
-
+  backdrop-filter: blur(2px);
   z-index: 1;
 }
 
@@ -663,7 +663,7 @@ h3.section-title {
   transition: all 0.2s;
   border-radius: 4px;
   text-align: center;
-
+  min-width: fit-content;
   font-weight: 600;
   color: var(--text-gray);
 }
@@ -809,7 +809,7 @@ h3.section-title {
   padding: var(--marker-padding);
   border-radius: var(--marker-border-radius);
   box-shadow: 0 4px 15px rgba(255, 202, 5, 0.3);
-
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;

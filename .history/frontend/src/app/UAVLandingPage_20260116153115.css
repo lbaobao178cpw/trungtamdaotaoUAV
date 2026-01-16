@@ -663,7 +663,7 @@ h3.section-title {
   transition: all 0.2s;
   border-radius: 4px;
   text-align: center;
-
+  min-width: fit-content;
   font-weight: 600;
   color: var(--text-gray);
 }

@@ -248,41 +248,6 @@ export default function DisplaySettingsManager() {
     backgroundColor: isActive ? '#0066cc' : '#f8f9fa', color: isActive ? '#ffffff' : '#333', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px'
   });
 
-  // HEADER STYLE ĐỒNG BỘ
-  const headerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: '25px',
-    paddingBottom: '8px',
-    paddingLeft: '10px',
-    borderBottom: '2px solid #0066cc'
-  };
-
-  const headerTitleStyle = {
-    margin: 0,
-    fontSize: '1.3rem',
-    fontWeight: 'bold',
-    color: '#0066cc'
-  };
-
-  const headerButtonStyle = (color = '#0066cc') => ({
-    padding: '8px 16px',
-    background: color,
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '14px',
-    transition: 'all 0.2s',
-    paddingRight: '20px',
-    ':hover': {
-      opacity: 0.9
-    }
-  });
-
   return (
     <div className="split-layout">
       {/* SIDEBAR */}
@@ -333,20 +298,7 @@ export default function DisplaySettingsManager() {
         {/* TAB FOOTER */}
         {activeTab === 'footer' && (
           <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>Chỉnh Sửa Nội Dung Footer</h2>
-              <button
-                onClick={handleSaveFooter}
-                disabled={loading}
-                style={{
-                  ...headerButtonStyle('#28a745'),
-                  opacity: loading ? 0.7 : 1,
-                  cursor: loading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {loading ? "Đang lưu..." : "Lưu cấu hình"}
-              </button>
-            </div>
+            <div className="panel-header">Chỉnh Sửa Nội Dung Footer</div>
             <div className="form-section">
               <form onSubmit={handleSaveFooter}>
 
@@ -428,43 +380,42 @@ export default function DisplaySettingsManager() {
 
         {/* TAB NOTIFICATIONS */}
         {activeTab === 'notifications' && (
-          <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>
-                {isEditingNoti ? "Chỉnh sửa Thông báo" : "Tạo Thông báo Mới"}
-              </h2>
+          <div className="form-section">
+            <div className="panel-header">
+              {isEditingNoti ? "Chỉnh sửa Thông báo" : "Tạo Thông báo Mới"}
             </div>
-            <div className="form-section">
-              <form onSubmit={handleSubmitNoti}>
-                <div className="form-group"><label className="form-label">Tiêu đề</label><input type="text" className="form-control" value={notiForm.title} onChange={e => setNotiForm({ ...notiForm, title: e.target.value })} /></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div className="form-group"><label className="form-label">Ngày</label><input type="text" className="form-control" value={notiForm.date} onChange={e => setNotiForm({ ...notiForm, date: e.target.value })} /></div>
-                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginTop: '30px' }}>
-                    <input type="checkbox" checked={notiForm.isNew} onChange={e => setNotiForm({ ...notiForm, isNew: e.target.checked })} style={{ width: '20px', height: '20px', marginRight: '10px' }} />
-                    <label>Badge MỚI</label>
-                  </div>
+            <form onSubmit={handleSubmitNoti}>
+              <div className="form-group"><label className="form-label">Tiêu đề</label><input type="text" className="form-control" value={notiForm.title} onChange={e => setNotiForm({ ...notiForm, title: e.target.value })} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="form-group"><label className="form-label">Ngày</label><input type="text" className="form-control" value={notiForm.date} onChange={e => setNotiForm({ ...notiForm, date: e.target.value })} /></div>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginTop: '30px' }}>
+                  <input type="checkbox" checked={notiForm.isNew} onChange={e => setNotiForm({ ...notiForm, isNew: e.target.checked })} style={{ width: '20px', height: '20px', marginRight: '10px' }} />
+                  <label>Badge MỚI</label>
                 </div>
-                <div className="form-group"><label className="form-label">Link</label><input type="text" className="form-control" value={notiForm.link} onChange={e => setNotiForm({ ...notiForm, link: e.target.value })} /></div>
-                <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '10px' }} disabled={loading}>
-                  {loading ? "Đang xử lý..." : (isEditingNoti ? "CẬP NHẬT" : "ĐĂNG")}
-                </button>
-              </form>
-            </div>
-          </>
+              </div>
+              <div className="form-group"><label className="form-label">Link</label><input type="text" className="form-control" value={notiForm.link} onChange={e => setNotiForm({ ...notiForm, link: e.target.value })} /></div>
+              <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '10px' }}>{isEditingNoti ? "CẬP NHẬT" : "ĐĂNG"}</button>
+            </form>
+          </div>
         )}
 
         {/* TAB POLICIES - CHÍNH SÁCH & ĐIỀU KHOẢN */}
         {activeTab === 'policies' && (
-          <>
-            <div style={headerStyle}>
-              <h2 style={headerTitleStyle}>Quản lý Chính sách & Điều khoản</h2>
+          <div className="form-section">
+            <div className="panel-header" >
+              <span>Quản lý Chính sách & Điều khoản</span>
               <button
                 onClick={handleSaveAllPolicies}
                 disabled={savingPrivacy || savingTerms || policyLoading}
                 style={{
-                  ...headerButtonStyle('#28a745'),
-                  opacity: (savingPrivacy || savingTerms || policyLoading) ? 0.7 : 1,
-                  cursor: (savingPrivacy || savingTerms || policyLoading) ? 'not-allowed' : 'pointer'
+                  padding: '8px 16px',
+                  background: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: (savingPrivacy || savingTerms) ? 'not-allowed' : 'pointer',
+                  opacity: (savingPrivacy || savingTerms) ? 0.7 : 1,
+                  fontWeight: 'bold'
                 }}
               >
                 {(savingPrivacy || savingTerms) ? 'Đang lưu...' : 'Lưu tất cả'}
@@ -476,7 +427,7 @@ export default function DisplaySettingsManager() {
                 <div style={{ fontSize: '14px', color: '#666' }}>Đang tải nội dung...</div>
               </div>
             ) : (
-              <div className="form-section">
+              <>
                 {/* CHÍNH SÁCH BẢO MẬT */}
                 <div style={{ marginBottom: '30px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
                   <div style={{
@@ -582,9 +533,30 @@ export default function DisplaySettingsManager() {
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* XEM TRƯỚC */}
+                <div style={{ marginBottom: '30px' }}>
+                  <h5 style={{ borderBottom: '2px solid #6c757d', paddingBottom: '8px', marginBottom: '15px', color: '#6c757d', fontWeight: '600' }}>
+                    Xem trước
+                  </h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', background: '#f8f9fa', maxHeight: '300px', overflowY: 'auto' }}>
+                      <h4>Chính sách Bảo mật</h4>
+                      <div style={{ whiteSpace: 'pre-line', fontSize: '14px' }}>
+                        {privacyPolicy}
+                      </div>
+                    </div>
+                    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '15px', background: '#f8f9fa', maxHeight: '300px', overflowY: 'auto' }}>
+                      <h4>Điều khoản Sử dụng</h4>
+                      <div style={{ whiteSpace: 'pre-line', fontSize: '14px' }}>
+                        {termsOfService}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
-          </>
+          </div>
         )}
       </main>
     </div>
