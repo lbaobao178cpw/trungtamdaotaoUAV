@@ -14,7 +14,7 @@
 .lms-page {
   font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--bg-dark);
+  background-color: #fff;
   min-height: 100vh;
   width: 100%;
   color: var(--text-white);
@@ -118,7 +118,7 @@
 }
 
 .chapter-header {
-  background-color: #ffffff;
+  background-color: #333;
   color: #eee;
   padding: 12px 15px;
   font-size: 0.9rem;
@@ -130,9 +130,9 @@
   transition: background 0.2s;
 }
 
-.chapter-header:hover {
+/* .chapter-header:hover {
   background-color: #333;
-}
+} */
 
 .lesson-list {
   background-color: #222;
@@ -151,7 +151,7 @@
 
 .lesson-item:hover {
   background-color: #ffffff;
-  color: #fff;
+  color: #000;
 }
 
 .lesson-item.active {
@@ -279,7 +279,7 @@
    3. INFO SECTION (BOTTOM - DARK MODE)
    ========================================= */
 .lms-info-section {
-  background-color: var(--bg-dark);
+  background-color: #fff;
   padding-bottom: 60px;
 }
 
@@ -333,8 +333,8 @@
    ========================================= */
 .course-main-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 40px;
+  border-radius: 5px;
+  padding: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border-color);
 }
@@ -622,7 +622,7 @@
 
 .btn-start-learning {
     background: var(--primary-yellow);
-    color: var(--text-black);
+    color:#fff;
     border: none;
     padding: 12px 30px;
     border-radius: 6px;

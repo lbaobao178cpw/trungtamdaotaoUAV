@@ -290,7 +290,7 @@ function CourseDetailPage() {
               {course.chapters.map(chapter => (
                 <div key={chapter.id} className="chapter-group">
                   <div className="chapter-header" onClick={() => setExpandedChapters(p => ({ ...p, [chapter.id]: !p[chapter.id] }))}>
-                    <span style={{ color: '#0050b8' }}>{chapter.title}</span>
+                    <span style={{ color: '#fff' }}>{chapter.title}</span>
                     {expandedChapters[chapter.id] ? <ChevronUp size={16} color="#aaa" /> : <ChevronDown size={16} color="#aaa" />}
                   </div>
                   {expandedChapters[chapter.id] && (
@@ -345,7 +345,7 @@ function CourseDetailPage() {
                   {!quizStarted && !quizSubmitted && (
                     <div className="quiz-card">
                       <h2 style={{ color: '#0050b8' }}>{activeLesson.title}</h2>
-                      <p style={{ color: '#ccc', marginBottom: 20 }}>
+                      <p style={{ color: '#000', marginBottom: 20 }}>
                         Bài kiểm tra trắc nghiệm gồm {activeLesson.questions?.length || 0} câu hỏi.
                       </p>
                       <button className="btn-start-learning" onClick={handleStartQuiz}>
@@ -458,18 +458,18 @@ function CourseDetailPage() {
                   <div className="comments-section">
                     {/* Form thêm bình luận */}
                     {token ? (
-                      <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
-                        <h4 style={{ color: '#FFCA05', marginBottom: '10px' }}>Viết bình luận</h4>
+                      <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #333' }}>
+                        <h1 style={{ color: '#000', marginBottom: '10px' }}>Nhận xét của bạn</h1>
                         <textarea
                           value={commentContent}
                           onChange={(e) => setCommentContent(e.target.value)}
                           placeholder="Chia sẻ ý kiến của bạn..."
                           style={{
                             width: '100%',
-                            minHeight: '100px',
+                            minHeight: '150px',
                             padding: '10px',
-                            backgroundColor: '#222',
-                            color: '#fff',
+                            backgroundColor: '#ffffff',
+                            color: '#000',
                             border: '1px solid #444',
                             borderRadius: '6px',
                             fontFamily: 'inherit',
@@ -480,8 +480,8 @@ function CourseDetailPage() {
                         <button
                           onClick={handlePostComment}
                           style={{
-                            backgroundColor: '#FFCA05',
-                            color: '#000',
+                            backgroundColor: '#0050b8',
+                            color: '#ffffff',
                             padding: '10px 20px',
                             border: 'none',
                             borderRadius: '6px',
@@ -501,7 +501,7 @@ function CourseDetailPage() {
 
                     {/* Danh sách bình luận */}
                     {loadingComments ? (
-                      <div style={{ textAlign: 'center', color: '#aaa', padding: '20px' }}>Đang tải bình luận...</div>
+                      <div style={{ textAlign: 'center', color: '#000', padding: '20px' }}>Đang tải bình luận...</div>
                     ) : comments.length > 0 ? (
                       <div className="comments-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {comments.map(comment => (
@@ -510,9 +510,10 @@ function CourseDetailPage() {
                             className="comment-item"
                             style={{
                               padding: '15px',
-                              backgroundColor: '#1a1a1a',
+                              backgroundColor: '#f9fafb',
                               borderRadius: '8px',
-                              border: '1px solid #333'
+                              border: '1px solid #333',
+                          
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -532,13 +533,13 @@ function CourseDetailPage() {
                                 {comment.full_name?.charAt(0).toUpperCase() || 'U'}
                               </div>
                               <div>
-                                <div style={{ color: '#fff', fontWeight: 'bold' }}>{comment.full_name}</div>
-                                <div style={{ color: '#999', fontSize: '0.85rem' }}>
+                                <div style={{ color: '#000', fontWeight: 'bold' }}>{comment.full_name}</div>
+                                <div style={{ color: '#000', fontSize: '0.85rem' }}>
                                   {new Date(comment.created_at).toLocaleDateString('vi-VN')}
                                 </div>
                               </div>
                             </div>
-                            <div style={{ color: '#ddd', lineHeight: '1.5', marginLeft: '50px' }}>
+                            <div style={{ color: '#221e1e', lineHeight: '1.5', marginLeft: '50px' }}>
                               {comment.content}
                             </div>
                           </div>
@@ -566,9 +567,9 @@ function CourseDetailPage() {
                         key={rc.id}
                         className="related-item"
                         onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}
-                        style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#FFCA05'; e.currentTarget.style.backgroundColor = '#222' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.backgroundColor = '#1a1a1a' }}
+                        style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#0050b8', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#FFCA05'; e.currentTarget.style.backgroundColor = '#0050b8' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.backgroundColor = '#0050b8' }}
                       >
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <img
