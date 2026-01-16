@@ -837,7 +837,7 @@ svg.text-primary {
 }
 
 .faq-question:hover {
-  background-color: var(--bg-card-hover);
+  background-color: #0050b8 !important;
 }
 
 .faq-answer {

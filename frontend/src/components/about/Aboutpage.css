@@ -413,12 +413,12 @@
 }
 
 .faq-question:hover {
-  background: #444;
+  background: #0050b8 !important;
   color: var(--about-primary);
 }
 
 .faq-question.active {
-  background: #333;
+  background: #0050b8 !important;
   color: var(--about-primary);
 }
 
