@@ -201,6 +201,8 @@ const ExamPage = () => {
                           : "bg-transparent text-white border"
                       }`}
                       style={{
+                        
+                        color: selectedCertificate === "hang-a" ? '#fff ': '#000',
                         background: selectedCertificate === "hang-a" ? '#0050b8' : 'transparent',
                         borderColor: selectedCertificate === "hang-a" ? '#0050b8' : '#555555'
                       }}
@@ -215,6 +217,7 @@ const ExamPage = () => {
                           : "bg-transparent text-white border"
                       }`}
                       style={{
+                        color: selectedCertificate === "hang-b" ? '#fff ': '#000',
                         background: selectedCertificate === "hang-b" ? '#0050b8' : 'transparent',
                         borderColor: selectedCertificate === "hang-b" ? '#0050b8' : '#555555'
                       }}

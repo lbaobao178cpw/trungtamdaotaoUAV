@@ -71,7 +71,7 @@ const Header = () => {
                         // === NẾU ĐÃ ĐĂNG NHẬP ===
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             {/* [THEME] Sửa màu chữ User thành trắng/vàng */}
-                            <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: '500' }}>
+                            <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#000000', fontWeight: '500' }}>
                                 <User size={20} color="#0050b8" /> {/* Icon màu vàng */}
                                 <span>Xin chào, {user.full_name || user.phone || 'Học viên'}</span>
                             </div>

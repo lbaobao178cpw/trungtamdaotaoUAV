@@ -17,9 +17,9 @@
   --text-muted: #b0b0b0;          /* Chữ phụ màu xám */
   --text-on-primary: #ffffff;     /* Chữ đen nằm trên nền vàng */
   
-  --border-color: #555555;        /* Viền màu xám tối */
-  --shadow-glow: 0 0 15px rgba(255, 202, 5, 0.15); /* Hiệu ứng phát sáng nhẹ */
-  
+        /* Viền màu xám tối */
+
+   
   --font-family: 'Roboto', sans-serif;
 }
 
@@ -91,13 +91,13 @@ a:hover {
 .btn-primary {
   background: var(--primary-color);
   color: var(--text-on-primary);
-  box-shadow: 0 0 10px rgba(255, 202, 5, 0.2);
+  /* box-shadow: 0 0 10px rgba(255, 202, 5, 0.2); */
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
   color: var(--text-on-primary);
-  box-shadow: 0 0 20px rgba(255, 202, 5, 0.5);
+  /* box-shadow: 0 0 20px rgba(255, 202, 5, 0.5); */
   transform: translateY(-2px);
 }
 
@@ -183,7 +183,7 @@ input:focus, textarea:focus, select:focus {
   color: var(--text-main);
 }
 .faq-question:hover, .faq-question.active {
-  background: #0050b8 !important;
+  background: #fff !important;
   color: var(--primary-color);
 }
 .faq-answer {

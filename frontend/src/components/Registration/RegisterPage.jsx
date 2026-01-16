@@ -64,12 +64,12 @@ function RegisterPage() {
     // } else if (!/^0\d{9}$/.test(formData.phone)) {
     //   newErrors.phone = "SĐT phải bắt đầu bằng 0 và đủ 10 số";
     // }
-    
+
     // ===== KIỂM TRA ĐỊA CHỈ THƯỜNG TRÚ =====
     if (!formData.address.trim()) {
       newErrors.address = "Vui lòng nhập địa chỉ";
     }
-  
+
     if (!formData.city.trim()) {
       newErrors.city = "Vui lòng nhập tỉnh/thành";
     }
@@ -204,6 +204,14 @@ function RegisterPage() {
     if (emergencyPhone && !/^0\d{9}$/.test(emergencyPhone)) {
       newErrors.emergencyPhone =
         "SĐT người liên hệ phải bắt đầu bằng 0 và đủ 10 số";
+    }
+    if (
+      emergencyPhone &&
+      formData.phone &&
+      emergencyPhone === formData.phone.trim()
+    ) {
+      newErrors.emergencyPhone =
+        "Số điện thoại người liên hệ không được trùng với số đăng ký";
     }
 
     // ===== SET ERROR & RETURN =====

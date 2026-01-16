@@ -29,7 +29,7 @@
   /* Layout */
   --radius: 8px;
   --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(255, 202, 5, 0.3);
+
   --font-family: "Roboto", sans-serif;
 }
 
@@ -442,7 +442,7 @@
 }
 
 .bg-secondary\/50 {
-  background-color: rgba(221, 218, 218, 0.5);
+  background-color: #ffffff;
 }
 
 .bg-gray-50 {
@@ -672,7 +672,7 @@ button.bg-primary,
 a.bg-primary {
   background-color: var(--primary-yellow) !important;
   color: var(--text-black) !important;
-  box-shadow: var(--shadow-glow);
+
 }
 
 .bg-primary:hover,
@@ -792,7 +792,7 @@ svg.text-primary {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: var(--shadow-glow);
+
 }
 
 /* Alert Box */
@@ -837,7 +837,7 @@ svg.text-primary {
 }
 
 .faq-question:hover {
-  background-color: #0050b8 !important;
+  background-color: #fff !important;
 }
 
 .faq-answer {

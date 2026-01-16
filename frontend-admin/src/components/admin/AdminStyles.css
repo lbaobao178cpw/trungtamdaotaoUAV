@@ -33,8 +33,8 @@
   --bg-gray-200: #e5e7eb;
   
   /* Text Colors */
-  --text-primary: #e1e1e1;
-  --text-secondary: #64748b;
+  --text-primary: #050505 !important;
+  --text-secondary: #006aff;
   --text-light: #94a3b8;
   --text-inverse: #ffffff;
   

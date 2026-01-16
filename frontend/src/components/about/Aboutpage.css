@@ -5,7 +5,7 @@
   --about-primary: #0050b8;       /* Vàng Neon */
   --about-primary-hover: #e6b804; /* Vàng đậm */
   --about-bg-body: #222222;       /* Nền đen chính */
-  --about-bg-card: #e1e1e1;       /* Nền thẻ */
+  --about-bg-card: #f7f3f3;       /* Nền thẻ */
   --about-bg-darker: #ffffff;     /* Nền xám đậm (thay cho gray sáng cũ) */
   --about-text-main: #000000;     /* Chữ trắng */
   --about-text-sub: #0a0a0a;      /* Chữ xám */
@@ -360,7 +360,7 @@
 .requirement-list li {
   padding: 12px 0 12px 30px;
   position: relative;
-  border-bottom: 1px solid #444;
+  
   color: var(--about-text-sub);
   font-size: 0.95rem;
   line-height: 1.5;
@@ -413,13 +413,12 @@
 }
 
 .faq-question:hover {
-  background: #0050b8 !important;
-  color: var(--about-primary);
+  background-color: #0050b8 !important;
 }
 
 .faq-question.active {
-  background: #0050b8 !important;
-  color: var(--about-primary);
+  background: #ffffff !important;
+
 }
 
 .faq-arrow {
@@ -451,7 +450,7 @@
 .cta-section {
   padding: 80px 20px;
   text-align: center;
-  background: #ebebeb; /* Đậm hơn cả body */
+  background: #f8fafb; /* Đậm hơn cả body */
   /* border-top: 2px solid var(--about-primary); */
 }
 
@@ -490,12 +489,12 @@
 .btn-primary {
   background: var(--about-primary);
   color: var(--about-text-black);
-  box-shadow: 0 0 10px rgba(255, 202, 5, 0.3);
+  /* box-shadow: 0 0 10px rgba(255, 202, 5, 0.3); */
 }
 
 .btn-primary:hover {
   background: var(--about-primary-hover);
-  box-shadow: 0 0 20px rgba(255, 202, 5, 0.6);
+  /* box-shadow: 0 0 20px rgba(255, 202, 5, 0.6); */
   transform: translateY(-2px);
   color: var(--about-text-black);
 }

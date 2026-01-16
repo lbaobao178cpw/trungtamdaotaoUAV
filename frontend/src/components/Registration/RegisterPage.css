@@ -429,7 +429,7 @@
 .btn-primary:hover {
     background-color: #e6b804 !important;
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(255, 202, 5, 0.5);
+    /* box-shadow: 0 0 25px rgba(255, 202, 5, 0.5); */
 }
 
 .btn-secondary {
@@ -461,9 +461,9 @@
 .required-checkbox {
     font-weight: 600;
     padding: 12px;
-    background-color: rgba(245, 158, 11, 0.1);
+    background-color: rgba(212, 212, 212, 0.1);
     border-radius: 8px;
-    border: 2px solid rgba(245, 158, 11, 0.5);
+    border: 2px solid rgba(20, 9, 232, 0.5);
 }
 
 .required-checkbox * {

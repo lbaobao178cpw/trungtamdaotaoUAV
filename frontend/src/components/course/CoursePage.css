@@ -279,16 +279,16 @@
 }
 .course-card:hover .badge-type-a {
   background: #388e3c;
-  box-shadow: 0 0 10px rgba(46, 125, 50, 0.5);
+  /* box-shadow: 0 0 10px rgba(46, 125, 50, 0.5); */
 }
 
 .badge-type-b {
   background: var(--primary-yellow);
   color: var(--text-black);
 }
-.course-card:hover .badge-type-b {
+/* .course-card:hover .badge-type-b {
   box-shadow: 0 0 10px rgba(255, 202, 5, 0.5);
-}
+} */
 
 .course-badge span {
   text-transform: uppercase;

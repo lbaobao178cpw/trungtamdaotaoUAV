@@ -411,7 +411,7 @@ function UAVLandingPage() {
       <section className="map-3d-section">
         <div className="map-3d-header">
           <h2 className="section-title">Cơ sở vật chất</h2>
-          <p style={{ color: "#b0b0b0", maxWidth: "800px", margin: "0 auto" }}>Khám phá cơ sở vật chất hiện đại qua mô hình 3D tương tác.</p>
+          <p style={{ color: "#000000", maxWidth: "800px", margin: "0 auto" }}>Khám phá cơ sở vật chất hiện đại qua mô hình 3D tương tác.</p>
         </div>
         <div className={`map-3d-container ${isFullscreen ? "fullscreen" : ""}`} id="map3d">
           <button className="fullscreen-btn" onClick={toggleFullscreen}>{isFullscreen ? "✕" : "⛶"}</button>

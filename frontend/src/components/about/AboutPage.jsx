@@ -272,7 +272,7 @@ function AboutPage() {
                             <ul className="requirement-list">
                                 <li>01 giấy chứng nhận đủ sức khỏe (tương đương giấy khám sức khỏe cấp phép lái xe hạng A)</li>
                                 <li>02 ảnh màu cỡ 3 cm x 4 cm, chụp không quá 6 tháng</li>
-                                <li>Bản sao hộ lệ Hộ chiếu còn thời hạn (đối với người nước ngoài); giấy bảo lãnh</li>
+                                <li>Bản sao hợp lệ Hộ chiếu còn thời hạn (đối với người nước ngoài); giấy bảo lãnh</li>
                                 <li>Sơ yếu lý lịch</li>
                                 <li>Phiếu lý lịch tư pháp</li>
                             </ul>
