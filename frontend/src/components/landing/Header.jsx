@@ -71,16 +71,25 @@ const Header = () => {
                         // === NẾU ĐÃ ĐĂNG NHẬP ===
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             {/* [THEME] Sửa màu chữ User thành trắng/vàng */}
-                            <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#000000', fontWeight: '500' }}>
+                            <Link 
+                                to={`/profile/${user.id}`} 
+                                className="user-info" 
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '8px', 
+                                    color: '#000000', 
+                                    fontWeight: '500',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'color 0.3s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#0050b8'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#000000'}
+                            >
                                 <User size={20} color="#0050b8" /> {/* Icon màu vàng */}
                                 <span>Xin chào, {user.full_name || user.phone || 'Học viên'}</span>
-                            </div>
-
-                            {user.role === 'admin' && (
-                                <Link to="/admin" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
-                                    Quản trị
-                                </Link>
-                            )}
+                            </Link>
 
                             <button
                                 onClick={handleLogout}
