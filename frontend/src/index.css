@@ -183,7 +183,7 @@ input:focus, textarea:focus, select:focus {
   color: var(--text-main);
 }
 .faq-question:hover, .faq-question.active {
-  background: #444;
+  background: #0050b8 !important;
   color: var(--primary-color);
 }
 .faq-answer {

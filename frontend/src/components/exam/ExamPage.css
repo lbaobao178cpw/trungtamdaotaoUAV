@@ -434,7 +434,7 @@
 }
 
 .bg-primary\/10 {
-  background-color: rgba(255, 202, 5, 0.1);
+  background-color: rgba(31, 31, 31, 0.1);
 }
 
 .bg-secondary {
@@ -442,7 +442,7 @@
 }
 
 .bg-secondary\/50 {
-  background-color: rgba(44, 44, 44, 0.5);
+  background-color: rgba(221, 218, 218, 0.5);
 }
 
 .bg-gray-50 {
@@ -543,7 +543,7 @@
 
 /* Hover States */
 .hover\:bg-secondary:hover {
-  background-color: var(--bg-card-hover);
+  background-color:  #fff;
 }
 
 .hover\:bg-gray-50:hover {
@@ -642,9 +642,9 @@
 }
 
 .bg-accent.text-accent-foreground {
-  background-color: rgba(255, 202, 5, 0.2);
+  background-color: rgba(214, 211, 199, 0.2);
   color: var(--primary-yellow);
-  border: 1px solid rgba(255, 202, 5, 0.4);
+  border: 1px solid rgba(255, 69, 69, 0.4);
 }
 
 /* =========================================
