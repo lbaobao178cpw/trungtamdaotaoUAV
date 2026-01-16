@@ -119,7 +119,7 @@ const StarIcon = () => (
   <svg
     className="star-icon"
     viewBox="0 0 24 24"
-    style={{ width: "16px", height: "16px", fill: "#FFCA05" }}
+    style={{ width: "16px", height: "16px", fill: "#0050b8" }}
   >
     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
   </svg>
@@ -225,9 +225,12 @@ function UAVLandingPage() {
           <div className="hero-logo">
             <img src="/images/logo_white_on_trans.png" alt="Logo" onError={(e) => (e.target.style.display = "none")} />
           </div>
-          <h1>Hệ thống Đào tạo và Cấp Chứng chỉ<br />Điều khiển UAV Theo Tiêu Chuẩn<br />Quy Định Pháp Luật VN</h1>
+          <h1>Hệ thống Đào tạo và Cấp Chứng chỉ<br />Điều khiển UAV Theo Tiêu Chuẩn<br />Quy Định Pháp Luật Việt Nam</h1>
           <p>Theo Nghị định Số 288/2025/NĐ-CP Quy Định về Quản lý Tàu Bay Không Người Lái</p>
-          <Link to="/dang-ky" className="btn btn-primary">Đăng ký học tập</Link>
+          <Link to="/dang-ky" className="btn btn-register1">
+            Đăng ký học tập
+          </Link>
+
         </div>
       </section>
 
@@ -302,8 +305,8 @@ function UAVLandingPage() {
                   <li>Kỹ năng điều khiển cơ bản (VLOS).</li>
                   <li>Thực hành nhiệm vụ VLOS nâng cao.</li>
                 </ol>
-                <br/>
-                <br/>
+                <br />
+                <br />
               </div>
               <div className="uav-duration-box">Thời gian đào tạo: xx Tuần</div>
               <button className="uav-cert-btn">Xem chi tiết</button>
@@ -314,7 +317,7 @@ function UAVLandingPage() {
                 <h3 className="uav-cert-title">BVLOS - Beyond Visual Line of Sight</h3>
                 <p className="uav-cert-desc">Giấy phép điều khiển bay bằng thiết bị (Hạng B) áp dụng đối với người điều khiển phương tiện bay có trọng lượng cất cánh tối đa từ 2 ki-lô-gam trở lên, phương tiện bay bay ngoài tầm nhìn trực quan, phương tiện bay được lập trình thông qua bộ điều khiển trung tâm.</p>
                 <p className="uav-cert-note">Thời gian hiệu lực: 10 năm.</p>
-                <br/> <br/>
+                <br /> <br />
                 <strong>Nội dung chương trình học:</strong>
                 <ol className="uav-cert-list">
                   <li>Pháp luật quy định về tàu bay không người lái và phương tiện bay khác.</li>

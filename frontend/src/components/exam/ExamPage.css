@@ -1,25 +1,25 @@
 /* =========================================
    EXAM PAGE - DARK NEON THEME
-   Màu chủ đạo: Vàng Neon #FFCA05 trên nền tối
+   Màu chủ đạo: Vàng Neon #0050b8 trên nền tối
    ========================================= */
 
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
 
 :root {
   /* Theme Colors */
-  --primary-yellow: #FFCA05;
+  --primary-yellow: #0050b8;
   --bg-body: #222222;
-  --bg-card: #3D3D3D;
+  --bg-card: #e1e1e1;
   --bg-card-hover: #454545;
   --text-white: #ffffff;
   --text-gray: #b0b0b0;
-  --text-black: #1a1a1a;
+  --text-black: #ffffff;
   --border-color: #555555;
   
   /* Semantic Colors */
   --primary: var(--primary-yellow);
   --primary-foreground: var(--text-black);
-  --secondary: #2c2c2c;
+  --secondary: #ffffff;
   --muted: var(--bg-body);
   --muted-foreground: var(--text-gray);
   --destructive: #ef4444;
@@ -434,7 +434,7 @@
 }
 
 .bg-primary\/10 {
-  background-color: rgba(255, 202, 5, 0.1);
+  background-color: rgba(31, 31, 31, 0.1);
 }
 
 .bg-secondary {
@@ -442,15 +442,15 @@
 }
 
 .bg-secondary\/50 {
-  background-color: rgba(44, 44, 44, 0.5);
+  background-color: rgba(221, 218, 218, 0.5);
 }
 
 .bg-gray-50 {
-  background-color: #2c2c2c;
+  background-color: #ffffff;
 }
 
 .bg-gray-100 {
-  background-color: #333333;
+  background-color: #e1e1e1;
 }
 
 .bg-gray-200 {
@@ -543,11 +543,11 @@
 
 /* Hover States */
 .hover\:bg-secondary:hover {
-  background-color: var(--bg-card-hover);
+  background-color:  #fff;
 }
 
 .hover\:bg-gray-50:hover {
-  background-color: #333333;
+  background-color: #e1e1e1;
 }
 
 .hover\:bg-primary\/90:hover {
@@ -642,9 +642,9 @@
 }
 
 .bg-accent.text-accent-foreground {
-  background-color: rgba(255, 202, 5, 0.2);
+  background-color: rgba(214, 211, 199, 0.2);
   color: var(--primary-yellow);
-  border: 1px solid rgba(255, 202, 5, 0.4);
+  border: 1px solid rgba(255, 69, 69, 0.4);
 }
 
 /* =========================================
@@ -837,7 +837,7 @@ svg.text-primary {
 }
 
 .faq-question:hover {
-  background-color: var(--bg-card-hover);
+  background-color: #0050b8 !important;
 }
 
 .faq-answer {

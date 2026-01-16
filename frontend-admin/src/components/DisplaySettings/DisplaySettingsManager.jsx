@@ -156,7 +156,7 @@ export default function DisplaySettingsManager() {
 
   const tabBtnStyle = (isActive) => ({
     width: '100%', padding: '12px 15px', marginBottom: '8px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', textAlign: 'left', fontSize: '14px', fontWeight: '600',
-    backgroundColor: isActive ? '#0066cc' : '#f8f9fa', color: isActive ? '#ffffff' : '#333333', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px'
+    backgroundColor: isActive ? '#0066cc' : '#f8f9fa', color: isActive ? '#ffffff' : '#e1e1e1', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px'
   });
 
   return (

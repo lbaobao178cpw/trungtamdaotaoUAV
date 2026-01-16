@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User } from 'lucide-react'; 
+import { LogOut, User } from 'lucide-react';
 
 const Header = () => {
     const navigate = useNavigate();
-    const location = useLocation(); 
+    const location = useLocation();
     const [user, setUser] = useState(null);
 
     useEffect(() => {
         const checkLoginStatus = () => {
             const token = localStorage.getItem('token');
             const userData = localStorage.getItem('user');
-            
+
             if (token && userData) {
                 try {
                     setUser(JSON.parse(userData));
@@ -24,7 +24,7 @@ const Header = () => {
         };
 
         checkLoginStatus();
-    }, [location]); 
+    }, [location]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -39,15 +39,15 @@ const Header = () => {
             <div className="nav-container">
                 {/* Logo */}
                 <div className="logo">
-                    <Link to="/"> 
+                    <Link to="/">
                         {/* [THEME] Đổi sang logo trắng để nổi trên nền đen */}
-                        <img 
-                            src="/images/logo_white_on_trans.png" 
-                            alt="UAV Logo" 
+                        <img
+                            src="/images/logo_black_on_white.png"
+                            alt="UAV Logo"
                             onError={(e) => {
                                 // Fallback nếu không có ảnh trắng: Dùng ảnh đen nhưng invert màu
-                                e.target.onerror = null; 
-                                e.target.src="/images/logo_black_on_white.png";
+                                e.target.onerror = null;
+                                e.target.src = "/images/logo_black_on_white.png";
                                 e.target.style.filter = "invert(1) brightness(100%)";
                             }}
                         />
@@ -72,22 +72,22 @@ const Header = () => {
                         <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             {/* [THEME] Sửa màu chữ User thành trắng/vàng */}
                             <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontWeight: '500' }}>
-                                <User size={20} color="#FFCA05" /> {/* Icon màu vàng */}
+                                <User size={20} color="#0050b8" /> {/* Icon màu vàng */}
                                 <span>Xin chào, {user.full_name || user.phone || 'Học viên'}</span>
                             </div>
-                            
+
                             {user.role === 'admin' && (
                                 <Link to="/admin" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
                                     Quản trị
                                 </Link>
                             )}
 
-                            <button 
-                                onClick={handleLogout} 
+                            <button
+                                onClick={handleLogout}
                                 className="btn"
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     gap: '5px',
                                     border: '1px solid #dc3545',
                                     color: '#fff', // Chữ trắng
@@ -106,8 +106,10 @@ const Header = () => {
                     ) : (
                         // === NẾU CHƯA ĐĂNG NHẬP ===
                         <>
-                            <Link to="/dang-nhap" className="btn btn-primary">Đăng nhập</Link>
-                            <Link to="/dang-ky" className="btn btn-secondary">Đăng ký</Link>
+                            <Link to="/dang-nhap" className="btn-register">Đăng nhập</Link>
+                            <Link to="/dang-ky" className="btn-register">Đăng ký</Link>
+
+
                         </>
                     )}
                 </div>

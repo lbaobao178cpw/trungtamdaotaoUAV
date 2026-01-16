@@ -63,25 +63,25 @@ const ExamBookingPage = () => {
     <div className="register-page" style={{ background: '#222222', minHeight: '100vh' }}>
       <div className="register-container" style={{maxWidth: '600px'}}>
         <div className="register-card" style={{ 
-          background: '#3D3D3D', 
+          background: '#e1e1e1', 
           border: '1px solid #555555',
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
         }}>
-          <h2 className="step-title" style={{ color: '#FFCA05', marginBottom: '2rem' }}>
+          <h2 className="step-title" style={{ color: '#0050b8', marginBottom: '2rem' }}>
             Xác nhận đăng ký thi
           </h2>
 
           {/* Box Thông tin Lịch thi */}
           <div className="info-box" style={{
             background: 'rgba(255, 202, 5, 0.05)', 
-            borderColor: '#FFCA05',
-            border: '1px solid #FFCA05',
+            borderColor: '#0050b8',
+            border: '1px solid #0050b8',
             borderRadius: '8px',
             padding: '1rem',
             marginBottom: '1.5rem'
           }}>
             <h3 className="info-title" style={{
-              color: '#FFCA05',
+              color: '#0050b8',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -92,10 +92,10 @@ const ExamBookingPage = () => {
             </h3>
             <div style={{marginTop: '10px', fontSize: '0.95rem', color: '#e0e0e0'}}>
               <p style={{marginBottom: '8px'}}>
-                <strong style={{ color: '#FFCA05' }}>Nội dung:</strong> {examInfo}
+                <strong style={{ color: '#0050b8' }}>Nội dung:</strong> {examInfo}
               </p>
               <p style={{marginBottom: '8px'}}>
-                <strong style={{ color: '#FFCA05' }}>Địa điểm:</strong> {examLocation}
+                <strong style={{ color: '#0050b8' }}>Địa điểm:</strong> {examLocation}
               </p>
               <p style={{marginBottom: '0', color: '#f59e0b', fontWeight: 'bold'}}>
                 Hạng chứng chỉ: {preSelectedTier}
@@ -105,7 +105,7 @@ const ExamBookingPage = () => {
 
           {/* Box Thông tin Thí sinh */}
           <div className="summary-section" style={{
-            background: '#2c2c2c',
+            background: '#ffffff',
             border: '1px solid #555555',
             borderRadius: '8px',
             padding: '1.25rem',
@@ -127,7 +127,7 @@ const ExamBookingPage = () => {
               borderBottom: '1px solid #444',
               paddingBottom: '8px'
             }}>
-              <strong style={{ color: '#FFCA05' }}>Họ và tên:</strong> {user.full_name}
+              <strong style={{ color: '#0050b8' }}>Họ và tên:</strong> {user.full_name}
             </div>
             <div className="summary-item" style={{ 
               color: '#b0b0b0',
@@ -135,13 +135,13 @@ const ExamBookingPage = () => {
               borderBottom: '1px solid #444',
               paddingBottom: '8px'
             }}>
-              <strong style={{ color: '#FFCA05' }}>Email:</strong> {user.email || "Chưa cập nhật"}
+              <strong style={{ color: '#0050b8' }}>Email:</strong> {user.email || "Chưa cập nhật"}
             </div>
             <div className="summary-item" style={{ 
               color: '#b0b0b0',
               marginBottom: '0'
             }}>
-              <strong style={{ color: '#FFCA05' }}>Số điện thoại:</strong> {user.phone}
+              <strong style={{ color: '#0050b8' }}>Số điện thoại:</strong> {user.phone}
             </div>
           </div>
 
@@ -176,8 +176,8 @@ const ExamBookingPage = () => {
               style={{
                 flex: 1,
                 background: 'transparent',
-                color: '#FFCA05',
-                border: '2px solid #FFCA05',
+                color: '#0050b8',
+                border: '2px solid #0050b8',
                 padding: '12px 24px',
                 borderRadius: '8px',
                 fontWeight: '700',
@@ -204,8 +204,8 @@ const ExamBookingPage = () => {
               disabled={loading}
               style={{
                 flex: 1,
-                background: '#FFCA05',
-                color: '#1a1a1a',
+                background: '#0050b8',
+                color: '#ffffff',
                 border: 'none',
                 padding: '12px 24px',
                 borderRadius: '8px',
@@ -229,7 +229,7 @@ const ExamBookingPage = () => {
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
-                  e.target.style.background = '#FFCA05';
+                  e.target.style.background = '#0050b8';
                   e.target.style.boxShadow = '0 0 20px rgba(255, 202, 5, 0.3)';
                   e.target.style.transform = 'translateY(0)';
                 }

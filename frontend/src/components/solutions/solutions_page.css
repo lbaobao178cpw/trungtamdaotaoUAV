@@ -2,12 +2,12 @@
    GLOBAL SETTINGS & VARIABLES
    ========================================= */
 :root {
-  --primary-yellow: #FFCA05;
+  --primary-yellow: #0050b8;
   --bg-dark: #222222;
-  --bg-card: #3D3D3D;
+  --bg-card: #e1e1e1;
   --text-white: #ffffff;
   --text-gray: #b0b0b0;
-  --text-black: #1a1a1a;
+  --text-black: #ffffff;
   --border-color: #555555;
 }
 
@@ -67,7 +67,7 @@
   font-size: 3.5rem;
   font-weight: 900;
   line-height: 1.1; 
-  color: var(--text-white);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: -0.5px;
   margin: 0;

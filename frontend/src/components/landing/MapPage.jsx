@@ -117,9 +117,9 @@ const styles = {
         alignItems: 'center',
         padding: '10px 20px',
         // [THEME] Đổi sang style Neon: Nền tối, Viền vàng, Chữ vàng
-        backgroundColor: '#3D3D3D', 
-        color: '#FFCA05',
-        border: '1px solid #FFCA05',
+        backgroundColor: '#e1e1e1', 
+        color: '#0050b8',
+        border: '1px solid #0050b8',
         borderRadius: '30px', // Bo tròn nhiều hơn cho hiện đại
         textDecoration: 'none',
         fontSize: '0.9rem',
@@ -133,7 +133,7 @@ const styles = {
         width: '16px',
         height: '16px',
         marginRight: '8px',
-        // [THEME] Filter này biến icon màu trắng/đen thành màu vàng #FFCA05
+        // [THEME] Filter này biến icon màu trắng/đen thành màu vàng #0050b8
         filter: 'invert(74%) sepia(61%) saturate(1682%) hue-rotate(359deg) brightness(103%) contrast(106%)',
     },
     layer3D: {

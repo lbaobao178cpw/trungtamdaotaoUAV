@@ -18,14 +18,14 @@ const BANNER_IMAGES = [
 // Icon Components
 const StarIcon = () => (
     <svg className="star-icon" viewBox="0 0 24 24">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#FFCA05" />
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#0050b8" />
     </svg>
 );
 
 const MedalIcon = () => (
     <svg className="icon-medal" viewBox="0 0 24 24">
-         <path fill="#FFCA05" d="M12 2l-5.5 9h11z"/>
-         <circle fill="none" stroke="#FFCA05" strokeWidth="2" cx="12" cy="16" r="4"/>
+         <path fill="#0050b8" d="M12 2l-5.5 9h11z"/>
+         <circle fill="none" stroke="#0050b8" strokeWidth="2" cx="12" cy="16" r="4"/>
     </svg>
 );
 
@@ -123,7 +123,7 @@ function CoursesPage() {
         <div className="courses-page">
             <div style={{padding: '100px 20px', textAlign: 'center'}}>
                 <div style={{fontSize: '1.2rem', color: '#ff4d4f', marginBottom: '10px'}}>⚠️ Lỗi: {error}</div>
-                <button onClick={() => window.location.reload()} style={{padding: '10px 20px', background: '#FFCA05', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>Thử lại</button>
+                <button onClick={() => window.location.reload()} style={{padding: '10px 20px', background: '#0050b8', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>Thử lại</button>
             </div>
         </div>
     );

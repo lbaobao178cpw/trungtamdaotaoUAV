@@ -172,7 +172,7 @@ function LoginPage() {
                         {/* Submit Button */}
                         <button 
                             type="submit" 
-                            className="btn btn-primary btn-login"
+                            className="btn btn-primary"
                             disabled={loading} // Vô hiệu hóa khi đang tải
                         >
                             {loading ? (

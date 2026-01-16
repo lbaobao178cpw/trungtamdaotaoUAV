@@ -2,20 +2,20 @@
 
 /* 1. KHAI BÁO BIẾN (THEME DARK NEON) */
 :root {
-  --primary-color: #FFCA05;       /* Vàng Neon chủ đạo */
+  --primary-color: #0050b8;       /* Vàng Neon chủ đạo */
   --primary-hover: #e6b804;       /* Vàng đậm khi hover */
   --accent-color: #ffffff;        /* Màu phụ (trắng) */
   
   /* Màu nền */
   --bg-body: #222222;             /* Nền chính đen xám */
-  --bg-card: #3D3D3D;             /* Nền khối/thẻ */
+  --bg-card: #e1e1e1;             /* Nền khối/thẻ */
   --bg-card-hover: #454545;       /* Nền thẻ khi hover */
-  --bg-darker: #1a1a1a;           /* Nền đậm hơn (footer/header) */
+  --bg-darker: #ffffff;           /* Nền đậm hơn (footer/header) */
   
   /* Màu chữ */
   --text-main: #ffffff;           /* Chữ chính màu trắng */
   --text-muted: #b0b0b0;          /* Chữ phụ màu xám */
-  --text-on-primary: #1a1a1a;     /* Chữ đen nằm trên nền vàng */
+  --text-on-primary: #ffffff;     /* Chữ đen nằm trên nền vàng */
   
   --border-color: #555555;        /* Viền màu xám tối */
   --shadow-glow: 0 0 15px rgba(255, 202, 5, 0.15); /* Hiệu ứng phát sáng nhẹ */
@@ -60,7 +60,7 @@ a:hover {
 
 /* Override background xám nhạt thành xám đậm */
 .section-gray { 
-  background-color: #2c2c2c !important; 
+  background-color: #ffffff !important; 
 }
 
 .section-title {
@@ -160,7 +160,7 @@ a:hover {
 
 /* 6. FORM INPUTS (Dark Mode) */
 input, textarea, select {
-  background-color: #2a2a2a;
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 10px;
@@ -183,7 +183,7 @@ input:focus, textarea:focus, select:focus {
   color: var(--text-main);
 }
 .faq-question:hover, .faq-question.active {
-  background: #444;
+  background: #0050b8 !important;
   color: var(--primary-color);
 }
 .faq-answer {

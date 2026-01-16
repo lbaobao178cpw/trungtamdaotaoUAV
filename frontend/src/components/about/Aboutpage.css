@@ -2,14 +2,14 @@
 
 /* 1. KHAI BÁO BIẾN CỤ THỂ CHO TRANG ABOUT */
 :root {
-  --about-primary: #FFCA05;       /* Vàng Neon */
+  --about-primary: #0050b8;       /* Vàng Neon */
   --about-primary-hover: #e6b804; /* Vàng đậm */
   --about-bg-body: #222222;       /* Nền đen chính */
-  --about-bg-card: #3D3D3D;       /* Nền thẻ */
-  --about-bg-darker: #2c2c2c;     /* Nền xám đậm (thay cho gray sáng cũ) */
-  --about-text-main: #ffffff;     /* Chữ trắng */
-  --about-text-sub: #b0b0b0;      /* Chữ xám */
-  --about-text-black: #1a1a1a;    /* Chữ đen (dùng trên nền vàng) */
+  --about-bg-card: #e1e1e1;       /* Nền thẻ */
+  --about-bg-darker: #ffffff;     /* Nền xám đậm (thay cho gray sáng cũ) */
+  --about-text-main: #000000;     /* Chữ trắng */
+  --about-text-sub: #0a0a0a;      /* Chữ xám */
+  --about-text-black: #ffffff;    /* Chữ đen (dùng trên nền vàng) */
   --about-border: #555555;        /* Viền xám */
   --about-font: 'Roboto', sans-serif;
 }
@@ -198,7 +198,7 @@
 .legal-date {
   font-style: italic;
   font-size: 0.85rem;
-  color: #888;
+  color: #393939;
   margin-bottom: 5px;
 }
 
@@ -215,7 +215,7 @@
 /* Authority (Thẩm quyền) */
 .authority-item {
   padding: 20px;
-  background: #2a2a2a;
+  background: #ffffff;
   border-radius: 8px;
   border-left: 4px solid var(--about-primary);
   margin-bottom: 15px;
@@ -244,7 +244,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  background: #2a2a2a;
+  background: #ffffff;
   border-radius: 6px;
   transition: 0.3s;
   border: 1px solid var(--about-border);
@@ -413,12 +413,12 @@
 }
 
 .faq-question:hover {
-  background: #444;
+  background: #0050b8 !important;
   color: var(--about-primary);
 }
 
 .faq-question.active {
-  background: #333;
+  background: #0050b8 !important;
   color: var(--about-primary);
 }
 
@@ -440,7 +440,7 @@
   color: var(--about-text-sub);
   font-size: 0.95rem;
   border-top: 1px solid #444;
-  background: #2a2a2a;
+  background: #ffffff;
 }
 
 .faq-answer .note {
@@ -451,8 +451,8 @@
 .cta-section {
   padding: 80px 20px;
   text-align: center;
-  background: #111; /* Đậm hơn cả body */
-  border-top: 2px solid var(--about-primary);
+  background: #ebebeb; /* Đậm hơn cả body */
+  /* border-top: 2px solid var(--about-primary); */
 }
 
 .cta-title {

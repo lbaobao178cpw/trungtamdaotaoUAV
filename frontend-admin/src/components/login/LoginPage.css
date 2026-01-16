@@ -32,7 +32,7 @@
 .login-title {
     font-size: 2rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: #212020;
     margin: 0 0 12px 0;
 }
 
@@ -85,12 +85,13 @@
 .form-input {
     width: 100%;
     padding: 14px 16px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid #717171;
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background-color: white;
     box-sizing: border-box;
+     color: #000;
 }
 
 .form-input:focus {

@@ -57,7 +57,7 @@ const PanoramaViewer = ({ panoramaUrl }) => {
                 height: '300px', // Chiều cao cố định để không bị méo
                 borderRadius: '8px',
                 overflow: 'hidden',
-                backgroundColor: '#3D3D3D', // [THEME] Màu nền card khi chưa có ảnh
+                backgroundColor: '#e1e1e1', // [THEME] Màu nền card khi chưa có ảnh
                 border: '1px solid #555'   // [THEME] Viền nhẹ
             }} 
         />

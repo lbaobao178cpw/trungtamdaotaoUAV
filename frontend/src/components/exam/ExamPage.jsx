@@ -160,8 +160,8 @@ const ExamPage = () => {
                         style={{ 
                           width: '48px',
                           height: '48px',
-                          background: '#FFCA05',
-                          color: '#1a1a1a',
+                          background: '#0050b8',
+                          color: '#ffffff',
                           position: 'relative',
                           zIndex: 1
                         }}
@@ -201,8 +201,8 @@ const ExamPage = () => {
                           : "bg-transparent text-white border"
                       }`}
                       style={{
-                        background: selectedCertificate === "hang-a" ? '#FFCA05' : 'transparent',
-                        borderColor: selectedCertificate === "hang-a" ? '#FFCA05' : '#555555'
+                        background: selectedCertificate === "hang-a" ? '#0050b8' : 'transparent',
+                        borderColor: selectedCertificate === "hang-a" ? '#0050b8' : '#555555'
                       }}
                     >
                       Hạng A
@@ -215,8 +215,8 @@ const ExamPage = () => {
                           : "bg-transparent text-white border"
                       }`}
                       style={{
-                        background: selectedCertificate === "hang-b" ? '#FFCA05' : 'transparent',
-                        borderColor: selectedCertificate === "hang-b" ? '#FFCA05' : '#555555'
+                        background: selectedCertificate === "hang-b" ? '#0050b8' : 'transparent',
+                        borderColor: selectedCertificate === "hang-b" ? '#0050b8' : '#555555'
                       }}
                     >
                       Hạng B
@@ -227,7 +227,7 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng A - nếu đã đăng ký A HOẶC đang chọn A */}
                 {((registeredTier === 'A') || (!registeredTier && selectedCertificate === "hang-a")) && (
                   <div className="p-6 border rounded-lg" style={{ 
-                    borderColor: registeredTier === 'A' ? '#FFCA05' : '#555555',
+                    borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
                     background: registeredTier === 'A' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
@@ -236,7 +236,7 @@ const ExamPage = () => {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold" style={{
                               background: 'rgba(255, 202, 5, 0.2)',
-                              color: '#FFCA05',
+                              color: '#0050b8',
                               border: '1px solid rgba(255, 202, 5, 0.4)'
                             }}>
                               <CheckCircle2 className="w-3 h-3" /> ĐÃ ĐĂNG KÝ
@@ -253,8 +253,8 @@ const ExamPage = () => {
                           fontSize: '1rem',
                           fontWeight: '700',
                           borderRadius: '50px',
-                          background: '#FFCA05',
-                          color: '#1a1a1a',
+                          background: '#0050b8',
+                          color: '#ffffff',
                           whiteSpace: 'nowrap',
                           width: 'fit-content',
                           marginTop: '8px'
@@ -336,7 +336,7 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng B - nếu đã đăng ký B HOẶC đang chọn B */}
                 {((registeredTier === 'B') || (!registeredTier && selectedCertificate === "hang-b")) && (
                   <div className="p-6 border rounded-lg" style={{ 
-                    borderColor: registeredTier === 'B' ? '#FFCA05' : '#555555',
+                    borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
                     background: registeredTier === 'B' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
@@ -345,7 +345,7 @@ const ExamPage = () => {
                           <div className="flex items-center gap-2 mb-2">
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold" style={{
                               background: 'rgba(255, 202, 5, 0.2)',
-                              color: '#FFCA05',
+                              color: '#0050b8',
                               border: '1px solid rgba(255, 202, 5, 0.4)'
                             }}>
                               <CheckCircle2 className="w-3 h-3" /> ĐÃ ĐĂNG KÝ
@@ -362,8 +362,8 @@ const ExamPage = () => {
                           fontSize: '1rem',
                           fontWeight: '700',
                           borderRadius: '50px',
-                          background: '#FFCA05',
-                          color: '#1a1a1a',
+                          background: '#0050b8',
+                          color: '#ffffff',
                           whiteSpace: 'nowrap',
                           width: 'fit-content',
                           marginTop: '8px'
@@ -595,7 +595,7 @@ const ExamPage = () => {
       </section>
 
       {/* Lịch thi sắp tới */}
-      <section id="exam-list-section" className="py-16 border-t" style={{ background: '#2c2c2c' }}>
+      <section id="exam-list-section" className="py-16 border-t" style={{ background: '#ffffff' }}>
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-3 text-primary">Lịch thi sắp tới</h2>
