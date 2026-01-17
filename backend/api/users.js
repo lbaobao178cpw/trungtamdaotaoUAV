@@ -13,6 +13,7 @@ router.get("/", async (req, res) => {
         p.identity_number, p.address, p.birth_date, p.gender, p.target_tier
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
+      WHERE u.role = 'student'
       ORDER BY u.created_at DESC
     `);
     res.json(rows);
