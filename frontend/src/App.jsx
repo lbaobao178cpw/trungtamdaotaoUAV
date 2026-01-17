@@ -20,6 +20,8 @@ import SolutionDetail from "./components/solutions/SolutionDetail";
 import PrivacyPolicyPage from './components/privacy-policy/PrivacyPolicyPage';
 import TermsOfServicePage from './components/TermsOfServicePage/TermsOfServicePage';
 import UserProfile from "./components/user/UserProfile";
+import PersonalInfo from './components/user/PersonalInfo';
+import MyComments from "./components/user/Comments/MyComments.jsx";
 // Import Component 404 (Nếu có) hoặc dùng tạm div
 const NotFound = () => <div className="p-20 text-center">404 - Không tìm thấy trang</div>;
 
@@ -62,7 +64,12 @@ function App() {
 
               {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
             {/* Route Thông tin user */}
-              <Route path="/profile/:id" element={<UserProfile />} />
+              <Route path="/profile/:id" element={<UserProfile />}>
+                <Route index element={<PersonalInfo />} />
+                {/* <Route path="learning-history" element={<LearningHistory />} /> */}
+                <Route path="comments" element={< MyComments />} />
+              </Route>
+
 
               {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
                - Lưu ý: Vì SQL bạn lưu link là "/khai-khoang", "/lam-nghiep"... 

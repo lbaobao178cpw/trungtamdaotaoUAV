@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation, Outlet } from 'react-router-dom';
+
 import './UserProfile.css';
 
 const API_BASE = "http://localhost:5000/api/users";
@@ -8,6 +9,13 @@ function UserProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, [location.pathname]);
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -142,7 +150,7 @@ function UserProfile() {
 
         {/* MAIN CONTENT */}
         <main className="profile-main">
-          <div className="personal-info-container">
+          {/* <div className="personal-info-container">
             <h2 className="section-title">Thông Tin Cá Nhân</h2>
             
             <div className="info-card">
@@ -204,7 +212,11 @@ function UserProfile() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
+          <main className="profile-main">
+            <Outlet context={{ profile, formatDate }} />
+          </main>
+
         </main>
       </div>
     </div>
