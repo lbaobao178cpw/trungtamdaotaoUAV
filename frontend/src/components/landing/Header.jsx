@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
+import './Heder.css';
+
+
 
 const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
+
+    const [openMenu, setOpenMenu] = useState(false);
+
+
 
     useEffect(() => {
         const checkLoginStatus = () => {
@@ -68,60 +75,48 @@ const Header = () => {
                 {/* Khu vực nút bấm bên phải */}
                 <div className="nav-buttons">
                     {user ? (
-                        // === NẾU ĐÃ ĐĂNG NHẬP ===
-                        <div className="user-menu" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            {/* [THEME] Sửa màu chữ User thành trắng/vàng */}
-                            <Link 
-                                to={`/profile/${user.id}`} 
-                                className="user-info" 
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: '8px', 
-                                    color: '#000000', 
-                                    fontWeight: '500',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.3s'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.color = '#0050b8'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = '#000000'}
+                        <div className="user-menu">
+                            {/* ICON USER */}
+                            <div
+                                className="user-icon"
+                                onClick={() => setOpenMenu(!openMenu)}
                             >
-                                <User size={20} color="#0050b8" /> {/* Icon màu vàng */}
-                                <span>Xin chào, {user.full_name || user.phone || 'Học viên'}</span>
-                            </Link>
+                                <User size={22} color="#0050b8" />
+                            </div>
 
-                            <button
-                                onClick={handleLogout}
-                                className="btn"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    border: '1px solid #dc3545',
-                                    color: '#fff', // Chữ trắng
-                                    background: '#dc3545', // Nền đỏ
-                                    padding: '8px 16px',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                <LogOut size={16} />
-                                Đăng xuất
-                            </button>
+                            {/* DROPDOWN */}
+                            {openMenu && (
+                                <div className="dropdown-menu">
+                                    <Link
+                                        to={`/profile/${user.id}`}
+                                        className="dropdown-item"
+                                        onClick={() => setOpenMenu(false)}
+                                    >
+                                        Tài khoản
+                                    </Link>
+
+                                    <button
+                                        className="dropdown-item logout"
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            handleLogout();
+                                        }}
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        // === NẾU CHƯA ĐĂNG NHẬP ===
                         <>
                             <Link to="/dang-nhap" className="btn-register">Đăng nhập</Link>
                             <Link to="/dang-ky" className="btn-register">Đăng ký</Link>
-
-
                         </>
                     )}
                 </div>
+
+
+
             </div>
         </header>
     );

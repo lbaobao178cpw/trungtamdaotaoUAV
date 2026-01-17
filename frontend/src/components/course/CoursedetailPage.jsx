@@ -559,7 +559,7 @@ function CourseDetailPage() {
             {/* Sidebar Right */}
             <div className="intro-right-col">
               <div className="sidebar-card related-card">
-                <h4>Khóa học liên quan</h4>
+                <h4>Khóa Học Liên Quan</h4>
                 {relatedCourses.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {relatedCourses.map(rc => (
@@ -567,9 +567,9 @@ function CourseDetailPage() {
                         key={rc.id}
                         className="related-item"
                         onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}
-                        style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#0050b8', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#FFCA05'; e.currentTarget.style.backgroundColor = '#0050b8' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.backgroundColor = '#0050b8' }}
+                        style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
                       >
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <img
@@ -579,8 +579,8 @@ function CourseDetailPage() {
                             onError={(e) => e.target.src = 'https://placehold.co/60x40/333/fff?text=Course'}
                           />
                           <div style={{ flex: 1 }}>
-                            <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px' }}>{rc.title}</div>
-                            <div style={{ color: '#FFCA05', fontSize: '0.8rem', fontWeight: 'bold' }}>Cấp độ: {rc.level}</div>
+                            <div style={{ color: '#3d3d3d', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px' }}>{rc.title}</div>
+                            <div style={{ color: '#aaa', fontSize: '0.8rem', fontWeight: 'bold' }}>Cấp độ: {rc.level}</div>
                           </div>
                         </div>
                       </div>

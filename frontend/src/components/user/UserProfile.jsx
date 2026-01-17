@@ -48,17 +48,12 @@ function UserProfile() {
   };
 
   const menuItems = [
-    { id: 'badges', label: 'Thành Tích', path: `/profile/${id}/badges` },
-    { id: 'learning', label: 'Lịch Sử Học Tập', path: `/profile/${id}/learning-history` },
-    { id: 'notes', label: 'Ghi Chú', path: `/profile/${id}/notes` },
-    { id: 'teaching', label: 'Thông Tin Giảng Dạy', path: `/profile/${id}/teaching` },
-    { id: 'favorites', label: 'Mục Yêu Thích', path: `/profile/${id}/favorites` },
+
+    { id: 'learning', label: 'Lịch Sử Học tập', path: `/profile/${id}/learning-history` },
+
     { id: 'comments', label: 'Bình Luận', path: `/profile/${id}/comments` },
-    { id: 'discussion', label: 'Thảo Luận', path: `/profile/${id}/discussion` },
-    { id: 'messages', label: 'Trung Tâm Tin Nhắn', path: `/profile/${id}/messages` },
     { id: 'personal', label: 'Thông Tin Cá Nhân', path: `/profile/${id}` },
-    { id: 'privacy', label: 'Quyền Riêng Tư', path: `/profile/${id}/privacy` },
-    { id: 'security', label: 'Bảo Mật Tài Khoản', path: `/profile/${id}/security` },
+
   ];
 
   const isMenuActive = (path) => location.pathname === path;
