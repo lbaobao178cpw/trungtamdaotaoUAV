@@ -1,20 +1,18 @@
-/* === AboutPage.css - DARK NEON THEME === */
+/* === AboutPage.css - CLEAN BLUE THEME === */
 
-/* 1. KHAI BÁO BIẾN CỤ THỂ CHO TRANG ABOUT */
+/* 1. KHAI BÁO BIẾN */
 :root {
-  --about-primary: #0050b8;       /* Vàng Neon */
-  --about-primary-hover: #e6b804; /* Vàng đậm */
-  --about-bg-body: #222222;       /* Nền đen chính */
-  --about-bg-card: #f7f3f3;       /* Nền thẻ */
-  --about-bg-darker: #ffffff;     /* Nền xám đậm (thay cho gray sáng cũ) */
-  --about-text-main: #000000;     /* Chữ trắng */
-  --about-text-sub: #0a0a0a;      /* Chữ xám */
-  --about-text-black: #ffffff;    /* Chữ đen (dùng trên nền vàng) */
-  --about-border: #555555;        /* Viền xám */
+  --about-primary: #0050b8;       /* Xanh dương chủ đạo */
+  --about-primary-hover: #00387a; /* Xanh đậm hơn khi hover */
+  --about-bg-body: #ffffff;       /* Nền trang trắng/sáng cho sạch */
+  --about-bg-card: #f7f9fc;       /* Nền thẻ hơi xám xanh nhẹ */
+  --about-text-main: #111111;     /* Chữ đen */
+  --about-text-sub: #555555;      /* Chữ phụ */
+  --about-border: #e5e5e5;
   --about-font: 'Roboto', sans-serif;
 }
 
-/* === CẤU TRÚC CHUNG TRANG ABOUT === */
+/* === CẤU TRÚC CHUNG === */
 .about-page {
   width: 100%;
   font-family: var(--about-font);
@@ -31,45 +29,55 @@
 
 /* === SECTIONS === */
 .section { padding: 60px 0; }
-
-/* Override lại các class màu nền cũ sang màu tối */
-.section-white { background: var(--about-bg-body); }
-.section-gray { background: var(--about-bg-darker); }
+.section-white { background: #ffffff; }
+.section-gray { background: #f8fafb; }
 
 .section-title {
   text-align: center;
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 40px;
-  color: var(--about-primary); /* Tiêu đề màu Vàng */
+  color: var(--about-primary); /* Tiêu đề Xanh */
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* === 1. HERO SECTION === */
+/* === 1. HERO SECTION (SỬA LẠI THEO YÊU CẦU) === */
 .about-hero {
-  /* Nền tối kết hợp ảnh */
-  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("/images/hero_background.webp") no-repeat center center/cover;
-  padding: 100px 20px;
+  /* Dùng màu xanh phẳng thay vì ảnh nền tối */
+  background-color: var(--about-primary); 
+  
+  /* Nếu muốn gradient nhẹ giống trang chủ thì dùng dòng dưới (tùy chọn) */
+  /* background: linear-gradient(180deg, #0050b8 0%, #00387a 100%); */
+
+  padding: 60px 20px; /* Độ cao vừa phải giống hình mẫu */
   text-align: center;
   color: white;
-  border-bottom: 1px solid var(--about-border);
+  position: relative;
+  border-bottom: none;
 }
 
 .about-hero-title {
   font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 15px;
-  color: var(--about-primary);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  margin-bottom: 10px;
+  
+  /* QUAN TRỌNG: Chuyển màu chữ thành Trắng */
+  color: #ffffff !important; 
+  
+  text-shadow: none; /* Bỏ bóng đen để giống thiết kế phẳng */
+  margin-top: 0;
 }
 
 .about-hero-subtitle {
   font-size: 1.1rem;
-  opacity: 0.9;
+  opacity: 1;
   max-width: 800px;
   margin: 0 auto;
-  color: #e0e0e0;
+  
+  /* Chuyển màu chữ mô tả thành Trắng */
+  color: #ffffff !important;
+  font-weight: 400;
 }
 
 /* === 2. OBJECTIVES GRID (Mục tiêu) === */
@@ -97,7 +105,7 @@
 .objective-icon {
   width: 70px;
   height: 70px;
-  background: rgba(255, 202, 5, 0.1); /* Nền vàng trong suốt */
+  background: rgba(255, 255, 255, 0.1); /* Nền vàng trong suốt */
   border: 1px solid var(--about-primary);
   border-radius: 50%;
   display: flex;
@@ -296,7 +304,7 @@
 .organization-icon {
   width: 70px;
   height: 70px;
-  background: rgba(255, 202, 5, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -330,25 +338,28 @@
 .requirements-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  gap: 20px; /* Giảm khoảng cách giữa 2 cột cho gọn (cũ là 30px) */
 }
 
 .requirement-card {
   background: var(--about-bg-card);
   border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  
+  /* --- THAY ĐỔI CHÍNH TẠI ĐÂY --- */
+  padding: 20px; /* Giảm từ 30px xuống 20px để khung ôm sát nội dung hơn */
+  
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Giảm độ đậm bóng cho nhẹ nhàng */
   border: 1px solid var(--about-border);
 }
 
 .requirement-card h3 {
-  font-size: 1.3rem;
+  font-size: 1.2rem; /* Giảm nhẹ size chữ tiêu đề */
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Kéo nội dung lên gần tiêu đề hơn */
   color: var(--about-primary);
   text-align: center;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #555;
+  padding-bottom: 10px; /* Giảm khoảng cách gạch chân */
+  border-bottom: 1px solid #e0e0e0; /* Viền nhạt hơn cho thanh thoát */
 }
 
 .requirement-list {
@@ -358,12 +369,14 @@
 }
 
 .requirement-list li {
-  padding: 12px 0 12px 30px;
+  /* Giảm padding trên dưới để danh sách ngắn lại */
+  padding: 8px 0 8px 25px; 
   position: relative;
   
   color: var(--about-text-sub);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.9rem; /* Giảm size chữ 1 chút cho vừa vặn */
+  line-height: 1.4;
+  border-bottom: 1px dashed #eee; /* Thêm dòng kẻ mờ giữa các ý cho dễ nhìn (tuỳ chọn) */
 }
 
 .requirement-list li:last-child {
@@ -371,10 +384,10 @@
 }
 
 .requirement-list li:before {
-  content: "•"; /* Dùng chấm tròn hoặc dấu tick */
+  content: "•";
   position: absolute;
   left: 0;
-  top: 12px;
+  top: 6px; /* Căn chỉnh lại vị trí dấu chấm */
   color: var(--about-primary);
   font-weight: bold;
   font-size: 1.5rem;

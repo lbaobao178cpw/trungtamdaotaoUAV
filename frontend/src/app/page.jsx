@@ -464,7 +464,7 @@ function UAVLandingPage() {
         <div className="container">
           <h2 className="section-title solutions-section-title">Giải pháp cho các ngành nghề khác nhau</h2>
           {solutions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#b0b0b0" }}><p>Đang tải dữ liệu giải pháp...</p></div>
+            <div style={{ textAlign: "center", padding: "40px", color: "#ffffff" }}><p>Đang tải dữ liệu giải pháp...</p></div>
           ) : (
             <div className="solutions-grid">
               {solutions.map((item) => (

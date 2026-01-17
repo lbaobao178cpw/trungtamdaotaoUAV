@@ -133,21 +133,6 @@
   /* Bóng chữ đậm hơn để nổi trên ảnh */
 }
 
-.hero-pill {
-  background: rgba(0, 0, 0, 0.5);
-  /* Nền bán trong suốt */
-  color: var(--primary-yellow);
-  padding: 6px 20px;
-  border-radius: 30px;
-  font-weight: 700;
-  font-size: 1rem;
-  text-transform: uppercase;
-  display: inline-block;
-  border: 2px solid var(--primary-yellow);
-  box-shadow: 0 0 15px rgba(255, 202, 5, 0.3);
-
-}
-
 .hero-illustration img {
   max-height: 250px;
   object-fit: contain;

@@ -4,7 +4,7 @@
    THEME CONFIGURATION: DARK NEON
    ========================================================= */
 :root {
-  --primary-yellow: #0050b8 !important;
+  --primary-yellow: #e6b804 !important;
   --secondary-blue: #0050b8 !important;
 
 
@@ -229,23 +229,18 @@ body .btn-primary:hover,
 }
 
 /* === HERO SECTION === */
-/* .hero {
-  background: url("/images/hero_background.webp") no-repeat center center/cover;
-  color: white;
-  padding: 100px 20px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-} */
 .hero {
-  background-color: #006eff;
+  /* --- THAY ĐỔI 1: MÀU XANH ĐẬM HƠN --- */
+  background-color: #1c68cc; /* Đã đổi từ #006eff sang màu đậm hơn */
+  
   color: white;
-  padding: 20px 20px;
+  padding: 20px 20px 60px 20px; /* Giảm padding bottom một chút cho cân đối với gradient ngắn */
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
+/* Lớp phủ tối màu (Dark Overlay) giữ nguyên để tạo chiều sâu */
 .hero::before {
   content: "";
   position: absolute;
@@ -253,12 +248,30 @@ body .btn-primary:hover,
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 40, 120, 0.25);
-
+  /* Bạn có thể tăng độ đậm của overlay ở đây nếu muốn tối hơn nữa, ví dụ: 0.4 */
+  background: rgba(0, 30, 100, 0.25); 
   z-index: 1;
 }
 
-.hero>.container {
+/* --- THAY ĐỔI 2: HIỆU ỨNG GRADIENT NGẮN LẠI --- */
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* --- ĐIỀU CHỈNH ĐỘ CAO TẠI ĐÂY --- */
+  height: 80px; /* Đã giảm từ 150px xuống 80px để ngắn lại */
+  
+  /* Gradient từ trong suốt xuống trắng */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
+  
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Nội dung phải nổi lên trên cùng */
+.hero > .container {
   position: relative;
   z-index: 2;
 }
@@ -288,6 +301,14 @@ body .btn-primary:hover,
   color: #e0e0e0;
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
+
+/* === CÁC PHẦN KHÁC GIỮ NGUYÊN === */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+/* ... (phần còn lại của CSS của bạn) */
 
 /* === COMMON SECTION === */
 .container {
@@ -490,7 +511,7 @@ h3.section-title {
   transform: scale(4.0) translateX(3px);
   transform-origin: center center;
   margin-top: 35px;
-  filter: brightness(0.35) opacity(0.5);
+filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%) contrast(104%);
   z-index: 1;
   position: relative;
 }

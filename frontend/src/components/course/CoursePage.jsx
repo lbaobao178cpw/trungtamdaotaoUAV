@@ -150,7 +150,6 @@ function CoursesPage() {
                     <div className="hero-content">
                         <div className="hero-text">
                             <h1 className="hero-title">TRAINING CENTER</h1>
-                            <span className="hero-pill">UAV PROFESSIONAL</span>
                         </div>
                         
                         {/* ĐÃ LOẠI BỎ HÌNH MINH HỌA NGƯỜI NGỒI XE MÁY TẠI ĐÂY 
