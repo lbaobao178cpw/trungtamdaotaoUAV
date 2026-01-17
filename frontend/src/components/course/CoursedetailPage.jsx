@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './CourseDetailPage.css'; // Đảm bảo import CSS mới
+import noVideoImage from "../assets/noVideoImage.png";
+
+
 import {
   Video, FileText, ChevronDown, ChevronUp,
   PenTool, PlayCircle, MessageSquare, CheckCircle, RefreshCw,
@@ -444,7 +447,7 @@ function CourseDetailPage() {
 
             {!activeLesson && (
               <div style={{ color: '#fff', padding: 20, textAlign: 'center' }}>
-                <p>Vui lòng chọn bài học từ danh sách bên trái.</p>
+                <img src={noVideoImage} alt="No Video" style={{ maxWidth: '100%' }} /> 
               </div>
             )}
           </div>
@@ -618,7 +621,7 @@ function CourseDetailPage() {
                       key={rc.id}
                       className="related-item"
                       onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}
-                      style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #333', transition: 'all 0.3s' }}
+                      style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #fff', transition: 'all 0.3s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
                     >
