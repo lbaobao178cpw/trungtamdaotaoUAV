@@ -87,7 +87,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// --- ĐĂNG NHẬP ---
+// --- ĐĂNG NHẬP (User & Admin) ---
 router.post("/login", async (req, res) => {
   const { identifier, password } = req.body; // identifier có thể là email hoặc phone
 
@@ -110,28 +110,96 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Mật khẩu không đúng" });
     }
 
-    // 3. Tạo Token (JWT)
+    // 3. Kiểm tra tài khoản có hoạt động không
+    if (!user.is_active) {
+      return res.status(403).json({ error: "Tài khoản của bạn đã bị khóa" });
+    }
+
+    // 4. Tạo Token (JWT)
     const token = jwt.sign(
         { id: user.id, role: user.role, fullName: user.full_name }, 
         "YOUR_SECRET_KEY", // Thay bằng chuỗi bí mật của bạn (nên để trong .env)
         { expiresIn: "1d" }
     );
 
+    // 5. Lấy dữ liệu khác nhau dựa vào role
+    let responseData = {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      avatar: user.avatar
+    };
+
+    // Nếu là admin, thêm thông tin đặc biệt
+    if (user.role === 'admin') {
+      responseData.permissions = ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings'];
+    }
+
     res.json({
       message: "Đăng nhập thành công",
       token,
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
-      }
+      user: responseData
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi đăng nhập" });
+  }
+});
+
+// --- ĐĂNG NHẬP ADMIN (Riêng) ---
+router.post("/login-admin", async (req, res) => {
+  const { identifier, password } = req.body;
+
+  try {
+    const [rows] = await db.query(
+        "SELECT * FROM users WHERE (email = ? OR phone = ?) AND role = 'admin'", 
+        [identifier, identifier]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: "Thông tin đăng nhập admin không hợp lệ" });
+    }
+
+    const admin = rows[0];
+
+    // So sánh mật khẩu
+    const validPass = await bcrypt.compare(password, admin.password_hash);
+    if (!validPass) {
+      return res.status(401).json({ error: "Mật khẩu không đúng" });
+    }
+
+    // Kiểm tra tài khoản
+    if (!admin.is_active) {
+      return res.status(403).json({ error: "Tài khoản admin đã bị khóa" });
+    }
+
+    // Tạo Token
+    const token = jwt.sign(
+        { id: admin.id, role: admin.role, fullName: admin.full_name }, 
+        "YOUR_SECRET_KEY",
+        { expiresIn: "1d" }
+    );
+
+    res.json({
+      message: "Đăng nhập Admin thành công",
+      token,
+      user: {
+        id: admin.id,
+        full_name: admin.full_name,
+        email: admin.email,
+        phone: admin.phone,
+        role: admin.role,
+        avatar: admin.avatar,
+        permissions: ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings', 'view_analytics']
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi đăng nhập admin" });
   }
 });
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require('../config/db');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken } = require('../middleware/verifyToken');
 
 // --- CREATE: Thêm comment mới (Chỉ user đã đăng nhập) ---
 router.post("/", verifyToken, async (req, res) => {

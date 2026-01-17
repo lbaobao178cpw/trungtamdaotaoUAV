@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { verifyToken, verifyAdmin } = require('../middleware/verifyToken');
 
 // --- GET: Lấy danh sách người dùng (Kèm thông tin chi tiết) ---
 router.get("/", async (req, res) => {
@@ -24,15 +25,23 @@ router.get("/", async (req, res) => {
 // ============================================================
 // --- GET: Lấy thông tin Profile chi tiết (User cá nhân) ---
 // ============================================================
-router.get("/:id/profile", async (req, res) => {
+router.get("/:id/profile", verifyToken, async (req, res) => {
   try {
+    const requestedId = req.params.id;
+    const tokenUserId = req.user.id;
+
+    // Kiểm tra: chỉ admin hoặc chính user đó mới được xem profile
+    if (req.user.role !== 'admin' && tokenUserId !== parseInt(requestedId)) {
+      return res.status(403).json({ error: "Bạn không có quyền xem profile này" });
+    }
+
     // JOIN bảng users với user_profiles để lấy target_tier
     const [rows] = await db.query(
       `SELECT u.full_name, u.email, u.phone, p.target_tier, p.address, p.uav_type
        FROM users u
        LEFT JOIN user_profiles p ON u.id = p.user_id
        WHERE u.id = ?`,
-      [req.params.id]
+      [requestedId]
     );
 
     if (rows.length === 0) {
