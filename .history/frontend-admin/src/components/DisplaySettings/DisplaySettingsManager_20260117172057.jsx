@@ -334,14 +334,14 @@ export default function DisplaySettingsManager() {
             </button>
             <div className="list-group" style={{ marginTop: '0', maxHeight: 'calc(100vh - 380px)', overflowY: 'auto' }}>
               {notis.map(item => (
-                <div key={item.id} className="list-item" onClick={() => handleEditNoti(item)} style={{ cursor: 'pointer', borderLeft: item.id === notiForm.id ? '4px solid #0066cc' : 'none' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>{item.title}</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>{item.date}</div>
-                  </div>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteNoti(item.id); }} style={{ background: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer' }}>X</button>
+              <div key={item.id} className="list-item" onClick={() => handleEditNoti(item)} style={{ cursor: 'pointer', borderLeft: item.id === notiForm.id ? '4px solid #0066cc' : 'none' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>{item.title}</div>
+                  <div style={{ fontSize: '11px', color: '#888' }}>{item.date}</div>
                 </div>
-              ))}
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteNoti(item.id); }} style={{ background: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer' }}>X</button>
+              </div>
+            ))}
             </div>
           </>
         )}
