@@ -6,6 +6,7 @@ import {
   PenTool, PlayCircle, MessageSquare, CheckCircle, RefreshCw,
   Circle, CheckCircle2
 } from 'lucide-react';
+import CourseRatings from './CourseRatings';
 
 const API_BASE = "http://localhost:5000/api/courses";
 const COMMENTS_API = "http://localhost:5000/api/comments";
@@ -40,6 +41,7 @@ function CourseDetailPage() {
   const [commentContent, setCommentContent] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [currentUser, setCurrentUser] = useState(null);
   
   // === GHI NHẬN LƯỢT XEM MỖI 10S NẾU Ở LẠI TRANG ===
   useEffect(() => {
@@ -70,6 +72,26 @@ function CourseDetailPage() {
       return () => clearInterval(interval); // cleanup khi rời trang
     }, [id, token]);
 
+
+    // === UTILITY: Decode JWT để lấy user info ===
+    const decodeToken = (token) => {
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded;
+      } catch (e) {
+        console.error('Lỗi decode token:', e);
+        return null;
+      }
+    };
+
+    // === SET CURRENT USER KHI TOKEN THAY ĐỔI ===
+    useEffect(() => {
+      if (token) {
+        const user = decodeToken(token);
+        setCurrentUser(user);
+      }
+    }, [token]);
 
     // === FETCH COMMENTS ===
     const fetchComments = async () => {
@@ -456,101 +478,12 @@ function CourseDetailPage() {
                   </>
                 ) : (
                   <div className="comments-section">
-                    {/* Form thêm bình luận */}
-                    {token ? (
-                      <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #333' }}>
-                        <h1 style={{ color: '#000', marginBottom: '10px' }}>Nhận xét của bạn</h1>
-                        <textarea
-                          value={commentContent}
-                          onChange={(e) => setCommentContent(e.target.value)}
-                          placeholder="Chia sẻ ý kiến của bạn..."
-                          style={{
-                            width: '100%',
-                            minHeight: '150px',
-                            padding: '10px',
-                            backgroundColor: '#ffffff',
-                            color: '#000',
-                            border: '1px solid #444',
-                            borderRadius: '6px',
-                            fontFamily: 'inherit',
-                            marginBottom: '10px',
-                            resize: 'vertical'
-                          }}
-                        />
-                        <button
-                          onClick={handlePostComment}
-                          style={{
-                            backgroundColor: '#0050b8',
-                            color: '#ffffff',
-                            padding: '10px 20px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '0.95rem'
-                          }}
-                        >
-                          Gửi bình luận
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', color: '#aaa', marginBottom: '20px' }}>
-                        <p>Vui lòng <span onClick={() => navigate('/dang-nhap')} style={{ color: '#FFCA05', cursor: 'pointer', fontWeight: 'bold' }}>đăng nhập</span> để bình luận</p>
-                      </div>
-                    )}
-
-                    {/* Danh sách bình luận */}
-                    {loadingComments ? (
-                      <div style={{ textAlign: 'center', color: '#000', padding: '20px' }}>Đang tải bình luận...</div>
-                    ) : comments.length > 0 ? (
-                      <div className="comments-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {comments.map(comment => (
-                          <div
-                            key={comment.id}
-                            className="comment-item"
-                            style={{
-                              padding: '15px',
-                              backgroundColor: '#f9fafb',
-                              borderRadius: '8px',
-                              border: '1px solid #333',
-                          
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                              <div
-                                style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#FFCA05',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  color: '#000',
-                                  fontWeight: 'bold'
-                                }}
-                              >
-                                {comment.full_name?.charAt(0).toUpperCase() || 'U'}
-                              </div>
-                              <div>
-                                <div style={{ color: '#000', fontWeight: 'bold' }}>{comment.full_name}</div>
-                                <div style={{ color: '#000', fontSize: '0.85rem' }}>
-                                  {new Date(comment.created_at).toLocaleDateString('vi-VN')}
-                                </div>
-                              </div>
-                            </div>
-                            <div style={{ color: '#221e1e', lineHeight: '1.5', marginLeft: '50px' }}>
-                              {comment.content}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ textAlign: 'center', color: '#aaa', padding: '30px' }}>
-                        <MessageSquare size={48} color="#666" style={{ marginBottom: '15px' }} />
-                        <p>Chưa có bình luận nào. Hãy là người bình luận đầu tiên!</p>
-                      </div>
-                    )}
+                    {/* RATINGS SECTION */}
+                    <CourseRatings 
+                      courseId={parseInt(id)}
+                      token={token}
+                      currentUserId={currentUser?.id || null}
+                    />
                   </div>
                 )}
               </div>

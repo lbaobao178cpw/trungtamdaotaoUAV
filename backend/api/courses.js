@@ -393,4 +393,151 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// ============================================================
+// --- RATING/REVIEW APIs ---
+// ============================================================
+
+// --- GET: Lấy danh sách đánh giá của 1 khóa học ---
+router.get("/:id/ratings", async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const { limit = 10, page = 1 } = req.query;
+    
+    const offset = (page - 1) * limit;
+
+    // Lấy danh sách ratings kèm thông tin user
+    const [ratings] = await db.query(
+      `SELECT 
+        r.id, r.course_id, r.user_id, r.rating, r.comment, r.created_at,
+        u.full_name, u.email
+       FROM course_ratings r
+       JOIN users u ON r.user_id = u.id
+       WHERE r.course_id = ?
+       ORDER BY r.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [courseId, parseInt(limit), offset]
+    );
+
+    // Lấy thống kê rating
+    const [stats] = await db.query(
+      `SELECT 
+        COUNT(*) as totalRatings,
+        AVG(rating) as averageRating,
+        COUNT(CASE WHEN rating = 5 THEN 1 END) as fiveStar,
+        COUNT(CASE WHEN rating = 4 THEN 1 END) as fourStar,
+        COUNT(CASE WHEN rating = 3 THEN 1 END) as threeStar,
+        COUNT(CASE WHEN rating = 2 THEN 1 END) as twoStar,
+        COUNT(CASE WHEN rating = 1 THEN 1 END) as oneStar
+       FROM course_ratings
+       WHERE course_id = ?`,
+      [courseId]
+    );
+
+    const totalCount = stats[0].totalRatings || 0;
+
+    res.json({
+      message: "Lấy đánh giá khóa học thành công",
+      courseId: courseId,
+      stats: {
+        totalRatings: totalCount,
+        averageRating: stats[0].averageRating ? parseFloat(stats[0].averageRating).toFixed(2) : 0,
+        distribution: {
+          5: stats[0].fiveStar || 0,
+          4: stats[0].fourStar || 0,
+          3: stats[0].threeStar || 0,
+          2: stats[0].twoStar || 0,
+          1: stats[0].oneStar || 0
+        }
+      },
+      ratings: ratings,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi lấy đánh giá:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy đánh giá khóa học" });
+  }
+});
+
+// --- POST: Thêm đánh giá mới (yêu cầu đăng nhập) ---
+router.post("/:id/ratings", verifyToken, async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const userId = req.user.id;
+    const { rating, comment } = req.body;
+
+    // Validate rating (1-5)
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating phải từ 1 đến 5 sao" });
+    }
+
+    // Kiểm tra user đã đánh giá khóa học này chưa
+    const [existingRating] = await db.query(
+      "SELECT id FROM course_ratings WHERE course_id = ? AND user_id = ?",
+      [courseId, userId]
+    );
+
+    if (existingRating.length > 0) {
+      // Update đánh giá cũ
+      await db.query(
+        "UPDATE course_ratings SET rating = ?, comment = ?, updated_at = NOW() WHERE course_id = ? AND user_id = ?",
+        [rating, comment || null, courseId, userId]
+      );
+
+      return res.json({ 
+        message: "Cập nhật đánh giá thành công",
+        isUpdate: true
+      });
+    }
+
+    // Thêm đánh giá mới
+    await db.query(
+      `INSERT INTO course_ratings (course_id, user_id, rating, comment, created_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [courseId, userId, rating, comment || null]
+    );
+
+    res.status(201).json({ 
+      message: "Thêm đánh giá thành công",
+      isUpdate: false
+    });
+  } catch (error) {
+    console.error("Lỗi thêm đánh giá:", error);
+    res.status(500).json({ error: "Lỗi server khi thêm đánh giá" });
+  }
+});
+
+// --- DELETE: Xóa đánh giá của chính mình ---
+router.delete("/:id/ratings/:ratingId", verifyToken, async (req, res) => {
+  try {
+    const { id: courseId, ratingId } = req.params;
+    const userId = req.user.id;
+
+    // Kiểm tra rating có tồn tại và thuộc về user hiện tại không
+    const [rating] = await db.query(
+      "SELECT id, user_id FROM course_ratings WHERE id = ? AND course_id = ?",
+      [ratingId, courseId]
+    );
+
+    if (rating.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy đánh giá" });
+    }
+
+    // Chỉ user tạo đánh giá hoặc admin mới được xóa
+    if (rating[0].user_id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Bạn không có quyền xóa đánh giá này" });
+    }
+
+    await db.query("DELETE FROM course_ratings WHERE id = ?", [ratingId]);
+
+    res.json({ message: "Đã xóa đánh giá" });
+  } catch (error) {
+    console.error("Lỗi xóa đánh giá:", error);
+    res.status(500).json({ error: "Lỗi server khi xóa đánh giá" });
+  }
+});
+
 module.exports = router;

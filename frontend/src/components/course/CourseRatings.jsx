@@ -1,0 +1,232 @@
+import React, { useState, useEffect } from 'react';
+import { Star, Trash2, Send } from 'lucide-react';
+import './CourseRatings.css';
+
+const API_BASE = "http://localhost:5000/api/courses";
+
+export default function CourseRatings({ courseId, token, currentUserId }) {
+  const [ratings, setRatings] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Fetch ratings khi load component
+  useEffect(() => {
+    fetchRatings();
+  }, [courseId, token]);
+
+  const fetchRatings = async () => {
+    try {
+      setLoading(true);
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const res = await fetch(`${API_BASE}/${courseId}/ratings`, { headers });
+      if (!res.ok) throw new Error("Lỗi tải đánh giá");
+      
+      const data = await res.json();
+      setStats(data.stats);
+      setRatings(data.ratings || []);
+
+      // Kiểm tra xem user đã đánh giá chưa
+      const myRating = data.ratings.find(r => r.user_id === currentUserId);
+      if (myRating) {
+        setUserRating(myRating.rating);
+        setUserComment(myRating.comment || '');
+      }
+    } catch (error) {
+      console.error("Lỗi fetch ratings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitRating = async (e) => {
+    e.preventDefault();
+    if (!token) {
+      alert('Vui lòng đăng nhập để đánh giá');
+      return;
+    }
+    if (!userRating) {
+      alert('Vui lòng chọn số sao');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await fetch(`${API_BASE}/${courseId}/ratings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: userRating,
+          comment: userComment.trim()
+        })
+      });
+
+      if (!res.ok) throw new Error("Lỗi gửi đánh giá");
+      
+      alert(userRating > 0 ? 'Đánh giá thành công!' : 'Cập nhật đánh giá thành công!');
+      setUserComment('');
+      await fetchRatings();
+    } catch (error) {
+      console.error(error);
+      alert('Lỗi: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteRating = async (ratingId) => {
+    if (!window.confirm('Xóa đánh giá này?')) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/${courseId}/ratings/${ratingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error("Lỗi xóa đánh giá");
+      
+      alert('Đã xóa đánh giá');
+      setUserRating(0);
+      setUserComment('');
+      await fetchRatings();
+    } catch (error) {
+      console.error(error);
+      alert('Lỗi: ' + error.message);
+    }
+  };
+
+  const StarRating = ({ value, onChange, onHover, onHoverLeave }) => (
+    <div className="star-rating-input">
+      {[1, 2, 3, 4, 5].map(i => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onChange(i)}
+          onMouseEnter={() => onHover(i)}
+          onMouseLeave={onHoverLeave}
+          className={`star-btn ${i <= (hoverRating || value) ? 'active' : ''}`}
+        >
+          <Star size={28} fill={i <= (hoverRating || value) ? 'currentColor' : 'none'} />
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderStars = (rating) => (
+    <div className="stars-display">
+      {[1, 2, 3, 4, 5].map(i => (
+        <Star
+          key={i}
+          size={16}
+          fill={i <= rating ? '#fbbf24' : '#e5e7eb'}
+          color={i <= rating ? '#fbbf24' : '#e5e7eb'}
+        />
+      ))}
+    </div>
+  );
+
+  if (loading) return <div className="ratings-loading">Đang tải đánh giá...</div>;
+
+  return (
+    <div className="course-ratings-section">
+      <h2 className="ratings-title">Đánh giá khóa học</h2>
+
+      {/* Rating Summary */}
+      {stats && (
+        <div className="ratings-summary">
+          <div className="ratings-average">
+            <div className="average-score">{stats.averageRating}</div>
+            <div className="average-stars">{renderStars(Math.round(stats.averageRating))}</div>
+            <div className="total-ratings">({stats.totalRatings} đánh giá)</div>
+          </div>
+
+          <div className="ratings-distribution">
+            {[5, 4, 3, 2, 1].map(star => (
+              <div key={star} className="distribution-bar">
+                <span className="star-label">{star} ⭐</span>
+                <div className="bar-container">
+                  <div
+                    className="bar-fill"
+                    style={{
+                      width: `${stats.totalRatings > 0 ? (stats.distribution[star] / stats.totalRatings * 100) : 0}%`
+                    }}
+                  ></div>
+                </div>
+                <span className="bar-count">{stats.distribution[star]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rating Form */}
+      {token && (
+        <form className="rating-form" onSubmit={handleSubmitRating}>
+          <h3 className="form-title">{userRating ? 'Cập nhật đánh giá' : 'Thêm đánh giá của bạn'}</h3>
+          
+          <StarRating
+            value={userRating}
+            onChange={setUserRating}
+            onHover={setHoverRating}
+            onHoverLeave={() => setHoverRating(0)}
+          />
+
+          <textarea
+            className="rating-textarea"
+            placeholder="Chia sẻ trải nghiệm của bạn về khóa học này..."
+            value={userComment}
+            onChange={(e) => setUserComment(e.target.value)}
+            rows="4"
+          />
+
+          <button type="submit" className="btn-submit-rating" disabled={submitting}>
+            <Send size={16} /> {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+          </button>
+        </form>
+      )}
+
+      {/* Ratings List */}
+      <div className="ratings-list">
+        <h3 className="list-title">Các đánh giá khác</h3>
+        {ratings.length === 0 ? (
+          <p className="no-ratings">Chưa có đánh giá nào</p>
+        ) : (
+          ratings.map(rating => (
+            <div key={rating.id} className="rating-card">
+              <div className="rating-header">
+                <div className="user-info">
+                  <h4 className="user-name">{rating.full_name}</h4>
+                  <div className="rating-meta">
+                    {renderStars(rating.rating)}
+                    <span className="rating-date">
+                      {new Date(rating.created_at).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                </div>
+                {currentUserId === rating.user_id && (
+                  <button
+                    className="btn-delete-rating"
+                    onClick={() => handleDeleteRating(rating.id)}
+                    title="Xóa đánh giá"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+              {rating.comment && <p className="rating-comment">{rating.comment}</p>}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
