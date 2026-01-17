@@ -7,7 +7,7 @@ const { verifyToken } = require('../middleware/verifyToken');
 router.post("/", verifyToken, async (req, res) => {
   const connection = await db.getConnection();
   try {
-    const { course_id, content } = req.body;
+    const { course_id, content, rating } = req.body;
     const user_id = req.user.id;
 
     // Kiểm tra dữ liệu
@@ -23,6 +23,9 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(400).json({ error: "Nội dung comment không được vượt quá 500 ký tự" });
     }
 
+    // Validate rating (1-5)
+    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : null;
+
     // Kiểm tra khóa học có tồn tại không
     const [courseExists] = await db.query("SELECT id FROM courses WHERE id = ?", [course_id]);
     if (courseExists.length === 0) {
@@ -31,9 +34,9 @@ router.post("/", verifyToken, async (req, res) => {
 
     // Insert comment
     const [result] = await db.query(
-      `INSERT INTO comments (user_id, course_id, content) 
-       VALUES (?, ?, ?)`,
-      [user_id, course_id, content.trim()]
+      `INSERT INTO comments (user_id, course_id, content, rating) 
+       VALUES (?, ?, ?, ?)`,
+      [user_id, course_id, content.trim(), validRating]
     );
 
     res.status(201).json({
@@ -43,6 +46,7 @@ router.post("/", verifyToken, async (req, res) => {
         user_id,
         course_id,
         content: content.trim(),
+        rating: validRating,
         created_at: new Date().toISOString()
       }
     });
@@ -71,7 +75,8 @@ router.get("/course/:course_id", async (req, res) => {
     let query = `SELECT 
         c.id, 
         c.user_id, 
-        c.content, 
+        c.content,
+        c.rating,
         c.created_at,
         u.full_name,
         u.avatar
@@ -120,7 +125,8 @@ router.get("/my-comments", verifyToken, async (req, res) => {
         c.id, 
         c.user_id, 
         c.course_id,
-        c.content, 
+        c.content,
+        c.rating,
         c.created_at,
         co.title as course_title
        FROM comments c
@@ -167,7 +173,8 @@ router.get("/:id", async (req, res) => {
         c.id, 
         c.user_id, 
         c.course_id,
-        c.content, 
+        c.content,
+        c.rating,
         c.created_at,
         u.full_name,
         u.avatar
@@ -197,7 +204,7 @@ router.put("/:id", verifyToken, async (req, res) => {
   const connection = await db.getConnection();
   try {
     const { id } = req.params;
-    const { content } = req.body;
+    const { content, rating } = req.body;
     const user_id = req.user.id;
 
     if (!content) {
@@ -211,6 +218,9 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (content.length > 500) {
       return res.status(400).json({ error: "Nội dung comment không được vượt quá 500 ký tự" });
     }
+
+    // Validate rating (1-5)
+    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : null;
 
     // Kiểm tra comment có tồn tại không
     const [comments] = await db.query(
@@ -229,15 +239,16 @@ router.put("/:id", verifyToken, async (req, res) => {
 
     // Update comment
     await db.query(
-      "UPDATE comments SET content = ? WHERE id = ?",
-      [content.trim(), id]
+      "UPDATE comments SET content = ?, rating = ? WHERE id = ?",
+      [content.trim(), validRating, id]
     );
 
     res.json({
       message: "Cập nhật comment thành công",
       comment: {
         id: parseInt(id),
-        content: content.trim()
+        content: content.trim(),
+        rating: validRating
       }
     });
 

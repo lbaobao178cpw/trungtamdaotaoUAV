@@ -5,6 +5,7 @@ import './CoursePage.css';
 
 // --- CẤU HÌNH API ---
 const API_URL = "http://localhost:5000/api/courses";
+const COMMENTS_API = "http://localhost:5000/api/comments";
 const MEDIA_BASE_URL = "http://localhost:5000";
 
 // --- DANH SÁCH ẢNH BANNER SLIDER ---
@@ -18,7 +19,7 @@ const BANNER_IMAGES = [
 // Icon Components
 const StarIcon = () => (
     <svg className="star-icon" viewBox="0 0 24 24">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#0050b8" />
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#FFC107" />
     </svg>
 );
 
@@ -34,6 +35,7 @@ function CoursesPage() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [courseRatings, setCourseRatings] = useState({});
 
     // --- STATE CHO SLIDER ---
     const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -57,6 +59,25 @@ function CoursesPage() {
                 if (!response.ok) throw new Error('Không thể kết nối Server');
                 const data = await response.json();
                 setCourses(data);
+
+                // Fetch ratings cho từng course
+                const ratings = {};
+                for (const course of data) {
+                    try {
+                        const res = await fetch(`${COMMENTS_API}/course/${course.id}`);
+                        if (res.ok) {
+                            const comments = await res.json();
+                            const ratedComments = (comments.comments || []).filter(c => c.rating);
+                            if (ratedComments.length > 0) {
+                                const avg = (ratedComments.reduce((sum, c) => sum + c.rating, 0) / ratedComments.length).toFixed(1);
+                                ratings[course.id] = { average: avg, count: ratedComments.length };
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`Lỗi fetch comments cho course ${course.id}:`, err);
+                    }
+                }
+                setCourseRatings(ratings);
             } catch (err) {
                 console.error('Lỗi fetch courses:', err);
                 setError(err.message);
@@ -90,6 +111,7 @@ function CoursesPage() {
     const renderCourseCard = (course) => {
         const isTypeA = course.level === 'A';
         const isTypeB = course.level === 'B';
+        const rating = courseRatings[course.id]?.average ? parseFloat(courseRatings[course.id].average) : 5;
         
         return (
             <div 
@@ -109,9 +131,20 @@ function CoursesPage() {
                     <h3 className="course-title">{course.title}</h3>
                     <div className="course-rating">
                         <div className="stars">
-                            {[...Array(5)].map((_, i) => <StarIcon key={i} />)}
+                            {[...Array(5)].map((_, i) => (
+                                <svg key={i} className="star-icon" viewBox="0 0 24 24">
+                                    <path 
+                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" 
+                                        fill={i < Math.round(rating) ? '#FFC107' : '#ddd'} 
+                                    />
+                                </svg>
+                            ))}
                         </div>
-                        <span style={{color: '#b0b0b0'}}>{course.rating || '5.0'} ({course.totalViews || 0} lượt xem)</span>
+                        <span style={{color: '#b0b0b0'}}>
+                            {courseRatings[course.id] 
+                                ? `${courseRatings[course.id].average} (${course.totalViews || 0} lượt xem)` 
+                                : `${course.rating || '5.0'} (${course.totalViews || 0} lượt xem)`}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -152,20 +185,6 @@ function CoursesPage() {
                             <h1 className="hero-title">TRAINING CENTER</h1>
                         </div>
                         
-                        {/* ĐÃ LOẠI BỎ HÌNH MINH HỌA NGƯỜI NGỒI XE MÁY TẠI ĐÂY 
-                           (Phần div className="hero-illustration" đã được xóa hoặc comment lại)
-                        */}
-                        {/* <div className="hero-illustration">
-                             <img 
-                                src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" 
-                                alt="Training Illustration" 
-                                style={{
-                                    opacity: 0.9, 
-                                    filter: 'invert(74%) sepia(61%) saturate(1682%) hue-rotate(359deg) brightness(103%) contrast(106%)'
-                                }} 
-                            />
-                        </div> 
-                        */}
                     </div>
                 </div>
                     

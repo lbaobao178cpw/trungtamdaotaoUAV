@@ -7,7 +7,7 @@ import noVideoImage from "../assets/noVideoImage.png";
 import {
   Video, FileText, ChevronDown, ChevronUp,
   PenTool, PlayCircle, MessageSquare, CheckCircle, RefreshCw,
-  Circle, CheckCircle2
+  Circle, CheckCircle2, Star
 } from 'lucide-react';
 
 const API_BASE = "http://localhost:5000/api/courses";
@@ -41,11 +41,14 @@ function CourseDetailPage() {
   // === COMMENT STATE ===
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
+  const [commentRating, setCommentRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
 
   const handleEditComment = (comment) => {
     setEditingCommentId(comment.id);
@@ -110,6 +113,26 @@ function CourseDetailPage() {
   }, [id, token]);
 
 
+    // === UTILITY: Decode JWT để lấy user info ===
+    const decodeToken = (token) => {
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded;
+      } catch (e) {
+        console.error('Lỗi decode token:', e);
+        return null;
+      }
+    };
+
+    // === SET CURRENT USER KHI TOKEN THAY ĐỔI ===
+    useEffect(() => {
+      if (token) {
+        const user = decodeToken(token);
+        setCurrentUser(user);
+      }
+    }, [token]);
+
   // === FETCH COMMENTS ===
   const fetchComments = async () => {
     try {
@@ -147,12 +170,14 @@ function CourseDetailPage() {
         },
         body: JSON.stringify({
           course_id: parseInt(id),
-          content: commentContent.trim()
+          content: commentContent.trim(),
+          rating: commentRating || null
         })
       });
 
       if (res.ok) {
         setCommentContent('');
+        setCommentRating(0);
         fetchComments();
         alert('Bình luận thành công!');
       } else {
@@ -498,14 +523,47 @@ function CourseDetailPage() {
                   {/* Form thêm bình luận */}
                   {token ? (
                     <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #333' }}>
-                      <h1 style={{ color: '#000', marginBottom: '10px' }}>Nhận xét của bạn</h1>
+                      <h4 style={{ color: '#000', marginBottom: '15px' }}>Nhận xét của bạn</h4>
+                      
+                      {/* Chọn số sao */}
+                      <div style={{ marginBottom: '15px' }}>
+                        <label style={{ color: '#000', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Đánh giá:</label>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setCommentRating(star)}
+                              onMouseEnter={() => setHoverRating(star)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '5px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <Star
+                                size={24}
+                                fill={star <= (hoverRating || commentRating) ? '#FFC107' : '#ddd'}
+                                color={star <= (hoverRating || commentRating) ? '#FFC107' : '#ddd'}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Nội dung bình luận */}
                       <textarea
                         value={commentContent}
                         onChange={(e) => setCommentContent(e.target.value)}
                         placeholder="Chia sẻ ý kiến của bạn..."
                         style={{
                           width: '100%',
-                          minHeight: '150px',
+                          minHeight: '120px',
                           padding: '10px',
                           backgroundColor: '#ffffff',
                           color: '#000',
@@ -552,12 +610,11 @@ function CourseDetailPage() {
                             backgroundColor: '#f9fafb',
                             borderRadius: '8px',
                             border: '1px solid #dcdcdc',
-                            position: 'relative' // ⭐ bắt buộc
+                            position: 'relative'
                           }}
                         >
-                          {/* ACTION: Sửa | Xóa (ẩn – hover mới hiện) */}
+                          {/* ACTION: Xóa */}
                           <div className="comment-actions">
-                           
                             <span
                               className="comment-delete"
                               onClick={() => handleDeleteComment(comment.id)}
@@ -583,11 +640,23 @@ function CourseDetailPage() {
                             >
                               {comment.full_name?.charAt(0).toUpperCase() || 'U'}
                             </div>
-                            <div>
+                            <div style={{ flex: 1 }}>
                               <div style={{ color: '#000', fontWeight: 'bold' }}>{comment.full_name}</div>
                               <div style={{ color: '#000', fontSize: '0.85rem' }}>
                                 {new Date(comment.created_at).toLocaleDateString('vi-VN')}
                               </div>
+                              {comment.rating && (
+                                <div style={{ display: 'flex', gap: '3px', marginTop: '5px' }}>
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <Star
+                                      key={star}
+                                      size={14}
+                                      fill={star <= comment.rating ? '#FFC107' : '#ddd'}
+                                      color={star <= comment.rating ? '#FFC107' : '#ddd'}
+                                    />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -597,7 +666,6 @@ function CourseDetailPage() {
                           </div>
                         </div>
                       ))}
-
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', color: '#aaa', padding: '30px' }}>
