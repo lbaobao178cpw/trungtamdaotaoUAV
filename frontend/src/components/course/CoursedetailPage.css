@@ -696,3 +696,32 @@
     border-radius: 0;
   }
 }
+.comment-actions {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.comment-item:hover .comment-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.comment-delete {
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comment-edit {
+  color: #0050b8;
+}
+
+.comment-delete {
+  color: #e53935;
+}

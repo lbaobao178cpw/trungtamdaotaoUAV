@@ -23,26 +23,13 @@ function LoginPage() {
         }));
     };
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-
-    //     // Demo: Giả lập đăng nhập thành công
-    //     console.log('Login data:', formData);
-
-    //     // Lưu thông tin đơn giản (demo)
-    //     localStorage.setItem('isLoggedIn', 'true');
-    //     localStorage.setItem('userPhone', formData.phone);
-
-    //     // Chuyển về trang chủ
-    //     navigate('/');
-    // };
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
 
         try {
-            const res = await fetch("http://localhost:5000/api/auth/login", {
+            const res = await fetch("http://localhost:5000/api/auth/login-admin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -57,13 +44,11 @@ function LoginPage() {
                 throw new Error(data.error || "Đăng nhập thất bại");
             }
 
-            if (data.user.role !== "admin") {
-                throw new Error("Bạn không có quyền truy cập trang quản trị");
-            }
-
+            // Save token and user info
             localStorage.setItem("admin_token", data.token);
             localStorage.setItem("admin_user", JSON.stringify(data.user));
 
+            // Redirect to admin panel
             navigate("/admin");
 
         } catch (err) {

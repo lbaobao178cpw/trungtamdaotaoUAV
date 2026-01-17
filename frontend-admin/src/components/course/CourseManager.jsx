@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    Plus, Edit2, Trash2, Video, Image as ImageIcon, X, Check, 
-    Film, BookOpen, Award, FileText, LayoutList, ChevronDown, 
-    ChevronUp, ArrowLeft, MoreVertical, HelpCircle, Save, AlertCircle,
-    Clock, Target, CheckCircle, List
+    Plus, Edit2, Trash2, Video, Image as X,
+    BookOpen, Award, FileText, ChevronDown, 
+    ChevronUp, ArrowLeft, MoreVertical, HelpCircle, Save, 
+    CheckCircle
 } from 'lucide-react';
 import MediaSelector from '../mediaSelector/MediaSelector';
 import MediaUploader from '../MediaUploader';

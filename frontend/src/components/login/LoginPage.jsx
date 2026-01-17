@@ -57,24 +57,28 @@ function LoginPage() {
 
             // --- ĐĂNG NHẬP THÀNH CÔNG ---
             
-            // 1. Lưu Token và User info vào LocalStorage
+            // 1. Kiểm tra quyền hạn - chỉ cho phép student/user login tại đây
+            if (data.user.role === 'admin') {
+                throw new Error('Tài khoản admin vui lòng truy cập trang quản trị');
+            }
+
+            if (data.user.role !== 'student') {
+                throw new Error('Tài khoản không hợp lệ');
+            }
+
+            // 2. Lưu Token và User info vào LocalStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user)); // Lưu object user để hiển thị Avatar/Tên
 
-            // 2. Kiểm tra "Ghi nhớ đăng nhập" (Demo logic)
+            // 3. Kiểm tra "Ghi nhớ đăng nhập" (Demo logic)
             if (formData.rememberMe) {
                 localStorage.setItem('rememberedPhone', formData.phone);
             } else {
                 localStorage.removeItem('rememberedPhone');
             }
             
-            // 3. Điều hướng dựa trên quyền hạn (Role)
-            // Giả sử backend trả về role: 'admin' hoặc 'student'
-            if (data.user.role === 'admin') {
-                navigate('/admin'); 
-            } else {
-                navigate('/'); // Về trang chủ
-            }
+            // 4. Điều hướng vào trang chủ
+            navigate('/');
 
         } catch (err) {
             console.error('Login error:', err);
