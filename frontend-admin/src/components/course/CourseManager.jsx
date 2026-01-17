@@ -3,11 +3,11 @@ import {
     Plus, Edit2, Trash2, Video, Image as X,
     BookOpen, Award, FileText, ChevronDown, 
     ChevronUp, ArrowLeft, MoreVertical, HelpCircle, Save, 
-    CheckCircle
+    CheckCircle, Loader
 } from 'lucide-react';
 import MediaSelector from '../mediaSelector/MediaSelector';
 import MediaUploader from '../MediaUploader';
-import { uploadImage } from '../../lib/cloudinaryService';
+import { uploadImage, uploadVideo } from '../../lib/cloudinaryService';
 import "./CourseManager.css";
 
 // CẤU HÌNH API
@@ -24,6 +24,9 @@ export default function CourseManager() {
     const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isVideoUploadingOpen, setIsVideoUploadingOpen] = useState(false);
+    const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+    const [isVideoUploading, setIsVideoUploading] = useState(false);
     
     // Form States
     const [courseFormData, setCourseFormData] = useState({
@@ -376,6 +379,53 @@ export default function CourseManager() {
         setIsMediaModalOpen(false);
     };
 
+    // --- Video Upload Logic ---
+    const handleVideoUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        console.log('🎬 Starting video upload:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
+
+        try {
+            setIsVideoUploading(true);
+            setVideoUploadProgress(0);
+            
+            // Simulate progress (since fetch doesn't support progress events natively)
+            const progressInterval = setInterval(() => {
+                setVideoUploadProgress(prev => {
+                    if (prev >= 90) return prev;
+                    return prev + Math.random() * 30;
+                });
+            }, 500);
+
+            console.log('🚀 Calling uploadVideo...');
+            const result = await uploadVideo(file);
+            console.log('📤 Upload result:', result);
+
+            clearInterval(progressInterval);
+
+            if (result.success) {
+                console.log('✅ Upload successful! URL:', result.url);
+                setLessonFormData(prev => ({ ...prev, content: result.url }));
+                setVideoUploadProgress(100);
+                alert("Upload video thành công!");
+                setTimeout(() => {
+                    setIsVideoUploadingOpen(false);
+                    setVideoUploadProgress(0);
+                    setIsVideoUploading(false);
+                }, 500);
+            } else {
+                console.error('❌ Upload failed:', result.error);
+                throw new Error(result.error || "Upload thất bại");
+            }
+        } catch (error) {
+            console.error('❌ Video upload error:', error);
+            alert("Lỗi upload video: " + error.message);
+            setVideoUploadProgress(0);
+            setIsVideoUploading(false);
+        }
+    };
+
     const handleDeleteCourse = async (id) => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa khóa học này?")) return;
         try {
@@ -627,9 +677,17 @@ export default function CourseManager() {
                                     <div className="cm-form-group">
                                         <label className="cm-form-label">Nội dung (URL)</label>
                                         <div className="cm-media-input-group">
-                                            <input className="cm-form-input" value={lessonFormData.content} onChange={e => setLessonFormData({...lessonFormData, content: e.target.value})} />
+                                            <input className="cm-form-input" value={lessonFormData.content} onChange={e => setLessonFormData({...lessonFormData, content: e.target.value})} placeholder="URL video..." />
+                                            <button type="button" onClick={() => setIsVideoUploadingOpen(true)} className="cm-btn cm-btn-primary cm-btn-sm" title="Upload video lên Cloud">
+                                                <Video size={16} /> Upload
+                                            </button>
                                             <button type="button" onClick={() => openMediaSelector('lesson-content')} className="cm-btn cm-btn-secondary">Chọn</button>
                                         </div>
+                                        {lessonFormData.content && (
+                                            <div style={{marginTop: '10px', fontSize: '12px', color: '#666'}}>
+                                                ✓ Video URL: {lessonFormData.content.substring(0, 50)}...
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             ) : (
@@ -713,6 +771,72 @@ export default function CourseManager() {
                                     }
                                 }}
                             />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isVideoUploadingOpen && (
+                <div className="cm-modal-overlay">
+                    <div className="cm-modal" style={{maxWidth: '500px'}}>
+                        <div className="cm-modal-header">
+                            <h2>Upload Video lên Cloud</h2>
+                            <button onClick={() => {
+                                setIsVideoUploadingOpen(false);
+                                setVideoUploadProgress(0);
+                                setIsVideoUploading(false);
+                            }} className="cm-modal-close"><X size={20}/></button>
+                        </div>
+                        <div style={{ padding: '30px', textAlign: 'center' }}>
+                            <div style={{marginBottom: '20px'}}>
+                                <Video size={48} style={{margin: '0 auto', color: '#4f46e5', opacity: 0.7}} />
+                            </div>
+                            <label style={{
+                                display: 'block',
+                                border: '2px dashed #d1d5db',
+                                borderRadius: '8px',
+                                padding: '30px',
+                                cursor: isVideoUploading ? 'not-allowed' : 'pointer',
+                                backgroundColor: '#f9fafb',
+                                transition: 'all 0.3s',
+                                opacity: isVideoUploading ? 0.6 : 1
+                            }}>
+                                <input 
+                                    type="file" 
+                                    accept="video/*" 
+                                    onChange={handleVideoUpload}
+                                    disabled={isVideoUploading}
+                                    style={{display: 'none'}}
+                                />
+                                <div style={{fontSize: '14px', color: '#666'}}>
+                                    {isVideoUploading ? (
+                                        <>
+                                            <Loader size={24} style={{animation: 'spin 1s linear infinite', margin: '0 auto 10px'}} />
+                                            <p style={{marginTop: '10px'}}>Đang upload... {Math.round(videoUploadProgress)}%</p>
+                                            <div style={{
+                                                width: '100%',
+                                                height: '6px',
+                                                backgroundColor: '#e5e7eb',
+                                                borderRadius: '3px',
+                                                marginTop: '10px',
+                                                overflow: 'hidden'
+                                            }}>
+                                                <div style={{
+                                                    width: `${videoUploadProgress}%`,
+                                                    height: '100%',
+                                                    backgroundColor: '#4f46e5',
+                                                    transition: 'width 0.3s'
+                                                }}></div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p style={{fontWeight: '500', marginBottom: '8px'}}>Chọn hoặc kéo video vào đây</p>
+                                            <p style={{fontSize: '12px', margin: '0'}}>Hỗ trợ MP4, WebM, Mov... • Tối đa 100MB</p>
+                                        </>
+                                    )}
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>
