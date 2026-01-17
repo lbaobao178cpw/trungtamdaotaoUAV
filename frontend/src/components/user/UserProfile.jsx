@@ -11,10 +11,42 @@ function UserProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [currentUser, setCurrentUser] = useState(null);
 
+  // Kiểm tra user từ localStorage khi component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error('Lỗi parse user:', error);
+        navigate('/dang-nhap');
+      }
+    } else {
+      navigate('/dang-nhap');
+    }
+  }, [navigate]);
+
+  // Kiểm tra ID khớp và fetch profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        // Kiểm tra user đã login chưa
+        if (!currentUser) {
+          alert('Vui lòng đăng nhập');
+          navigate('/dang-nhap');
+          return;
+        }
+
+        // Kiểm tra ID trong URL có khớp với ID từ token không
+        if (String(currentUser.id) !== String(id)) {
+          alert('Bạn không có quyền xem profile này');
+          navigate(`/profile/${currentUser.id}`);
+          return;
+        }
+
         setLoading(true);
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
         const res = await fetch(`${API_BASE}/${id}/profile`, { headers });
@@ -38,8 +70,10 @@ function UserProfile() {
       }
     };
 
-    if (id) fetchProfile();
-  }, [id, token, navigate]);
+    if (id && currentUser && token) {
+      fetchProfile();
+    }
+  }, [id, token, navigate, currentUser]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '--';

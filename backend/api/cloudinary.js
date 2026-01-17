@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cloudinary = require('cloudinary').v2;
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken } = require('../middleware/verifyToken');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');

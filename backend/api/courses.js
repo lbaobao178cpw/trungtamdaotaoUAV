@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require('../config/db');
-const verifyToken = require('../middleware/verifyToken');
+const { verifyToken, verifyAdmin } = require('../middleware/verifyToken');
 
 // --- GET: Lấy tổng lượt xem khóa học ---
 router.get("/:id/view-stats", async (req, res) => {
