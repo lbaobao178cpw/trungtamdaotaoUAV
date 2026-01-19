@@ -125,27 +125,23 @@ body {
 
 body .btn-primary,
 .btn-primary.btn-primary {
-  background: var(--primary-yellow) !important;
-  color: var(--text-black) !important;
-  box-shadow: 0 0 10px rgba(255, 202, 5, 0.3);
-  border: none !important;
+  background: #0050b8 !important;
   color: #ffffff !important;
-  /* box-shadow: 0 0 10px rgba(255, 202, 5, 0.3); */
   border: none !important;
 }
 
 body .btn-primary:hover,
 .btn-primary.btn-primary:hover {
-  background: #e6b804 !important;
-  color: var(--text-black) !important;
+  background: #0050b8 !important;
+  color: var(--text-white) !important;
   /* box-shadow: 0 0 20px rgba(255, 202, 5, 0.6); */
   transform: translateY(-2px);
 }
 
 .btn-register1 {
   background-color: #e6b804;
-  /* vàng neon */
-  color: var(--text-black);
+  /* vàng */
+  color: #000000;
   font-weight: 700;
   padding: 10px 26px;
   border-radius: 6px;
@@ -158,8 +154,8 @@ body .btn-primary:hover,
 
 .btn-register1:hover {
   background-color: #e6b804;
-  /* vàng đậm hơn */
-  color: var(--text-black);
+  /* giữ vàng */
+  color: #000000;
   transform: translateY(-2px);
   /* box-shadow: 0 0 22px rgba(255, 202, 5, 0.75); */
 }
@@ -180,7 +176,6 @@ body .btn-primary:hover,
   font-size: 12px !important;
   font-weight: 600;
   border-radius: 20px;
-  box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
   transition: background-color 0.25s ease;
 }
 
@@ -203,7 +198,6 @@ body .btn-primary:hover,
   font-size: 12px;
   font-weight: 600;
   border-radius: 20px;
-  box-shadow: 0 0 8px rgba(0, 80, 184, 0.3);
   transition: background-color 0.25s ease;
 }
 
@@ -218,14 +212,14 @@ body .btn-primary:hover,
 
 /* Nút phụ */
 .btn-secondary {
-  background: transparent;
-  color: var(--primary-yellow);
-  border: 2px solid var(--primary-yellow);
+  background: #ffffff;
+  color: #0050b8;
+  border: 2px solid #ffffff;
 }
 
 .btn-secondary:hover {
-  background: var(--primary-yellow);
-  color: var(--text-black);
+  background: #e6b804;
+  color: #000000;
 }
 
 /* === HERO SECTION === */
@@ -463,7 +457,6 @@ h3.section-title {
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
-  box-shadow: 0 0 15px rgba(0, 80, 184, 0.3);
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
@@ -700,7 +693,6 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
   font-weight: 700;
   color: #000000 !important;
   background-color: #e6b804;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .cert-tab-content {

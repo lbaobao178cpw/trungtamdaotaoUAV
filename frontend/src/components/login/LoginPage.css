@@ -139,7 +139,6 @@
 .form-input:focus {
     outline: none;
     border-color: #0050b8;
-    box-shadow: 0 0 0 3px rgba(255, 202, 5, 0.1);
 }
 
 .form-input::placeholder {
@@ -223,7 +222,6 @@
 .btn-primary {
     background-color: #0050b8;
     color: #ffffff; /* Chữ đen trên nền vàng */
-    box-shadow: 0 0 15px rgba(255, 202, 5, 0.2);
 }
 
 .btn-primary:hover {

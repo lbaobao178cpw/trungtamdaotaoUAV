@@ -60,7 +60,7 @@
 
 .step-bar.active {
     background-color: var(--primary-yellow);
-    box-shadow: 0 0 10px rgba(255, 202, 5, 0.5);
+    box-shadow: 0 0 10px #0050b8;
 }
 
 /* =========================================

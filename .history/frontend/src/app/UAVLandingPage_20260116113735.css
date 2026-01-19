@@ -107,12 +107,12 @@ body .btn-primary,
 .btn-primary.btn-primary { 
   background: var(--primary-yellow) !important;
   color: var(--text-black) !important;
-  box-shadow: 0 0 10px rgba(255, 202, 5, 0.3);
+  box-shadow: 0 0 10px #0050b8;
   border: none !important; 
 }
 body .btn-primary:hover,
 .btn-primary.btn-primary:hover {
-  background: #e6b804 !important;
+  box-shadow: 0 0 10px #0050b8;
   color: var(--text-black) !important;
   box-shadow: 0 0 20px rgba(255, 202, 5, 0.6);
   transform: translateY(-2px);

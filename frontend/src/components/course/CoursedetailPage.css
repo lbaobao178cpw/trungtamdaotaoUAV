@@ -600,7 +600,6 @@
 
 .btn-nav-quiz.next:hover {
     background: #e6b804;
-    box-shadow: 0 0 15px rgba(255, 202, 5, 0.3);
 }
 
 .btn-submit-quiz {
@@ -617,7 +616,6 @@
 
 .btn-submit-quiz:hover {
     background: #e6b804;
-    box-shadow: 0 0 15px rgba(255, 202, 5, 0.3);
 }
 
 .btn-start-learning {
@@ -634,7 +632,6 @@
 
 .btn-start-learning:hover {
     background: #e6b804;
-    box-shadow: 0 0 15px rgba(255, 202, 5, 0.3);
 }
 
 /* Comments section placeholder */

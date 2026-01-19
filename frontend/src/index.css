@@ -111,7 +111,6 @@ a:hover {
 .btn-secondary:hover {
   background: var(--primary-color);
   color: var(--text-on-primary);
-  box-shadow: 0 0 15px rgba(255, 202, 5, 0.3);
   transform: translateY(-2px);
 }
 
@@ -170,7 +169,6 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 5px rgba(255, 202, 5, 0.3);
 }
 
 /* 7. FAQ / ACCORDION (Dark Mode) */
