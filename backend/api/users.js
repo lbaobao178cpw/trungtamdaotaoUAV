@@ -111,15 +111,15 @@ router.post("/", async (req, res) => {
 // --- PUT: Cập nhật thông tin người dùng ---
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { full_name, email, phone, role, is_active, gender, birth_date, address } = req.body;
+  const { full_name, email, phone, gender, birth_date, address } = req.body;
 
   try {
     // Cập nhật bảng users
     await db.query(
       `UPDATE users 
-       SET full_name=?, email=?, phone=?, role=?, is_active=? 
+       SET full_name=?, email=?, phone=? 
        WHERE id=?`,
-      [full_name, email, phone, role, is_active ? 1 : 0, id]
+      [full_name, email, phone, id]
     );
 
     // Cập nhật bảng user_profiles (gender, birth_date, address)
