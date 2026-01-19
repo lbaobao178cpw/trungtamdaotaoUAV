@@ -28,19 +28,19 @@ const verifyToken = (req, res, next) => {
 // --- MIDDLEWARE: Xác thực quyền Admin ---
 const verifyAdmin = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-
+  
   if (!token) {
     return res.status(401).json({ error: "Vui lòng đăng nhập" });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "YOUR_SECRET_KEY");
-
+    
     // Kiểm tra xem user có phải admin không
     if (decoded.role !== 'admin') {
       return res.status(403).json({ error: "Bạn không có quyền truy cập tài nguyên này" });
     }
-
+    
     req.user = decoded;
     next();
   } catch (error) {
@@ -51,19 +51,19 @@ const verifyAdmin = (req, res, next) => {
 // --- MIDDLEWARE: Xác thực quyền Student ---
 const verifyStudent = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-
+  
   if (!token) {
     return res.status(401).json({ error: "Vui lòng đăng nhập" });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "YOUR_SECRET_KEY");
-
+    const decoded = jwt.verify(token, "YOUR_SECRET_KEY");
+    
     // Kiểm tra xem user có phải student không
     if (decoded.role !== 'student') {
       return res.status(403).json({ error: "Bạn không có quyền truy cập tài nguyên này" });
     }
-
+    
     req.user = decoded;
     next();
   } catch (error) {
