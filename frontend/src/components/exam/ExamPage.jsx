@@ -30,7 +30,7 @@ const ExamPage = () => {
       try {
         setLoading(true);
 
-        // Fetch exams
+        // Fetch exams (API công khai, không cần token)
         const examResponse = await fetch("http://localhost:5000/api/exams");
         if (examResponse.ok) {
           const data = await examResponse.json();
@@ -40,7 +40,7 @@ const ExamPage = () => {
           setUpcomingExams(activeExams);
         }
 
-        // Fetch study materials
+        // Fetch study materials (API công khai)
         const materialsResponse = await fetch("http://localhost:5000/api/study-materials");
         if (materialsResponse.ok) {
           const materialsData = await materialsResponse.json();
@@ -49,23 +49,41 @@ const ExamPage = () => {
           }
         }
 
-        // Fetch FAQs từ API
+        // Fetch FAQs (API công khai)
         const faqResponse = await fetch("http://localhost:5000/api/faqs?category=exam");
         if (faqResponse.ok) {
           const faqData = await faqResponse.json();
           setFaqList(faqData.data || []);
         }
 
+        // --- PHẦN SỬA LỖI 401 ---
         if (user) {
-          const profileResponse = await fetch(`http://localhost:5000/api/users/${user.id}/profile`);
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            if (profileData.target_tier) {
-              setRegisteredTier(profileData.target_tier);
-              setSelectedCertificate(profileData.target_tier === "B" ? "hang-b" : "hang-a");
+          // 1. Lấy token từ localStorage (kiểm tra lại key bạn dùng lúc login, thường là "token" hoặc "accessToken")
+          const token = localStorage.getItem("token"); 
+
+          if (token) {
+            const profileResponse = await fetch(`http://localhost:5000/api/users/${user.id}/profile`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                // 2. Gửi token kèm theo trong header Authorization
+                "Authorization": `Bearer ${token}` 
+              }
+            });
+
+            if (profileResponse.ok) {
+              const profileData = await profileResponse.json();
+              if (profileData.target_tier) {
+                setRegisteredTier(profileData.target_tier);
+                setSelectedCertificate(profileData.target_tier === "B" ? "hang-b" : "hang-a");
+              }
+            } else if (profileResponse.status === 401) {
+               // Token hết hạn hoặc không hợp lệ -> Có thể logout hoặc yêu cầu đăng nhập lại
+               console.warn("Token hết hạn, vui lòng đăng nhập lại");
             }
           }
         }
+        // -----------------------
 
       } catch (error) {
         console.error("Lỗi tải dữ liệu:", error);
@@ -76,7 +94,6 @@ const ExamPage = () => {
 
     fetchData();
   }, []);
-
   const scrollToExams = () => {
     const section = document.getElementById("exam-list-section");
     if (section) section.scrollIntoView({ behavior: "smooth" });
