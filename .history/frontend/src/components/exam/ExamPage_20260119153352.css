@@ -677,6 +677,7 @@ a.bg-primary {
 button.bg-primary:hover,
 a.bg-primary:hover {
   background-color: #e6b804 !important;
+  box-shadow: 0 0 25px rgba(255, 202, 5, 0.5);
   transform: translateY(-2px);
 }
 

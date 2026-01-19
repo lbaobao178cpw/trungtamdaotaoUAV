@@ -160,21 +160,13 @@ router.post('/', verifyAdmin, async (req, res) => {
 router.put('/:id', verifyAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { question, answer, category, display_order, is_active } = req.body;
-        const ALLOWED_CATEGORIES = ['exam', 'about'];
+        const { question, answer, category = 'general', display_order, is_active } = req.body;
 
         // Validate
         if (!question || !answer) {
             return res.status(400).json({
                 success: false,
                 error: 'Câu hỏi và trả lời không được để trống'
-            });
-        }
-
-        if (!category || !ALLOWED_CATEGORIES.includes(category.trim())) {
-            return res.status(400).json({
-                success: false,
-                error: `Category phải là một trong: ${ALLOWED_CATEGORIES.join(', ')}`
             });
         }
 
@@ -198,7 +190,7 @@ router.put('/:id', verifyAdmin, async (req, res) => {
             [
                 question,
                 answer,
-                category.trim(),
+                category.trim() || 'general',
                 display_order !== undefined ? display_order : 0,
                 is_active !== undefined ? (is_active ? 1 : 0) : 1,
                 id

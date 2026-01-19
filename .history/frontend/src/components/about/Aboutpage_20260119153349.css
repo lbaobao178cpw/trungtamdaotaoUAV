@@ -1,17 +1,25 @@
-/* === AboutPage.css - CLEAN BLUE THEME (NO GLOW) === */
+/* === AboutPage.css - CLEAN BLUE THEME === */
 
 /* 1. KHAI BÁO BIẾN */
 :root {
-  --about-primary: #0050b8;       /* Xanh Neon */
-  --about-primary-hover: #003f91; /* Xanh đậm hơn cho trạng thái hover */
-  
-  --about-bg-body: #222222;       /* Nền đen chính */
-  --about-bg-card: #f7f3f3;       /* Nền thẻ */
-  --about-bg-darker: #ffffff;     /* Nền trắng */
-  --about-text-main: #000000;     /* Chữ đen */
-  --about-text-sub: #0a0a0a;      /* Chữ xám */
-  --about-text-white: #ffffff;    /* Chữ trắng */
-  --about-border: #555555;        /* Viền xám */
+  --about-primary: #0050b8;
+  /* Vàng Neon */
+  --about-primary-hover: #e6b804;
+  /* Vàng đậm */
+  --about-bg-body: #222222;
+  /* Nền đen chính */
+  --about-bg-card: #f7f3f3;
+  /* Nền thẻ */
+  --about-bg-darker: #ffffff;
+  /* Nền xám đậm (thay cho gray sáng cũ) */
+  --about-text-main: #000000;
+  /* Chữ trắng */
+  --about-text-sub: #0a0a0a;
+  /* Chữ xám */
+  --about-text-black: #ffffff;
+  /* Chữ đen (dùng trên nền vàng) */
+  --about-border: #555555;
+  /* Viền xám */
   --about-font: 'Roboto', sans-serif;
 }
 
@@ -35,6 +43,7 @@
   padding: 60px 0;
 }
 
+/* Override lại các class màu nền cũ sang màu tối */
 .section-white {
   background: var(--about-bg-body);
 }
@@ -49,14 +58,21 @@
   font-weight: 700;
   margin-bottom: 40px;
   color: var(--about-primary);
+  /* Tiêu đề màu Vàng */
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* === 1. HERO SECTION === */
+/* === 1. HERO SECTION (SỬA LẠI THEO YÊU CẦU) === */
 .about-hero {
+  /* Dùng màu xanh phẳng thay vì ảnh nền tối */
   background-color: var(--about-primary);
+
+  /* Nếu muốn gradient nhẹ giống trang chủ thì dùng dòng dưới (tùy chọn) */
+  /* background: linear-gradient(180deg, #0050b8 0%, #00387a 100%); */
+
   padding: 60px 20px;
+  /* Độ cao vừa phải giống hình mẫu */
   text-align: center;
   color: white;
   position: relative;
@@ -67,7 +83,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 15px;
-  color: #ffffff;
+  color: #ffff;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
@@ -76,11 +92,13 @@
   opacity: 1;
   max-width: 800px;
   margin: 0 auto;
+
+  /* Chuyển màu chữ mô tả thành Trắng */
   color: #ffffff !important;
   font-weight: 400;
 }
 
-/* === 2. OBJECTIVES GRID === */
+/* === 2. OBJECTIVES GRID (Mục tiêu) === */
 .objectives-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -98,6 +116,8 @@
 
 .objective-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 0 15px #0050b8;
+  /* Glow nhẹ màu vàng */
   border-color: var(--about-primary);
 }
 
@@ -131,6 +151,7 @@
   padding: 5px 0 5px 25px;
   position: relative;
   color: var(--about-text-sub);
+  /* Chữ xám */
   font-size: 0.95rem;
 }
 
@@ -142,7 +163,7 @@
   font-weight: bold;
 }
 
-/* === 3. LEGAL TABS === */
+/* === 3. LEGAL TABS (Pháp lý) === */
 .legal-tabs {
   display: flex;
   justify-content: center;
@@ -164,11 +185,13 @@
 
 .legal-tab:hover {
   color: var(--about-text-main);
+  box-shadow: 0 0 10px #0050b8;
 }
 
 .legal-tab.active {
   background: var(--about-primary);
-  color: var(--about-text-main);
+  color: var(--about-text-black);
+  /* Chữ đen trên nền vàng */
   border-color: var(--about-primary);
   font-weight: 700;
 }
@@ -181,7 +204,7 @@
   border: 1px solid var(--about-border);
 }
 
-/* Legal Cards Grid */
+/* Legal Cards Grid - Clean and Compact */
 .legal-cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -258,6 +281,7 @@
   color: var(--about-primary);
 }
 
+/* Styling for document links (văn bản pháp luật tab) */
 .legal-card-link.doc-link {
   position: static;
   width: auto;
@@ -280,7 +304,44 @@
   text-decoration: underline;
 }
 
-/* Authority */
+/* Legacy styles - kept for compatibility */
+.legal-doc-item {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #444;
+  margin-bottom: 20px;
+}
+
+.legal-doc-item:last-child {
+  border: none;
+  padding-bottom: 0;
+  margin: 0;
+}
+
+.legal-doc-item h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: var(--about-primary);
+}
+
+.legal-date {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #393939;
+  margin-bottom: 5px;
+}
+
+.legal-link {
+  color: var(--about-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-link:hover {
+  text-decoration: underline;
+}
+
+/* Authority (Thẩm quyền) */
 .authority-item {
   padding: 20px;
   background: #ffffff;
@@ -300,7 +361,7 @@
   color: var(--about-text-sub);
 }
 
-/* Forms */
+/* Forms (Biểu mẫu) */
 .forms-list {
   display: flex;
   flex-direction: column;
@@ -337,7 +398,7 @@
   white-space: nowrap;
 }
 
-/* === 4. ORGANIZATION GRID === */
+/* === 4. ORGANIZATION GRID (Đơn vị tổ chức) === */
 .organization-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -357,6 +418,7 @@
 
 .organization-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 0 15px #0050b8;
   border-color: var(--about-primary);
 }
 
@@ -393,11 +455,12 @@
   line-height: 1.6;
 }
 
-/* === 5. REQUIREMENTS GRID === */
+/* === 5. REQUIREMENTS GRID (Yêu cầu) === */
 .requirements-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  /* Giảm khoảng cách giữa 2 cột cho gọn (cũ là 30px) */
 }
 
 .requirement-card {
@@ -410,12 +473,16 @@
 
 .requirement-card h3 {
   font-size: 1.2rem;
+  /* Giảm nhẹ size chữ tiêu đề */
   font-weight: 700;
   margin-bottom: 15px;
+  /* Kéo nội dung lên gần tiêu đề hơn */
   color: var(--about-primary);
   text-align: center;
   padding-bottom: 10px;
+  /* Giảm khoảng cách gạch chân */
   border-bottom: 1px solid #e0e0e0;
+  /* Viền nhạt hơn cho thanh thoát */
 }
 
 .requirement-list {
@@ -425,12 +492,16 @@
 }
 
 .requirement-list li {
+  /* Giảm padding trên dưới để danh sách ngắn lại */
   padding: 8px 0 8px 25px;
   position: relative;
+
   color: var(--about-text-sub);
   font-size: 0.9rem;
+  /* Giảm size chữ 1 chút cho vừa vặn */
   line-height: 1.4;
   border-bottom: 1px dashed #eee;
+  /* Thêm dòng kẻ mờ giữa các ý cho dễ nhìn (tuỳ chọn) */
 }
 
 .requirement-list li:last-child {
@@ -439,9 +510,11 @@
 
 .requirement-list li:before {
   content: "•";
+  /* Dùng chấm tròn hoặc dấu tick */
   position: absolute;
   left: 0;
   top: 6px;
+  /* Căn chỉnh lại vị trí dấu chấm */
   color: var(--about-primary);
   font-weight: bold;
   font-size: 1.5rem;
@@ -557,6 +630,8 @@
   padding: 80px 20px;
   text-align: center;
   background: #f8fafb;
+  /* Đậm hơn cả body */
+  /* border-top: 2px solid var(--about-primary); */
 }
 
 .cta-title {
@@ -578,7 +653,7 @@
   gap: 20px;
 }
 
-/* Nút bấm chung */
+/* Buttons riêng của trang About */
 .btn {
   padding: 12px 30px;
   border-radius: 6px;
@@ -591,22 +666,19 @@
   display: inline-block;
 }
 
-/* --- NÚT PRIMARY (Đã sửa: Không còn Glow Vàng) --- */
-.btn-primary.btn-primary:hover {
-  background: var(--about-primary-hover);
-  border-color: var(--about-primary-hover);
-  transform: translateY(-2px);
-  /* Màu trắng cho chính nó */
-  color: #ffffff !important;
-}
-.btn-primary.btn-primary:hover a,
-.btn-primary.btn-primary:hover span,
-.btn-primary.btn-primary:hover i,
-.btn-primary.btn-primary:hover * {
-  color: #ffffff !important;
+.btn-primary {
+  background: var(--about-primary);
+  color: var(--about-text-black);
+  /* box-shadow: 0 0 10px rgba(255, 202, 5, 0.3); */
 }
 
-/* Nút Secondary */
+.btn-primary:hover {
+  background: var(--about-primary-hover);
+  /* box-shadow: 0 0 20px rgba(255, 202, 5, 0.6); */
+  transform: translateY(-2px);
+  color: var(--about-text-black);
+}
+
 .btn-secondary {
   background: transparent;
   color: var(--about-primary);
@@ -615,7 +687,7 @@
 
 .btn-secondary:hover {
   background: var(--about-primary);
-  color: var(--about-text-main);
+  color: var(--about-text-black);
   transform: translateY(-2px);
 }
 
