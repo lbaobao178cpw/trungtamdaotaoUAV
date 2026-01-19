@@ -6,6 +6,12 @@ import { ChevronDown, Download } from "lucide-react";
 const API_URL = "http://localhost:5000/api/display";
 
 function AboutPage() {
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }, []);
     const [activeTab, setActiveTab] = useState('van-ban');
     const [openFAQ, setOpenFAQ] = useState(null);
     const [legalDocuments, setLegalDocuments] = useState([]);
@@ -43,6 +49,7 @@ function AboutPage() {
             setLoading(false);
         }
     };
+
 
     // Dữ liệu FAQ
     const faqData = [
