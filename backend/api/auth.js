@@ -48,32 +48,34 @@ router.post("/register", async (req, res) => {
     const uavTypeString = Array.isArray(uavTypes) ? uavTypes.join(', ') : uavTypes;
     const uavPurposeString = Array.isArray(uavPurposes) ? uavPurposes.join(', ') : uavPurposes;
 
-    // Tạo địa chỉ đầy đủ từ các trường lẻ
-    const fullCurrentAddress = `${address}, ${ward}, ${district}, ${city}`;
-    const fullPermanentAddress = `${permanentAddress}, ${permanentWard}, ${permanentDistrict}, ${permanentCity}`;
+    // Tạo địa chỉ đầy đủ từ các trường lẻ (lọc bỏ undefined/null/empty)
+    const fullCurrentAddress = [address, ward, district, city].filter(part => part !== undefined && part !== null && String(part).trim() !== '').join(', ');
+    const fullPermanentAddress = [permanentAddress, permanentWard, permanentDistrict, permanentCity].filter(part => part !== undefined && part !== null && String(part).trim() !== '').join(', ');
 
     // 6. Insert vào bảng USER_PROFILES
     // Lưu ý: Đảm bảo tên cột khớp với DB bạn đã tạo
     await connection.query(
       `INSERT INTO user_profiles 
-      (user_id, address, permanent_address, identity_number, 
-       emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
-       uav_type, usage_purpose, operation_area, uav_experience, target_tier)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        newUserId,
-        fullCurrentAddress,
-        fullPermanentAddress,
-        cccd, // Dùng số CCCD làm identity_number
-        emergencyName,
-        emergencyPhone,
-        emergencyRelation,
-        uavTypeString,
-        uavPurposeString,
-        activityArea,
-        experience,
-        certificateType
-      ]
+        (user_id, address, permanent_address, identity_number, birth_date, gender,
+         emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
+         uav_type, usage_purpose, operation_area, uav_experience, target_tier)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          newUserId,
+          fullCurrentAddress,
+          fullPermanentAddress,
+          cccd, // Dùng số CCCD làm identity_number
+          birthDate || null,
+          gender || null,
+          emergencyName,
+          emergencyPhone,
+          emergencyRelation,
+          uavTypeString,
+          uavPurposeString,
+          activityArea,
+          experience,
+          certificateType
+        ]
     );
 
     await connection.commit();

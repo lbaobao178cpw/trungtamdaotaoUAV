@@ -400,6 +400,17 @@
   font-weight: bold;
   color: #fff;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.info-avatar-large:hover {
+  transform: scale(1.05);
+}
+
+.info-avatar-large:hover .avatar-overlay {
+  opacity: 1 !important;
 }
 
 .info-grid {

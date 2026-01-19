@@ -12,7 +12,12 @@ function LookupPage() {
         droneSerial: '',
         droneType: ''
     });
-
+    useEffect(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, []);
     const [cameraActive, setCameraActive] = useState(false);
     const [mediaStream, setMediaStream] = useState(null);
     const [qrResult, setQrResult] = useState(null);
