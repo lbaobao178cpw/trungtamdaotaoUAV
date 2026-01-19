@@ -1,0 +1,987 @@
+/* =========================================
+   EXAM PAGE - DARK NEON THEME
+   Màu chủ đạo: Vàng Neon #0050b8 trên nền tối
+   ========================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
+
+:root {
+  /* Theme Colors */
+  --primary-yellow: #0050b8;
+  --bg-body: #222222;
+  --bg-card: #e1e1e1;
+  --bg-card-hover: #454545;
+  --text-white: #ffffff;
+  --text-gray: #b0b0b0;
+  --text-black: #ffffff;
+  --border-color: #555555;
+
+  /* Semantic Colors */
+  --primary: var(--primary-yellow);
+  --primary-foreground: var(--text-black);
+  --secondary: #ffffff;
+  --muted: var(--bg-body);
+  --muted-foreground: var(--text-gray);
+  --destructive: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+
+  /* Layout */
+  --radius: 8px;
+  --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+
+  --font-family: "Roboto", sans-serif;
+}
+
+/* =========================================
+   GLOBAL RESET
+   ========================================= */
+.exam-page-wrapper {
+  font-family: var(--font-family);
+  color: var(--text-white);
+  line-height: 1.6;
+  background-color: var(--bg-body);
+  min-height: 100vh;
+}
+
+.exam-page-wrapper * {
+  box-sizing: border-box;
+}
+
+/* =========================================
+   UTILITY CLASSES
+   ========================================= */
+
+/* Layout */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+/* Display */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+}
+
+.hidden {
+  display: none;
+}
+
+.block {
+  display: block;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+/* Flex Alignment */
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* Gaps */
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+.gap-8 {
+  gap: 2rem;
+}
+
+/* Spacing */
+.space-y-3>*+* {
+  margin-top: 0.75rem;
+}
+
+.space-y-4>*+* {
+  margin-top: 1rem;
+}
+
+.space-y-6>*+* {
+  margin-top: 1.5rem;
+}
+
+.space-y-8>*+* {
+  margin-top: 2rem;
+}
+
+/* Margins */
+.m-0 {
+  margin: 0;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mb-12 {
+  margin-bottom: 3rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mr-1 {
+  margin-right: 0.25rem;
+}
+
+.mr-3 {
+  margin-right: 0.75rem;
+}
+
+/* Padding */
+.p-3 {
+  padding: 0.75rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.py-16 {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.py-20 {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.pb-2 {
+  padding-bottom: 0.5rem;
+}
+
+/* Width & Height */
+.w-full {
+  width: 100%;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+.w-5 {
+  width: 1.25rem;
+}
+
+.w-8 {
+  width: 2rem;
+}
+
+.w-10 {
+  width: 2.5rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+.h-5 {
+  height: 1.25rem;
+}
+
+.h-8 {
+  height: 2rem;
+}
+
+.h-10 {
+  height: 2.5rem;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Position */
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+/* Typography */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.text-5xl {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* Text Colors */
+.text-white {
+  color: var(--text-white);
+}
+
+.text-primary {
+  color: var(--primary-yellow);
+}
+
+.text-muted-foreground {
+  color: var(--text-gray);
+}
+
+.text-green-600 {
+  color: #10b981;
+}
+
+.text-green-700 {
+  color: #047857;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-gray-700 {
+  color: #374151;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Backgrounds */
+.bg-muted {
+  background-color: var(--bg-body);
+}
+
+.bg-white {
+  background-color: var(--bg-card);
+}
+
+.bg-primary {
+  background-color: var(--primary-yellow);
+  color: var(--text-black);
+}
+
+.bg-primary\/5 {
+  background-color: rgba(255, 202, 5, 0.05);
+}
+
+.bg-primary\/10 {
+  background-color: rgba(31, 31, 31, 0.1);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.bg-secondary\/50 {
+  background-color: #ffffff;
+}
+
+.bg-gray-50 {
+  background-color: #ffffff;
+}
+
+.bg-gray-100 {
+  background-color: #e1e1e1;
+}
+
+.bg-gray-200 {
+  background-color: #3a3a3a;
+}
+
+.bg-green-100 {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.bg-amber-500 {
+  background-color: #f59e0b;
+}
+
+.bg-destructive {
+  background-color: #ef4444;
+}
+
+.bg-accent {
+  background-color: rgba(255, 202, 5, 0.15);
+}
+
+/* Borders */
+.border {
+  border: 1px solid var(--border-color);
+}
+
+.border-t {
+  border-top: 1px solid var(--border-color);
+}
+
+.border-b {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.border-primary {
+  border-color: var(--primary-yellow);
+}
+
+.border-gray-200 {
+  border-color: #444444;
+}
+
+.border-gray-300 {
+  border-color: #555555;
+}
+
+.border-green-200 {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.rounded {
+  border-radius: 4px;
+}
+
+.rounded-lg {
+  border-radius: var(--radius);
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Shadows */
+.shadow-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow);
+}
+
+/* Transitions */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-colors {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+/* Hover States */
+.hover\:bg-secondary:hover {
+  background-color: #fff;
+}
+
+.hover\:bg-gray-50:hover {
+  background-color: #e1e1e1;
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: #e6b804;
+}
+
+.hover\:shadow-lg:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.hover\:underline:hover {
+  text-decoration: underline;
+}
+
+.group:hover .group-hover\:underline {
+  text-decoration: underline;
+}
+
+.group:hover .group-hover\:bg-white {
+  background-color: var(--bg-card-hover);
+}
+
+.group:hover .group-hover\:shadow-sm {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* =========================================
+   HERO SECTION
+   ========================================= */
+.bg-gradient-to-br {
+  background: linear-gradient(135deg,
+      rgba(20, 20, 20, 0.95) 0%,
+      rgba(40, 40, 40, 0.9) 100%),
+    url("/images/hero_background.webp") no-repeat center center/cover;
+  position: relative;
+}
+
+.bg-gradient-to-br::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 202, 5, 0.05);
+  pointer-events: none;
+}
+
+/* Đảm bảo text trong hero màu vàng */
+.bg-gradient-to-br h1 {
+  color: var(--primary-yellow) !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.bg-gradient-to-br p {
+  color: #e0e0e0 !important;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+
+.opacity-90 {
+  opacity: 0.9;
+}
+
+/* =========================================
+   CARD STYLES
+   ========================================= */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================
+   BADGE
+   ========================================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.bg-accent.text-accent-foreground {
+  background-color: rgba(214, 211, 199, 0.2);
+  color: var(--primary-yellow);
+  border: 1px solid rgba(255, 69, 69, 0.4);
+}
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+button,
+.btn {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: var(--radius);
+}
+
+button:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Primary Button - Vàng Neon */
+.bg-primary,
+button.bg-primary,
+a.bg-primary {
+  background-color: var(--primary-yellow) !important;
+  color: var(--text-black) !important;
+
+}
+
+.bg-primary:hover,
+button.bg-primary:hover,
+a.bg-primary:hover {
+  background-color: #e6b804 !important;
+  box-shadow: 0 0 25px rgba(255, 202, 5, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Secondary Button - Viền */
+button.bg-transparent,
+button.border {
+  background-color: transparent;
+  color: var(--text-white);
+  border: 1px solid var(--border-color);
+}
+
+button.bg-transparent:hover,
+button.border:hover {
+  border-color: var(--primary-yellow);
+  background-color: rgba(255, 202, 5, 0.05);
+}
+
+button.text-gray-600 {
+  color: var(--primary-yellow);
+}
+
+button.text-gray-600:hover {
+  border-color: var(--primary-yellow);
+  background-color: rgba(255, 202, 5, 0.05);
+}
+
+/* Disabled States */
+button[disabled].bg-gray-200 {
+  background-color: #3a3a3a;
+  color: #666666;
+}
+
+button[disabled].bg-green-100 {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* =========================================
+   FORM ELEMENTS
+   ========================================= */
+input[type="radio"] {
+  accent-color: var(--primary-yellow);
+  width: 18px;
+  height: 18px;
+}
+
+label {
+  cursor: pointer;
+  color: var(--text-white);
+}
+
+/* =========================================
+   LINKS
+   ========================================= */
+a {
+  color: var(--primary-yellow);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: #e6b804;
+}
+
+/* Link buttons */
+a.block.text-center {
+  text-decoration: none;
+}
+
+a.text-primary {
+  color: var(--primary-yellow);
+}
+
+/* =========================================
+   GRID LAYOUTS
+   ========================================= */
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.lg\:col-span-2 {
+  grid-column: span 2 / span 2;
+}
+
+/* =========================================
+   ICONS
+   ========================================= */
+.text-primary svg,
+svg.text-primary {
+  color: var(--primary-yellow);
+}
+
+.text-muted-foreground svg {
+  color: var(--text-gray);
+}
+
+/* =========================================
+   SPECIAL SECTIONS
+   ========================================= */
+
+/* Process Steps */
+.process-step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--primary-yellow);
+  color: var(--text-black);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+}
+
+/* Alert Box */
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.alert-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* FAQ Accordion */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes arrowRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+.faq-item {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item:hover {
+  border-color: var(--primary-yellow);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+  transform: translateY(-2px);
+}
+
+.faq-question {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.faq-question:hover {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+  padding-left: 1.5rem;
+}
+
+.faq-question:active {
+  transform: scale(0.99);
+}
+
+.faq-question svg {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.faq-question svg.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  padding: 0 1.25rem 1rem;
+  color: var(--text-gray);
+  line-height: 1.8;
+  animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md\:text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .md\:text-5xl {
+    font-size: 3rem;
+    line-height: 1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =========================================
+   CUSTOM OVERRIDES
+   ========================================= */
+
+/* Ensure all headings use yellow color */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-white);
+}
+
+.card h3,
+.card h4 {
+  color: var(--text-white);
+}
+
+/* Override any remaining blue colors */
+.text-blue-600,
+.text-blue-700 {
+  color: var(--primary-yellow) !important;
+}
+
+.bg-blue-50,
+.bg-blue-100 {
+  background-color: rgba(255, 202, 5, 0.05) !important;
+}
+
+/* Scrollbar styling for dark theme */
+.exam-page-wrapper ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.exam-page-wrapper ::-webkit-scrollbar-track {
+  background: var(--bg-body);
+}
+
+.exam-page-wrapper ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.exam-page-wrapper ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-yellow);
+}
+
+/* Fix text color for primary link buttons */
+a.bg-primary,
+a.bg-primary:focus,
+a.bg-primary:active {
+  color: #ffffff !important;
+}
+
+a.bg-primary:hover {
+  color: #000000 !important;
+}

@@ -4,13 +4,21 @@ import './AboutPage.css';
 import { ChevronDown, Download } from "lucide-react";
 
 const API_URL = "http://localhost:5000/api/display";
+const FAQ_API = "http://localhost:5000/api/faqs";
 
 function AboutPage() {
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }, []);
     const [activeTab, setActiveTab] = useState('van-ban');
     const [openFAQ, setOpenFAQ] = useState(null);
     const [legalDocuments, setLegalDocuments] = useState([]);
     const [authorities, setAuthorities] = useState([]);
     const [forms, setForms] = useState([]);
+    const [faqData, setFaqData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const toggleFAQ = (index) => {
@@ -20,6 +28,7 @@ function AboutPage() {
     // Fetch legal data from admin
     useEffect(() => {
         fetchLegalData();
+        fetchFAQData();
     }, []);
 
     const fetchLegalData = async () => {
@@ -44,68 +53,18 @@ function AboutPage() {
         }
     };
 
-    // Dữ liệu FAQ
-    const faqData = [
-        {
-            q: "Tôi cần chứng chỉ loại nào cho UAV của mình?",
-            a: (
-                <>
-                    <p>Loại chứng chỉ phụ thuộc vào trọng lượng của UAV:</p>
-                    <ul>
-                        <li><strong>UAV dưới 250g:</strong> Chứng chỉ hạng A</li>
-                        <li><strong>UAV từ 250g đến 2kg:</strong> Chứng chỉ hạng B</li>
-                    </ul>
-                </>
-            )
-        },
-        {
-            q: "Thời gian học và thi mất bao lâu?",
-            a: (
-                <>
-                    <p>Thời gian học và thi phụ thuộc vào loại chứng chỉ:</p>
-                    <ul>
-                        <li><strong>Chứng chỉ hạng A:</strong> từ 3 tuần</li>
-                        <li><strong>Chứng chỉ hạng B:</strong> từ 6 tuần</li>
-                    </ul>
-                </>
-            )
-        },
-        {
-            q: "Chi phí đào tạo và cấp chứng chỉ là bao nhiêu?",
-            a: (
-                <>
-                    <p>Chi phí đào tạo và cấp chứng chỉ phụ thuộc vào loại chứng chỉ:</p>
-                    <ul>
-                        <li><strong>Chứng chỉ hạng A:</strong> 500.000 đồng</li>
-                        <li><strong>Chứng chỉ hạng B:</strong> 1.500.000 đồng</li>
-                    </ul>
-                    <p className="note">* Chi phí đã bao gồm học phí, tài liệu và sát hạch lý thuyết. Chưa bao gồm chi phí thuê/mướn thiết bị thực hành và sát hạch.</p>
-                </>
-            )
-        },
-        {
-            q: "Chứng chỉ có thời hạn bao lâu?",
-            a: (
-                <>
-                    <p>Thời hạn của chứng chỉ phụ thuộc vào loại:</p>
-                    <ul>
-                        <li><strong>Chứng chỉ hạng A:</strong> 10 năm</li>
-                        <li><strong>Chứng chỉ hạng B:</strong> 10 năm</li>
-                    </ul>
-                    <p>Sau khi hết hạn, bạn cần làm thủ tục gia hạn theo quy định.</p>
-                </>
-            )
-        },
-        {
-            q: "Tôi có thể bay UAV ở đâu sau khi có chứng chỉ?",
-            a: (
-                <>
-                    <p>Sau khi có chứng chỉ, bạn được phép bay UAV tại các khu vực không cấm bay theo quy định. Tuy nhiên, bạn vẫn phải tuân thủ các quy định về độ cao, khoảng cách và thời gian bay.</p>
-                    <p>Bạn nên sử dụng ứng dụng chính thức kiểm tra khu vực cấm bay trước khi thực hiện xin cấp phép bay.</p>
-                </>
-            )
+    // Fetch FAQ từ API
+    const fetchFAQData = async () => {
+        try {
+            const response = await fetch(`${FAQ_API}?category=about&limit=100`);
+            if (response.ok) {
+                const data = await response.json();
+                setFaqData(data.data || []);
+            }
+        } catch (error) {
+            console.error('Lỗi tải FAQ:', error);
         }
-    ];
+    };
 
     return (
         <div className="about-page">
@@ -339,22 +298,26 @@ function AboutPage() {
                 <div className="container">
                     <h2 className="section-title">Câu hỏi thường gặp</h2>
                     <div className="faq-container">
-                        {faqData.map((item, index) => (
-                            <div key={index} className="faq-item">
-                                <button
-                                    className={`faq-question ${openFAQ === index ? 'active' : ''}`}
-                                    onClick={() => toggleFAQ(index)}
-                                >
-                                    <span>{item.q}</span>
-                                    <ChevronDown className={`faq-arrow ${openFAQ === index ? 'rotate' : ''}`} />
-                                </button>
-                                {openFAQ === index && (
-                                    <div className="faq-answer">
-                                        {item.a}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                        {faqData && faqData.length > 0 ? (
+                            faqData.map((item, index) => (
+                                <div key={index} className="faq-item">
+                                    <button
+                                        className={`faq-question ${openFAQ === index ? 'active' : ''}`}
+                                        onClick={() => toggleFAQ(index)}
+                                    >
+                                        <span>{item.question}</span>
+                                        <ChevronDown className={`faq-arrow ${openFAQ === index ? 'rotate' : ''}`} />
+                                    </button>
+                                    {openFAQ === index && (
+                                        <div className="faq-answer">
+                                            {item.answer}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <p>Đang tải câu hỏi...</p>
+                        )}
                     </div>
                 </div>
             </section>

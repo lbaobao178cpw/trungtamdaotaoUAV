@@ -130,6 +130,12 @@ const StarIcon = () => (
 // =====================================================================
 function UAVLandingPage() {
   const navigate = useNavigate();
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
 
   // State
   const [points, setPoints] = useState([]);
@@ -231,7 +237,7 @@ function UAVLandingPage() {
     const getBadgeInfo = (text) => {
       if (!text) return null;
       const t = text.toLowerCase();
-      
+
       // Nếu là 'a' hoặc 'cơ bản' -> Style Hạng A (Màu xanh/vàng)
       if (t.includes('a') || t.includes('cơ bản')) {
         return { label: 'HẠNG A', className: 'badge-a' };
@@ -250,14 +256,14 @@ function UAVLandingPage() {
     return (
       <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
         <div className="course-image-wrapper">
-          <img 
-            src={course.image} 
-            alt={course.title} 
-            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} 
+          <img
+            src={course.image}
+            alt={course.title}
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }}
           />
           {/* Đã XÓA badge cũ ở đây để không hiện đè lên ảnh */}
         </div>
-        
+
         <div className="course-content">
           {/* --- CẤU TRÚC MỚI: Flexbox cho Tiêu đề và Badge --- */}
           <div className="course-title-row">
@@ -332,13 +338,13 @@ function UAVLandingPage() {
             <div className="step-item">
               <div className="step-icon"><img src="/images/icons/register.svg" alt="Đăng ký" onError={(e) => (e.target.src = "https://img.icons8.com/ios-filled/50/ffffff/open-book.png")} /></div>
               <div className="step-title">Đăng ký tài khoản</div>
-              <div className="step-desc">Tạo tài khoản với thông tin cá nhân và xác thực qua CCCD/CMND</div>
+              <div className="step-desc">Tạo tài khoản với thông tin cá nhân <br/>và xác thực qua CCCD/CMND</div>
             </div>
             <img className="step-arrow-img" src="/images/icons/arrow.svg" alt="arrow" />
             <div className="step-item">
               <div className="step-icon"><img src="/images/icons/course.svg" alt="Học" onError={(e) => (e.target.src = "https://img.icons8.com/ios-filled/50/ffffff/learning.png")} /></div>
               <div className="step-title">Hoàn thành khóa học</div>
-              <div className="step-desc">Học các bài giảng trực tuyến và hoàn thành bài tập</div>
+              <div className="step-desc">Học các bài giảng trực tuyến <br/> và hoàn thành bài tập</div>
             </div>
             <img className="step-arrow-img" src="/images/icons/arrow.svg" alt="arrow" />
             <div className="step-item">
@@ -350,7 +356,7 @@ function UAVLandingPage() {
             <div className="step-item">
               <div className="step-icon"><img src="/images/icons/license.svg" alt="Giấy phép" onError={(e) => (e.target.src = "https://img.icons8.com/ios-filled/50/ffffff/medal.png")} /></div>
               <div className="step-title">Giấy phép điều khiển</div>
-              <div className="step-desc">Nhận chứng chỉ số sau 10 ngày từ lúc xác nhận kết quả</div>
+              <div className="step-desc">Nhận chứng chỉ số sau 10 ngày <br/>từ lúc xác nhận kết quả</div>
             </div>
           </div>
         </div>
