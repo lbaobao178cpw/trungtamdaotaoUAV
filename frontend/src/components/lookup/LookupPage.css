@@ -115,6 +115,15 @@
    TABS
    ========================================= */
 .search-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #d7d8d8; /* xám rất nhạt */
+    border-radius: 10px;
+    padding: 3px
+}
+
+
+/* .search-tabs {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -122,13 +131,13 @@
     margin-bottom: 32px;
     border-bottom: 2px solid var(--border-color);
     flex-wrap: wrap;
-}
+} */
 
 .search-tab {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 10px 30px;
     border: none;
     background: transparent;
     color: var(--text-gray);
@@ -136,7 +145,7 @@
     font-weight: 500;
     cursor: pointer;
     border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
+
     transition: all 0.3s ease;
     white-space: nowrap;
 }
@@ -146,11 +155,10 @@
     background-color: rgba(255, 202, 5, 0.1);
 } */
 
-/* .search-tab.active {
+.search-tab.active {
     color: var(--primary-yellow);
-    border-bottom-color: var(--primary-yellow);
-    background-color: rgba(0 30 217 / 10%);
-} */
+    background-color: #fff;
+}
 
 .search-tab svg {
     color: currentColor;

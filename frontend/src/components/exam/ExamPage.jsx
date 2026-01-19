@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import "./ExamPage.css"; 
+import "./ExamPage.css";
 import {
   FileText, CheckCircle2, Plane, Award, ChevronDown, Phone, Mail, FileDown,
   MapPin, Calendar, Clock, BookOpen, AlertCircle, UserCheck, ShieldCheck,
@@ -9,10 +9,17 @@ import {
 
 const ExamPage = () => {
   const [selectedCertificate, setSelectedCertificate] = useState("hang-a");
-  const [registeredTier, setRegisteredTier] = useState(null); 
+  const [registeredTier, setRegisteredTier] = useState(null);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [upcomingExams, setUpcomingExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const formRef = useRef(null);
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -24,7 +31,7 @@ const ExamPage = () => {
         const examResponse = await fetch("http://localhost:5000/api/exams");
         if (examResponse.ok) {
           const data = await examResponse.json();
-          const activeExams = Array.isArray(data) 
+          const activeExams = Array.isArray(data)
             ? data.filter(exam => exam.is_active === 1 || exam.is_active === true)
             : [];
           setUpcomingExams(activeExams);
@@ -80,37 +87,37 @@ const ExamPage = () => {
   ];
 
   const faqList = [
-    { 
-      q: "Tôi cần chuẩn bị gì khi đi thi sát hạch?", 
-      a: "Bạn cần mang theo CCCD/CMND, biên lai thanh toán lệ phí thi, giấy xác nhận đủ điều kiện dự thi (được cấp sau khi hoàn thành khóa học), và thiết bị bay (đối với các kỳ thi có phần thực hành)." 
+    {
+      q: "Tôi cần chuẩn bị gì khi đi thi sát hạch?",
+      a: "Bạn cần mang theo CCCD/CMND, biên lai thanh toán lệ phí thi, giấy xác nhận đủ điều kiện dự thi (được cấp sau khi hoàn thành khóa học), và thiết bị bay (đối với các kỳ thi có phần thực hành)."
     },
-    { 
-      q: "Tôi có thể đăng ký thi lại nếu trượt không?", 
-      a: "Có, bạn có thể đăng ký thi lại sau 15 ngày kể từ ngày thi trước. Lệ phí thi lại sẽ bằng 50% lệ phí thi ban đầu." 
+    {
+      q: "Tôi có thể đăng ký thi lại nếu trượt không?",
+      a: "Có, bạn có thể đăng ký thi lại sau 15 ngày kể từ ngày thi trước. Lệ phí thi lại sẽ bằng 50% lệ phí thi ban đầu."
     },
-    { 
-      q: "Chứng chỉ có hiệu lực trong bao lâu và làm thế nào để gia hạn?", 
-      a: "Thời hạn hiệu lực tùy thuộc vào từng loại chứng chỉ, từ 1-3 năm. Để gia hạn, bạn cần nộp đơn trực tuyến trước khi chứng chỉ hết hạn 30 ngày, hoàn thành khóa học cập nhật (nếu có) và đóng phí gia hạn." 
+    {
+      q: "Chứng chỉ có hiệu lực trong bao lâu và làm thế nào để gia hạn?",
+      a: "Thời hạn hiệu lực tùy thuộc vào từng loại chứng chỉ, từ 1-3 năm. Để gia hạn, bạn cần nộp đơn trực tuyến trước khi chứng chỉ hết hạn 30 ngày, hoàn thành khóa học cập nhật (nếu có) và đóng phí gia hạn."
     },
-    { 
-      q: "Tôi có thể nâng cấp chứng chỉ từ hạng thấp lên hạng cao hơn không?", 
-      a: "Có, bạn có thể nâng cấp chứng chỉ bằng cách hoàn thành khóa học bổ sung và tham gia kỳ thi sát hạch cho hạng chứng chỉ mới. Bạn sẽ được giảm một phần lệ phí thi nếu đã có chứng chỉ hạng thấp hơn còn hiệu lực." 
+    {
+      q: "Tôi có thể nâng cấp chứng chỉ từ hạng thấp lên hạng cao hơn không?",
+      a: "Có, bạn có thể nâng cấp chứng chỉ bằng cách hoàn thành khóa học bổ sung và tham gia kỳ thi sát hạch cho hạng chứng chỉ mới. Bạn sẽ được giảm một phần lệ phí thi nếu đã có chứng chỉ hạng thấp hơn còn hiệu lực."
     },
-    { 
-      q: "Tôi cần có chứng chỉ nào nếu sử dụng UAV cho mục đích thương mại?", 
-      a: "Đối với hoạt động thương mại, bạn cần có ít nhất chứng chỉ hạng C trở lên. Ngoài ra, doanh nghiệp của bạn cũng cần có giấy phép kinh doanh dịch vụ bay không người lái do Cục Hàng không Việt Nam cấp." 
+    {
+      q: "Tôi cần có chứng chỉ nào nếu sử dụng UAV cho mục đích thương mại?",
+      a: "Đối với hoạt động thương mại, bạn cần có ít nhất chứng chỉ hạng C trở lên. Ngoài ra, doanh nghiệp của bạn cũng cần có giấy phép kinh doanh dịch vụ bay không người lái do Cục Hàng không Việt Nam cấp."
     },
-    { 
-      q: "Có yêu cầu về độ tuổi tối thiểu để tham gia thi sát hạch không?", 
-      a: "Có, độ tuổi tối thiểu phụ thuộc vào từng loại chứng chỉ: Hạng A (16 tuổi), Hạng B và C (18 tuổi), Hạng D (21 tuổi)." 
+    {
+      q: "Có yêu cầu về độ tuổi tối thiểu để tham gia thi sát hạch không?",
+      a: "Có, độ tuổi tối thiểu phụ thuộc vào từng loại chứng chỉ: Hạng A (16 tuổi), Hạng B và C (18 tuổi), Hạng D (21 tuổi)."
     },
-    { 
-      q: "Tôi có cần đăng ký UAV của mình không?", 
-      a: "Có, mọi UAV có trọng lượng trên 250g đều phải đăng ký với Cục Hàng không Việt Nam. Việc đăng ký có thể thực hiện trực tuyến sau khi bạn có chứng chỉ người điều khiển UAV." 
+    {
+      q: "Tôi có cần đăng ký UAV của mình không?",
+      a: "Có, mọi UAV có trọng lượng trên 250g đều phải đăng ký với Cục Hàng không Việt Nam. Việc đăng ký có thể thực hiện trực tuyến sau khi bạn có chứng chỉ người điều khiển UAV."
     },
-    { 
-      q: "Có chế độ miễn giảm lệ phí thi không?", 
-      a: "Học sinh, sinh viên và người có công với cách mạng được giảm 20% lệ phí thi. Người khuyết tật được giảm 50% lệ phí thi. Để được miễn giảm, vui lòng cung cấp giấy tờ chứng minh khi đăng ký." 
+    {
+      q: "Có chế độ miễn giảm lệ phí thi không?",
+      a: "Học sinh, sinh viên và người có công với cách mạng được giảm 20% lệ phí thi. Người khuyết tật được giảm 50% lệ phí thi. Để được miễn giảm, vui lòng cung cấp giấy tờ chứng minh khi đăng ký."
     }
   ];
 
@@ -128,7 +135,7 @@ const ExamPage = () => {
       <section className="py-12">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* LEFT COLUMN */}
             <div className="lg:col-span-2 space-y-8">
               {/* Quy trình thi */}
@@ -143,7 +150,7 @@ const ExamPage = () => {
                     <div key={idx} className="flex gap-4 items-start relative">
                       {/* Đường dọc nối các icon */}
                       {idx < processSteps.length - 1 && (
-                        <div 
+                        <div
                           style={{
                             position: 'absolute',
                             left: '23px',
@@ -154,10 +161,10 @@ const ExamPage = () => {
                           }}
                         />
                       )}
-                      
-                      <div 
+
+                      <div
                         className="flex items-center justify-center flex-shrink-0 rounded-full"
-                        style={{ 
+                        style={{
                           width: '48px',
                           height: '48px',
                           background: '#0050b8',
@@ -195,14 +202,13 @@ const ExamPage = () => {
                   <div className="flex gap-2 mb-6">
                     <button
                       onClick={() => setSelectedCertificate("hang-a")}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        selectedCertificate === "hang-a"
-                          ? "text-black"
-                          : "bg-transparent text-white border"
-                      }`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${selectedCertificate === "hang-a"
+                        ? "text-black"
+                        : "bg-transparent text-white border"
+                        }`}
                       style={{
-                        
-                        color: selectedCertificate === "hang-a" ? '#fff ': '#000',
+
+                        color: selectedCertificate === "hang-a" ? '#fff ' : '#000',
                         background: selectedCertificate === "hang-a" ? '#0050b8' : 'transparent',
                         borderColor: selectedCertificate === "hang-a" ? '#0050b8' : '#555555'
                       }}
@@ -211,13 +217,12 @@ const ExamPage = () => {
                     </button>
                     <button
                       onClick={() => setSelectedCertificate("hang-b")}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                        selectedCertificate === "hang-b"
-                          ? "text-black"
-                          : "bg-transparent text-white border"
-                      }`}
+                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${selectedCertificate === "hang-b"
+                        ? "text-black"
+                        : "bg-transparent text-white border"
+                        }`}
                       style={{
-                        color: selectedCertificate === "hang-b" ? '#fff ': '#000',
+                        color: selectedCertificate === "hang-b" ? '#fff ' : '#000',
                         background: selectedCertificate === "hang-b" ? '#0050b8' : 'transparent',
                         borderColor: selectedCertificate === "hang-b" ? '#0050b8' : '#555555'
                       }}
@@ -229,7 +234,7 @@ const ExamPage = () => {
 
                 {/* Hiển thị Hạng A - nếu đã đăng ký A HOẶC đang chọn A */}
                 {((registeredTier === 'A') || (!registeredTier && selectedCertificate === "hang-a")) && (
-                  <div className="p-6 border rounded-lg" style={{ 
+                  <div className="p-6 border rounded-lg" style={{
                     borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
                     background: registeredTier === 'A' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
                   }}>
@@ -269,7 +274,7 @@ const ExamPage = () => {
                         5.800.000 VNĐ
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       Phù hợp với người dùng UAV cá nhân, sử dụng cho mục đích giải trí, chụp ảnh, quay phim cá nhân.
                     </p>
@@ -323,7 +328,7 @@ const ExamPage = () => {
                         to="/dang-ky"
                         state={{ preSelectedTier: "A" }}
                         className="mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
-                        style={{ 
+                        style={{
                           textDecoration: 'none',
                           padding: '12px 32px', // Tăng padding giống badge
                           fontSize: '1rem',     // Tăng font chữ
@@ -338,7 +343,7 @@ const ExamPage = () => {
 
                 {/* Hiển thị Hạng B - nếu đã đăng ký B HOẶC đang chọn B */}
                 {((registeredTier === 'B') || (!registeredTier && selectedCertificate === "hang-b")) && (
-                  <div className="p-6 border rounded-lg" style={{ 
+                  <div className="p-6 border rounded-lg" style={{
                     borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
                     background: registeredTier === 'B' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
                   }}>
@@ -378,7 +383,7 @@ const ExamPage = () => {
                         12.900.000 VNĐ
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       Phù hợp với người dùng UAV chuyên nghiệp hơn, sử dụng cho mục đích chụp ảnh, quay phim.
                     </p>
@@ -432,7 +437,7 @@ const ExamPage = () => {
                         to="/dang-ky"
                         state={{ preSelectedTier: "B" }}
                         className="mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
-                        style={{ 
+                        style={{
                           textDecoration: 'none',
                           padding: '12px 32px', // Tăng padding giống badge
                           fontSize: '1rem',     // Tăng font chữ
@@ -475,49 +480,50 @@ const ExamPage = () => {
               {/* Đăng ký nhanh */}
               <div className="card p-6">
                 <h3 className="font-bold mb-4 text-lg">Đăng ký nhanh</h3>
-                
+
                 {registeredTier ? (
-                    <div className="p-4 bg-primary/10 rounded-lg border border-primary/30 mb-4">
-                        <div className="flex items-center gap-2 text-primary mb-2">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <span className="font-semibold">Bạn đã đăng ký học</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Chứng chỉ Hạng {registeredTier}</p>
-                        <button onClick={scrollToExams} className="w-full mt-4 bg-primary text-black hover:bg-primary/90 py-3 rounded-lg font-bold transition-all">
-                            Xem lịch thi
-                        </button>
+                  <div className="p-4 bg-primary/10 rounded-lg border border-primary/30 mb-4">
+                    <div className="flex items-center gap-2 text-primary mb-2">
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span className="font-semibold">Bạn đã đăng ký học</span>
                     </div>
+                    <p className="text-sm text-muted-foreground">Chứng chỉ Hạng {registeredTier}</p>
+                    <button onClick={scrollToExams} className="w-full mt-4 bg-primary text-black hover:bg-primary/90 py-3 rounded-lg font-bold transition-all">
+                      Xem lịch thi
+                    </button>
+                  </div>
                 ) : (
-                    <>
-                        <div className="flex flex-col gap-3 mb-4">
-                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${selectedCertificate === "hang-a" ? "border-primary bg-primary/5" : "hover:bg-secondary"}`}>
-                            <input type="radio" name="cert-sidebar" checked={selectedCertificate === "hang-a"} onChange={() => setSelectedCertificate("hang-a")} className="mr-3 accent-primary" />
-                            <span className="text-sm font-medium text-white">Chứng chỉ Hạng A (UAV &lt; 250g)</span>
-                        </label>
-                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${selectedCertificate === "hang-b" ? "border-primary bg-primary/5" : "hover:bg-secondary"}`}>
-                            <input type="radio" name="cert-sidebar" checked={selectedCertificate === "hang-b"} onChange={() => setSelectedCertificate("hang-b")} className="mr-3 accent-primary" />
-                            <span className="text-sm font-medium text-white">Chứng chỉ Hạng B (UAV 250g - 2kg)</span>
-                        </label>
-                        </div>
+                  <>
+                    <div className="flex flex-col gap-3 mb-4">
+                      <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${selectedCertificate === "hang-a" ? "border-primary bg-primary/5" : "hover:bg-secondary"}`}>
+                        <input type="radio" name="cert-sidebar" checked={selectedCertificate === "hang-a"} onChange={() => setSelectedCertificate("hang-a")} className="mr-3 accent-primary" />
+                        <span className="text-sm font-medium text-white">Chứng chỉ Hạng A (UAV &lt; 250g)</span>
+                      </label>
+                      <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${selectedCertificate === "hang-b" ? "border-primary bg-primary/5" : "hover:bg-secondary"}`}>
+                        <input type="radio" name="cert-sidebar" checked={selectedCertificate === "hang-b"} onChange={() => setSelectedCertificate("hang-b")} className="mr-3 accent-primary" />
+                        <span className="text-sm font-medium text-white">Chứng chỉ Hạng B (UAV 250g - 2kg)</span>
+                      </label>
+                    </div>
 
-                        <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg mb-6 border">
-                        <span className="text-sm font-semibold text-muted-foreground">Lệ phí thi:</span>
-                        <div className="text-right">
-                            <span className="text-xs text-muted-foreground block mb-1">{selectedCertificate === "hang-a" ? "Hạng A" : "Hạng B"}</span>
-                            <strong className="text-primary text-lg">{selectedCertificate === "hang-a" ? "5.800.000 VNĐ" : "12.900.000 VNĐ"}</strong>
-                        </div>
-                        </div>
+                    <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg mb-6 border">
+                      <span className="text-sm font-semibold text-muted-foreground">Lệ phí thi:</span>
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground block mb-1">{selectedCertificate === "hang-a" ? "Hạng A" : "Hạng B"}</span>
+                        <strong className="text-primary text-lg">{selectedCertificate === "hang-a" ? "5.800.000 VNĐ" : "12.900.000 VNĐ"}</strong>
+                      </div>
+                    </div>
 
-                        <Link
-                        to="/dang-ky"
-                        state={{ preSelectedTier: selectedCertificate === "hang-a" ? "A" : "B" }}
-                        className="block w-full text-center bg-primary hover:bg-primary/90 py-3 rounded-lg font-bold transition-all shadow-sm"
-                        style={{ textDecoration: 'none' }}
-                        >
-                        Đăng ký thi sát hạch
-                        </Link>
-                        <p className="text-xs text-muted-foreground mt-4 text-center">Cần hỗ trợ? Vui lòng liên hệ Hotline <strong className="text-primary">1900 xxxx</strong>.</p>
-                    </>
+                    <Link
+                      to="/dang-ky"
+                      state={{ preSelectedTier: selectedCertificate === "hang-a" ? "A" : "B" }}
+                      className="block w-full text-center bg-primary hover:bg-primary/90 py-3 rounded-lg font-bold transition-all shadow-sm text-white"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      Đăng ký thi sát hạch
+                    </Link>
+
+                    <p className="text-xs text-muted-foreground mt-4 text-center">Cần hỗ trợ? Vui lòng liên hệ Hotline <strong className="text-primary">1900 xxxx</strong>.</p>
+                  </>
                 )}
               </div>
 
@@ -544,28 +550,28 @@ const ExamPage = () => {
 
               {/* Thống kê */}
               <div className="card p-6">
-                 <h3 className="font-bold mb-4 text-lg flex items-center gap-2">
-                   <BarChart3 className="w-5 h-5 text-primary" />
-                   Thống kê
-                 </h3>
-                 <div className="space-y-3 text-sm">
-                    <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
-                        <span className="text-muted-foreground">Tổng số đã cấp chứng chỉ:</span>
-                        <span className="font-bold text-white">12,548</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
-                        <span className="text-muted-foreground">Tỷ lệ đậu trung bình:</span>
-                        <span className="font-bold text-green-600">78%</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
-                        <span className="text-muted-foreground">Kỳ thi gần nhất:</span>
-                        <span className="font-bold text-white">25/12/2025</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Số lượng trung tâm:</span>
-                        <span className="font-bold text-white">15</span>
-                    </div>
-                 </div>
+                <h3 className="font-bold mb-4 text-lg flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Thống kê
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+                    <span className="text-muted-foreground">Tổng số đã cấp chứng chỉ:</span>
+                    <span className="font-bold text-white">12,548</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+                    <span className="text-muted-foreground">Tỷ lệ đậu trung bình:</span>
+                    <span className="font-bold text-green-600">78%</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+                    <span className="text-muted-foreground">Kỳ thi gần nhất:</span>
+                    <span className="font-bold text-white">25/12/2025</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Số lượng trung tâm:</span>
+                    <span className="font-bold text-white">15</span>
+                  </div>
+                </div>
               </div>
 
               {/* Support */}
@@ -612,35 +618,35 @@ const ExamPage = () => {
               {upcomingExams.map((exam, idx) => {
                 const tier = getTierFromType(exam.type);
                 let ButtonRender;
-                
+
                 if (exam.is_registered === 1) {
-                    ButtonRender = (
-                      <button disabled className="w-full py-2 bg-green-100 text-green-700 font-bold rounded cursor-not-allowed flex items-center justify-center gap-2">
-                        <CheckCircle2 size={18} /> Đã đăng ký
-                      </button>
-                    );
+                  ButtonRender = (
+                    <button disabled className="w-full py-2 bg-green-100 text-green-700 font-bold rounded cursor-not-allowed flex items-center justify-center gap-2">
+                      <CheckCircle2 size={18} /> Đã đăng ký
+                    </button>
+                  );
                 } else if (exam.spots_left <= 0) {
-                    ButtonRender = (
-                      <button disabled className="w-full py-2 bg-gray-200 text-gray-500 font-bold rounded cursor-not-allowed">
-                        Đã hết chỗ
-                      </button>
-                    );
+                  ButtonRender = (
+                    <button disabled className="w-full py-2 bg-gray-200 text-gray-500 font-bold rounded cursor-not-allowed">
+                      Đã hết chỗ
+                    </button>
+                  );
                 } else {
-                    ButtonRender = (
-                        <Link
-                            to={user ? "/dat-lich-thi" : "/dang-ky"}
-                            state={{ 
-                              preSelectedTier: tier, 
-                              examId: exam.id, 
-                              examLocation: exam.location, 
-                              examInfo: `${exam.type} - ${formatDate(exam.exam_date)}` 
-                            }}
-                            className="block w-full text-center bg-primary hover:bg-primary/90 py-2 rounded font-bold transition-all"
-                            style={{ textDecoration: 'none' }}
-                        >
-                            Đăng ký ngay
-                        </Link>
-                    );
+                  ButtonRender = (
+                    <Link
+                      to={user ? "/dat-lich-thi" : "/dang-ky"}
+                      state={{
+                        preSelectedTier: tier,
+                        examId: exam.id,
+                        examLocation: exam.location,
+                        examInfo: `${exam.type} - ${formatDate(exam.exam_date)}`
+                      }}
+                      className="block w-full text-center bg-primary hover:bg-primary/90 py-2 rounded font-bold transition-all"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      Đăng ký ngay
+                    </Link>
+                  );
                 }
 
                 return (
@@ -652,23 +658,23 @@ const ExamPage = () => {
                       </div>
                     </div>
                     <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-muted-foreground"/> 
-                          <div>
-                            <p className="font-medium text-white">{exam.location}</p>
-                            <p className="text-xs text-muted-foreground">{exam.address}</p>
-                          </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-white">{exam.location}</p>
+                          <p className="text-xs text-muted-foreground">{exam.address}</p>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Calendar className="w-4 h-4"/> 
-                              <span>{formatDate(exam.exam_date)}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Clock className="w-4 h-4"/> 
-                              <span>{exam.exam_time}</span>
-                            </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span>{formatDate(exam.exam_date)}</span>
                         </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          <span>{exam.exam_time}</span>
+                        </div>
+                      </div>
                     </div>
                     {ButtonRender}
                   </div>

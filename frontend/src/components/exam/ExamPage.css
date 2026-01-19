@@ -914,3 +914,13 @@ h1, h2, h3, h4, h5, h6 {
 .exam-page-wrapper ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-yellow);
 }
+/* Fix text color for primary link buttons */
+a.bg-primary,
+a.bg-primary:focus,
+a.bg-primary:active {
+  color: #ffffff !important;
+}
+
+a.bg-primary:hover {
+  color: #000000 !important;
+}

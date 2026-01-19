@@ -12,6 +12,7 @@ function LookupPage() {
         droneSerial: '',
         droneType: ''
     });
+
     const [cameraActive, setCameraActive] = useState(false);
     const [mediaStream, setMediaStream] = useState(null);
     const [qrResult, setQrResult] = useState(null);
@@ -108,6 +109,7 @@ function LookupPage() {
         }));
     };
 
+
     const handleSearch = (e) => {
         e.preventDefault();
         console.log('Searching with:', formData);
@@ -117,8 +119,8 @@ function LookupPage() {
 
     const activateCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
             });
             // Lưu stream vào state và bật camera
             // useEffect sẽ gán stream cho video sau khi render
@@ -177,6 +179,8 @@ function LookupPage() {
         }
     };
 
+
+
     return (
         <div className="lookup-page">
             {/* Hero Section */}
@@ -190,33 +194,33 @@ function LookupPage() {
             <section className="search-section">
                 <div className="container">
                     <div className="search-card">
-                        <h2 className="search-title">Tra cứu thông tin</h2>
-                        <p className="search-subtitle">Nhập thông tin để tra cứu giấy phép/bằng lái drone</p>
+                        <h2 className="search-title">Tra Cứu Thông Tin</h2>
+                        <p className="search-subtitle">Nhập thông tin để tra cứu giấy phép/ bằng lái drone</p>
 
                         {/* Tabs */}
                         <div className="search-tabs">
-                            <button 
+                            <button
                                 className={`search-tab ${activeTab === 'so-giay-phep' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('so-giay-phep')}
                             >
                                 <FileText size={18} />
                                 <span>Số giấy phép</span>
                             </button>
-                            <button 
+                            <button
                                 className={`search-tab ${activeTab === 'cccd' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('cccd')}
                             >
                                 <CreditCard size={18} />
                                 <span>CCCD/CMND</span>
                             </button>
-                            <button 
+                            <button
                                 className={`search-tab ${activeTab === 'ma-thiet-bi' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('ma-thiet-bi')}
                             >
                                 <Smartphone size={18} />
                                 <span>Mã thiết bị drone</span>
                             </button>
-                            <button 
+                            <button
                                 className={`search-tab ${activeTab === 'qr' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('qr')}
                             >
@@ -314,9 +318,9 @@ function LookupPage() {
                                             </div>
                                         ) : (
                                             <>
-                                                <video 
-                                                    ref={videoRef} 
-                                                    autoPlay 
+                                                <video
+                                                    ref={videoRef}
+                                                    autoPlay
                                                     playsInline
                                                     muted
                                                     className="qr-video"
@@ -461,9 +465,9 @@ function LookupPage() {
                             <div className="instruction-card">
                                 <div className="instruction-icon">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="12" y1="16" x2="12" y2="12"/>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="16" x2="12" y2="12" />
+                                        <line x1="12" y1="8" x2="12.01" y2="8" />
                                     </svg>
                                 </div>
                                 <div className="instruction-content">

@@ -2,8 +2,9 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 function PersonalInfo() {
-  const { profile, formatDate } = useOutletContext();
 
+  const { profile, formatDate } = useOutletContext();
+  console.log("PROFILE:", profile);
   return (
     <div className="personal-info-container">
       <h2 className="section-title">Thông Tin Cá Nhân</h2>
@@ -20,34 +21,57 @@ function PersonalInfo() {
               </div>
 
               <div className="info-row">
-                <span className="info-label">ID</span>
-                <span className="info-value">{profile.staff_id || '--'}</span>
+                <span className="info-label">Email</span>
+                <span className="info-value">{profile.email || '--'}</span>
               </div>
 
               <div className="info-row">
+                <span className="info-label">Số điện thoại</span>
+                <span className="info-value">{profile.phone || '--'}</span>
+              </div>
+
+              {/* <div className="info-row">
                 <span className="info-label">Giới tính</span>
-                <span className="info-value">{profile.gender || 'Male'}</span>
+                <span className="info-value">{profile.gender || '--'}</span>
+              </div> */}
+
+              <div className="info-row">
+                <span className="info-label">Mã định danh</span>
+                <span className="info-value">{profile.identity_number || '--'}</span>
+              </div>
+
+              {/* <div className="info-row">
+                <span className="info-label">Sinh nhật</span>
+                <span className="info-value">
+                  {profile.birth_date ? formatDate(profile.birth_date) : '--'}
+                </span>
+              </div> */}
+
+              <div className="info-row">
+                <span className="info-label">Địa chỉ</span>
+                <span className="info-value">{profile.address || '--'}</span>
               </div>
 
               <div className="info-row">
-                <span className="info-label">Sinh nhật</span>
-                <span className="info-value">{formatDate(profile.birthday)}</span>
+                <span className="info-label">Hạng</span>
+                <span className="info-value">{profile.target_tier || '--'}</span>
               </div>
+
+              <div className="info-row">
+                <span className="info-label">Loại UAV</span>
+                <span className="info-value">{profile.uav_type || '--'}</span>
+              </div>
+
+              
 
               <div className="info-row">
                 <span className="info-label">Ngày kích hoạt</span>
-                <span className="info-value">{formatDate(profile.onboarding_date)}</span>
+                <span className="info-value">
+                  {profile.created_at ? formatDate(profile.created_at) : '--'}
+                </span>
               </div>
 
-              <div className="info-row">
-                <span className="info-label">Bộ phận</span>
-                <span className="info-value">{profile.department}</span>
-              </div>
 
-              <div className="info-row">
-                <span className="info-label">Chức vụ</span>
-                <span className="info-value">{profile.position || '--'}</span>
-              </div>
             </div>
           </div>
 

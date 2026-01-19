@@ -50,18 +50,14 @@
 /* === HERO BANNER SLIDER (MỚI) === */
 .hero-banner-wrapper {
   position: relative;
-  /* Chiều cao tối thiểu để chứa nội dung và ảnh */
   min-height: 600px;
   background-color: #000;
-  /* Màu nền dự phòng khi ảnh chưa load */
   overflow: hidden;
-  /* Cắt phần ảnh thừa */
   border-bottom: 1px solid var(--border-color);
   color: white;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Đẩy bottom bar xuống cuối */
 }
 
 /* Container chứa các slide ảnh */
@@ -72,7 +68,6 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  /* Nằm dưới cùng */
 }
 
 /* Từng slide ảnh */
@@ -85,9 +80,7 @@
   background-size: cover;
   background-position: center;
   opacity: 0;
-  /* Mặc định ẩn */
   transition: opacity 1.5s ease-in-out;
-  /* Hiệu ứng chuyển mờ dần trong 1.5s */
 }
 
 /* Slide đang active thì hiện lên */
@@ -103,9 +96,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
-  /* Đen mờ 60% */
   z-index: 1;
-  /* Nằm trên ảnh nhưng dưới chữ */
 }
 
 /* Nội dung bên trong Hero (Chữ, Nút...) */
@@ -114,12 +105,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 50px 20px 30px 20px;
-  /* Giảm padding-bottom */
   min-height: 200px;
-  /* Giảm min-height */
   position: relative;
   z-index: 2;
-  /* Nằm trên cùng */
 }
 
 .hero-title {
@@ -130,30 +118,24 @@
   text-transform: uppercase;
   color: var(--primary-yellow);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-  /* Bóng chữ đậm hơn để nổi trên ảnh */
 }
 
 .hero-illustration img {
   max-height: 250px;
   object-fit: contain;
   opacity: 1;
-  /* Giữ filter neon */
-  filter: drop-shadow(0 0 10px rgba(255, 202, 5, 0.5));
+  /* Đã XÓA filter drop-shadow màu vàng ở đây */
 }
 
 /* Bottom Bar */
 .hero-bottom-bar {
   background-color: rgba(20, 20, 20, 0.95);
-  /* Đậm hơn để rõ ràng */
   padding: 15px 0;
   width: 100%;
   border-top: 1px solid #444;
   position: relative;
   z-index: 2;
-  /* Nằm trên slider */
-
   margin-top: auto;
-  /* Đẩy xuống cuối flexbox */
 }
 
 .bar-content {
@@ -232,7 +214,8 @@
 
 .course-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 15px rgba(255, 202, 5, 0.15);
+  /* Đã ĐỔI từ shadow vàng sang shadow đen thường */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
   border-color: var(--primary-yellow);
 }
 
@@ -284,17 +267,12 @@
 
 .course-card:hover .badge-type-a {
   background: #388e3c;
-  /* box-shadow: 0 0 10px rgba(46, 125, 50, 0.5); */
 }
 
 .badge-type-b {
   background: var(--primary-yellow);
   color: var(--text-black);
 }
-
-/* .course-card:hover .badge-type-b {
-  box-shadow: 0 0 10px rgba(255, 202, 5, 0.5);
-} */
 
 .course-badge span {
   text-transform: uppercase;

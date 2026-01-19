@@ -1,0 +1,499 @@
+/* =========================================
+   DISPLAY SETTINGS MANAGER STYLES
+   (Tách từ component DisplaySettingsManager.js)
+   ========================================= */
+
+/* 1. CÁC BIẾN MÀU SẮC CHUYÊN DỤNG */
+:root {
+    /* Màu chính cho Display Settings */
+    --ds-primary: #0066cc;
+    --ds-primary-dark: #0052a3;
+    --ds-primary-light: #f0f7ff;
+
+    /* Màu trạng thái */
+    --ds-success: #28a745;
+    --ds-success-light: #d4edda;
+    --ds-info: #17a2b8;
+    --ds-danger: #dc3545;
+    --ds-danger-light: #f8d7da;
+    --ds-warning: #ffc107;
+
+    /* Màu nền */
+    --ds-bg-light: #f8f9fa;
+    --ds-bg-white: #ffffff;
+    --ds-bg-gray: #f1f8ff;
+
+    /* Màu chữ */
+    --ds-text-primary: #333;
+    --ds-text-secondary: #666;
+    --ds-text-light: #888;
+    --ds-text-inverse: #fff;
+
+    /* Border */
+    --ds-border-light: #ddd;
+    --ds-border-medium: #ccc;
+    --ds-border-primary: #0066cc;
+
+    /* Shadow */
+    --ds-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --ds-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 2. STYLES CHUNG CHO DISPLAY SETTINGS */
+.display-settings-manager {
+    /* Không cần thêm style cụ thể nếu không cần thiết */
+}
+
+/* 3. HEADER STYLES */
+.ds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 25px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    border-bottom: 2px solid var(--ds-primary);
+}
+
+.ds-header-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--ds-primary);
+}
+
+.ds-header-button {
+    padding: 8px 16px;
+    background: var(--ds-primary);
+    color: var(--ds-text-inverse);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.2s;
+    padding-right: 20px;
+}
+
+.ds-header-button:hover {
+    opacity: 0.9;
+}
+
+.ds-header-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* 4. TAB BUTTON STYLES */
+.ds-tab-button {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border: 1px solid var(--ds-border-light);
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ds-tab-button.active {
+    background-color: var(--ds-primary);
+    color: var(--ds-text-inverse);
+}
+
+.ds-tab-button:not(.active) {
+    background-color: var(--ds-bg-light);
+    color: var(--ds-text-primary);
+}
+
+.ds-tab-button:hover:not(.active) {
+    background-color: var(--ds-primary-light);
+    border-color: var(--ds-primary);
+}
+
+/* 5. MESSAGE STYLES */
+.ds-message {
+    padding: 12px 15px;
+    margin: 15px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.ds-message.success {
+    background: var(--ds-success-light);
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.ds-message.error {
+    background: var(--ds-danger-light);
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* 6. SECTION HEADERS */
+.ds-section-header {
+    border-bottom: 2px solid var(--ds-primary);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    color: var(--ds-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.ds-subsection-header {
+    border-bottom: 1px solid var(--ds-border-light);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    margin-top: 30px;
+    color: var(--ds-primary);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* 7. FORM CONTROLS */
+.ds-form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--ds-border-medium);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--ds-text-primary);
+    background: var(--ds-bg-white);
+    transition: all 0.3s;
+    margin-bottom: 15px;
+}
+
+.ds-form-control:focus {
+    border-color: var(--ds-primary);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.ds-form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--ds-text-secondary);
+}
+
+.ds-form-group {
+    margin-bottom: 20px;
+}
+
+/* 8. LEGAL DOCUMENTS EDITOR */
+.ds-legal-doc-editor {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+}
+
+.ds-legal-doc-editor.editing {
+    background: #e8f5e9;
+    border: 1px solid #c3e6cb;
+}
+
+.ds-legal-doc-editor:not(.editing) {
+    background: var(--ds-bg-gray);
+    border: 1px solid #cce5ff;
+}
+
+.ds-legal-doc-header {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ds-legal-doc-header.editing {
+    color: #155724;
+}
+
+.ds-legal-doc-header:not(.editing) {
+    color: #004085;
+}
+
+.ds-cancel-edit-btn {
+    border: none;
+    background: transparent;
+    text-decoration: underline;
+    cursor: pointer;
+    color: var(--ds-danger);
+    font-size: 12px;
+}
+
+.ds-legal-doc-inputs {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 10px;
+}
+
+.ds-save-doc-btn {
+    height: 38px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--ds-text-inverse);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0 15px;
+}
+
+.ds-save-doc-btn.editing {
+    background: var(--ds-success);
+}
+
+.ds-save-doc-btn:not(.editing) {
+    background: var(--ds-primary);
+}
+
+/* 9. LEGAL DOCUMENTS LIST */
+.ds-documents-list {
+    margin-bottom: 20px;
+    border: 1px solid var(--ds-border-light);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.ds-document-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--ds-border-light);
+}
+
+.ds-document-item.editing {
+    background: #e8f5e9;
+}
+
+.ds-document-item:not(.editing) {
+    background: var(--ds-bg-white);
+}
+
+.ds-document-info {
+    overflow: hidden;
+    flex: 1;
+}
+
+.ds-document-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ds-text-primary);
+}
+
+.ds-document-url {
+    font-size: 12px;
+    color: var(--ds-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ds-document-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.ds-edit-btn {
+    background: #007bff;
+    color: var(--ds-text-inverse);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ds-delete-btn {
+    background: var(--ds-danger);
+    color: var(--ds-text-inverse);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* 10. POLICY SECTIONS */
+.ds-policy-section {
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ds-policy-header {
+    padding: 12px 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ds-policy-header.privacy {
+    background: var(--ds-success);
+    color: var(--ds-text-inverse);
+}
+
+.ds-policy-header.terms {
+    background: var(--ds-info);
+    color: var(--ds-text-inverse);
+}
+
+.ds-policy-save-btn {
+    padding: 6px 12px;
+    background: var(--ds-bg-white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.ds-policy-save-btn.privacy {
+    color: var(--ds-success);
+}
+
+.ds-policy-save-btn.terms {
+    color: var(--ds-info);
+}
+
+.ds-policy-save-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.ds-policy-content {
+    padding: 20px;
+    background: var(--ds-bg-light);
+}
+
+.ds-policy-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--ds-border-light);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    background: var(--ds-bg-white);
+}
+
+.ds-policy-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--ds-text-secondary);
+}
+
+/* 11. NOTIFICATION ITEMS */
+.ds-notification-item {
+    cursor: pointer;
+    border-left: 4px solid transparent;
+}
+
+.ds-notification-item.active {
+    border-left-color: var(--ds-primary);
+}
+
+.ds-notification-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ds-text-primary);
+}
+
+.ds-notification-date {
+    font-size: 11px;
+    color: var(--ds-text-light);
+}
+
+.ds-delete-noti-btn {
+    background: #ff4d4f;
+    color: var(--ds-text-inverse);
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 12. LOADING STATES */
+.ds-loading-text {
+    text-align: center;
+    padding: 40px;
+    font-size: 14px;
+    color: var(--ds-text-secondary);
+}
+
+.ds-loading-button {
+    opacity: 0.7;
+    cursor: not-allowed !important;
+}
+
+/* 13. UTILITY CLASSES */
+.ds-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.ds-full-width-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ds-empty-state {
+    padding: 15px;
+    text-align: center;
+    color: var(--ds-text-light);
+    font-size: 13px;
+}
+
+/* 14. RESPONSIVE STYLES */
+@media (max-width: 768px) {
+    .ds-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .ds-legal-doc-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .ds-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .ds-document-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .ds-document-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

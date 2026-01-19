@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
+import { NavLink } from "react-router-dom";
 import './Heder.css';
 
 
@@ -64,11 +65,31 @@ const Header = () => {
                 {/* Menu chính */}
                 <nav className="nav">
                     <ul className="nav-menu">
-                        <li><Link to="/">Trang chủ</Link></li>
-                        <li><Link to="/gioi-thieu">Giới thiệu</Link></li>
-                        <li><Link to="/khoa-hoc">Khóa học</Link></li>
-                        <li><Link to="/thi-sat-hach">Thi sát hạch</Link></li>
-                        <li><Link to="/tra-cuu">Tra cứu</Link></li>
+                        <li>
+                            <NavLink to="/" end className="nav-link">
+                                Trang chủ
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/gioi-thieu" className="nav-link">
+                                Giới thiệu
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/khoa-hoc" className="nav-link">
+                                Khóa học
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/thi-sat-hach" className="nav-link">
+                                Thi sát hạch
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/tra-cuu" className="nav-link">
+                                Tra cứu
+                            </NavLink>
+                        </li>
                     </ul>
                 </nav>
 

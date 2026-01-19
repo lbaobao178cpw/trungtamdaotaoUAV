@@ -613,7 +613,7 @@ h3.section-title {
 .sub-list-arrow li {
   position: relative;
   padding-left: 25px;
-  margin-bottom: 10px;
+
   color: var(--text-white);
   font-size: 0.95rem;
   line-height: 1.5;
