@@ -23,7 +23,7 @@
     margin: 0 auto;
     padding: 20px;
     min-height: 100vh;
-    background: var(--bg-body);
+    background-color: var(--bg-body);
     color: var(--text-white);
     font-family: "Roboto", sans-serif;
 }
@@ -37,8 +37,7 @@
 }
 
 .policy-header-content {
-    background: #006eff;
-    /* Màu xanh giống hero section của bạn */
+    background-color: #006eff;
     border-radius: 12px;
     padding: 40px;
     color: white;
@@ -84,7 +83,7 @@
     gap: 10px;
     font-size: 0.95rem;
     opacity: 0.9;
-    background: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     padding: 8px 16px;
     border-radius: 50px;
     color: white;
@@ -108,7 +107,7 @@
 }
 
 .breadcrumb a:hover {
-    color: #003b8e;
+    color: #0050b8;
     text-decoration: underline;
 }
 
@@ -125,7 +124,7 @@
 }
 
 .policy-card {
-    background: var(--bg-card);
+    background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 40px;
@@ -215,7 +214,7 @@
 }
 
 .policy-contact-card {
-    background: var(--primary-yellow);
+    background-color: var(--primary-yellow);
     border-radius: 12px;
     padding: 40px;
     color: white;
@@ -249,16 +248,15 @@
     gap: 15px;
     font-size: 1.1rem;
     padding: 12px 20px;
-    background: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-
-    transition: transform 0.3s, background 0.3s;
+    transition: transform 0.3s, background-color 0.3s;
     color: white;
 }
 
 .contact-item:hover {
     transform: translateX(10px);
-    background: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.25);
 }
 
 .contact-item svg {
@@ -298,7 +296,7 @@
     align-items: center;
     gap: 10px;
     padding: 12px 25px;
-    background: var(--primary-yellow);
+    background-color: var(--primary-yellow);
     color: white !important;
     text-decoration: none;
     border-radius: 50px;
@@ -309,19 +307,19 @@
 }
 
 .policy-link:hover {
-    background: #003b8e;
+    background-color: #003b8e;
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 80, 184, 0.4);
     color: white !important;
 }
 
 .policy-link:last-child {
-    background: #006eff;
+    background-color: #006eff;
     box-shadow: 0 4px 15px rgba(0, 110, 255, 0.3);
 }
 
 .policy-link:last-child:hover {
-    background: #0050b8;
+    background-color: #0050b8;
     box-shadow: 0 8px 25px rgba(0, 110, 255, 0.4);
 }
 
@@ -331,7 +329,7 @@
 .policy-loading {
     text-align: center;
     padding: 100px 20px;
-    background: var(--bg-card);
+    background-color: var(--bg-card);
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -368,7 +366,7 @@
 .policy-error {
     text-align: center;
     padding: 80px 20px;
-    background: var(--bg-card);
+    background-color: var(--bg-card);
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -391,7 +389,7 @@
 
 .retry-btn {
     padding: 12px 30px;
-    background: var(--primary-yellow);
+    background-color: var(--primary-yellow);
     color: white;
     border: none;
     border-radius: 50px;
@@ -403,7 +401,7 @@
 }
 
 .retry-btn:hover {
-    background: #003b8e;
+    background-color: #003b8e;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 80, 184, 0.4);
 }
@@ -508,4 +506,25 @@
     .policy-list-item {
         font-size: 1rem;
     }
+}
+/* =========================================================
+   FORCE REMOVE ALL GRADIENTS
+   ========================================================= */
+.policy-contact-card,
+.policy-header-content,
+.contact-item {
+    background-image: none !important;
+    background: none !important;
+}
+
+.policy-contact-card {
+    background-color: #0050b8 !important;
+}
+
+.policy-header-content {
+    background-color: #006eff !important;
+}
+
+.contact-item {
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }

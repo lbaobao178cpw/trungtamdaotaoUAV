@@ -565,7 +565,7 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 }
 
 .badge-a {
-  background-color: rgba(255, 202, 5, 0.15);
+  background-color:  rgb(0 39 255 / 15%);
   color: var(--primary-yellow);
   border: 1px solid var(--primary-yellow);
 }
@@ -823,7 +823,6 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 /* === MAP 3D (DESKTOP) === */
 .point-image-marker {
   --marker-size: 150px;
-  /* Kích thước mặc định PC */
   --marker-padding: 8px;
   --marker-border-radius: 20px;
 
@@ -831,11 +830,16 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
   height: var(--marker-size);
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(61, 61, 61, 0.85);
+  
+  /* Giữ nguyên màu nền và viền mặc định */
+  background: rgba(252, 252, 252, 0.85);
   border: 2px solid var(--primary-yellow);
+  
   padding: var(--marker-padding);
   border-radius: var(--marker-border-radius);
-  box-shadow: 0 4px 15px rgba(255, 202, 5, 0.3);
+  
+  /* Đã xóa box-shadow để không có bóng/glow */
+  box-shadow: none; 
 
   display: flex;
   align-items: center;
@@ -844,8 +848,11 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 
 .point-image-marker:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(255, 202, 5, 0.6);
-  background: var(--primary-yellow);
+  
+  background: #e6b804;
+  border-color: #e6b804; 
+
+  box-shadow: none; 
 }
 
 .point-image-marker img {
@@ -967,7 +974,7 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 }
 
 .map-info-description-new {
-  background: #ffffff;
+  background: #999696;
   padding: 16px;
   border-radius: 8px;
   border: 1px solid #444;

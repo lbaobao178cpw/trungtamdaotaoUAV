@@ -1869,3 +1869,66 @@
 .cm-badge-b::before {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* ============================================
+   VIDEO UPLOAD ANIMATION
+   ============================================ */
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.video-upload-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Video upload drag and drop area */
+.video-upload-zone {
+    border: 2px dashed var(--cm-gray-300);
+    border-radius: var(--cm-radius-md);
+    padding: var(--cm-spacing-2xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--cm-transition-base);
+    background: var(--cm-gray-50);
+}
+
+.video-upload-zone:hover {
+    border-color: var(--cm-primary);
+    background: rgba(15, 98, 254, 0.02);
+}
+
+.video-upload-zone.uploading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.video-upload-progress {
+    width: 100%;
+    height: 6px;
+    background: var(--cm-gray-200);
+    border-radius: 3px;
+    margin-top: var(--cm-spacing-md);
+    overflow: hidden;
+}
+
+.video-upload-progress-bar {
+    height: 100%;
+    background: var(--cm-primary);
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+/* Modal sizes */
+.cm-modal-large {
+    max-width: 800px;
+}
+
+.cm-modal-upload {
+    max-width: 500px;
+}

@@ -135,6 +135,8 @@ function UAVLandingPage() {
   const [points, setPoints] = useState([]);
   const [solutions, setSolutions] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [courseRatings, setCourseRatings] = useState({});
   const [modelUrl, setModelUrl] = useState(null);
   const [cameraSettings, setCameraSettings] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -158,8 +160,33 @@ function UAVLandingPage() {
       .then((res) => res.json()).then((data) => setPoints(data)).catch((err) => console.error(err));
     fetch("http://localhost:5000/api/solutions")
       .then((res) => res.json()).then((data) => setSolutions(data)).catch((err) => console.error(err));
-    fetch("http://localhost:5000/api/notifications")
-      .then((res) => res.json()).then((data) => setNotifications(data)).catch((err) => console.error(err));
+    fetch("http://localhost:5000/api/display/notifications")
+      .then((res) => res.json()).then((data) => setNotifications(Array.isArray(data) ? data : data.data || [])).catch((err) => console.error(err));
+
+    // Fetch courses và ratings
+    fetch("http://localhost:5000/api/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        setCourses(data);
+
+        // Fetch ratings cho từng course
+        const ratings = {};
+        data.forEach((course) => {
+          fetch(`http://localhost:5000/api/comments/course/${course.id}`)
+            .then((res) => res.json())
+            .then((comments) => {
+              const ratedComments = (comments.comments || []).filter(c => c.rating);
+              if (ratedComments.length > 0) {
+                const avg = (ratedComments.reduce((sum, c) => sum + c.rating, 0) / ratedComments.length).toFixed(1);
+                ratings[course.id] = { average: avg, count: ratedComments.length };
+                setCourseRatings(prev => ({ ...prev, [course.id]: { average: avg, count: ratedComments.length } }));
+              }
+            })
+            .catch((err) => console.error(`Lỗi fetch comments cho course ${course.id}:`, err));
+        });
+      })
+      .catch((err) => console.error(err));
+
     fetch("http://localhost:5000/api/settings/current_model_url")
       .then((res) => res.json()).then((data) => setModelUrl(data.value || "/models/scene.glb")).catch(() => setModelUrl("/models/scene.glb"));
     fetch("http://localhost:5000/api/settings/default_camera_view")
@@ -193,29 +220,76 @@ function UAVLandingPage() {
     return true;
   };
 
-  const courses = [
-    { id: 1, title: "ĐIỀU KHIỂN THIẾT BỊ BAY KHÔNG NGƯỜI LÁI HẠNG A", image: "/images/course-images/course-a.jpeg", badge: "Sản phẩm mới", rating: 4.8, reviews: 250, group: "newest" },
-    { id: 2, title: "ĐIỀU KHIỂN THIẾT BỊ BAY KHÔNG NGƯỜI LÁI HẠNG B", image: "/images/course-images/course-b.jpeg", badge: "Sản phẩm mới", rating: 4.9, reviews: 171, group: "newest" },
-    { id: 3, title: "LỚP ỨNG DỤNG: KIỂM TRA CÔNG NGHIỆP VỚI UAV", image: "/images/course-images/course-industry.jpeg", badge: "Sản phẩm mới", rating: 4.8, reviews: 150, group: "newest" },
-    { id: 4, title: "LỚP ỨNG DỤNG: MAPPING - DIGITAL TWIN", image: "/images/course-images/course-mapping.jpeg", badge: "Cập nhật", rating: 4.5, reviews: 198, group: "newest" },
-  ];
-  const newestCourses = courses.filter((c) => c.group === "newest");
+  const newestCourses = [...courses]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 4);
 
-  const renderCourseCard = (course) => (
-    <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
-      <div className="course-image-wrapper">
-        <img src={course.image} alt={course.title} onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} />
-        {course.badge && <div className="course-badge">{course.badge}</div>}
-      </div>
-      <div className="course-content">
-        <h3 className="course-title">{course.title}</h3>
-        <div className="course-rating">
-          <div className="stars" style={{ display: "flex" }}>{[...Array(5)].map((_, i) => <StarIcon key={i} />)}</div>
-          <span style={{ marginLeft: "8px", fontSize: "14px", color: "#b0b0b0" }}>{course.rating} ({course.reviews})</span>
+  const renderCourseCard = (course) => {
+    const rating = courseRatings[course.id]?.average ? parseFloat(courseRatings[course.id].average) : (course.rating || 5.0);
+
+    // --- LOGIC MỚI: Xác định loại Badge (Hạng A / Hạng B) ---
+    const getBadgeInfo = (text) => {
+      if (!text) return null;
+      const t = text.toLowerCase();
+      
+      // Nếu là 'a' hoặc 'cơ bản' -> Style Hạng A (Màu xanh/vàng)
+      if (t.includes('a') || t.includes('cơ bản')) {
+        return { label: 'HẠNG A', className: 'badge-a' };
+      }
+      // Nếu là 'b' hoặc 'nâng cao' -> Style Hạng B (Màu xanh lá)
+      if (t.includes('b') || t.includes('nâng cao')) {
+        return { label: 'HẠNG B', className: 'badge-b' };
+      }
+      // Mặc định dùng style A
+      return { label: text, className: 'badge-a' };
+    };
+
+    // Lấy thông tin badge từ dữ liệu (kiểm tra cả 'level' và 'badge' phòng trường hợp API trả về khác nhau)
+    const badgeInfo = getBadgeInfo(course.level || course.badge);
+
+    return (
+      <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
+        <div className="course-image-wrapper">
+          <img 
+            src={course.image} 
+            alt={course.title} 
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} 
+          />
+          {/* Đã XÓA badge cũ ở đây để không hiện đè lên ảnh */}
+        </div>
+        
+        <div className="course-content">
+          {/* --- CẤU TRÚC MỚI: Flexbox cho Tiêu đề và Badge --- */}
+          <div className="course-title-row">
+            <h3 className="course-title">{course.title}</h3>
+            {badgeInfo && (
+              <span className={`uav-cert-badge course-inline-badge ${badgeInfo.className}`}>
+                {badgeInfo.label}
+              </span>
+            )}
+          </div>
+
+          <div className="course-rating">
+            <div className="stars" style={{ display: "flex" }}>
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="star-icon" viewBox="0 0 24 24" style={{ width: "16px", height: "16px" }}>
+                  <path
+                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                    fill={i < Math.round(rating) ? '#FFC107' : '#ddd'}
+                  />
+                </svg>
+              ))}
+            </div>
+            <span style={{ marginLeft: "8px", fontSize: "14px", color: "#b0b0b0" }}>
+              {courseRatings[course.id]
+                ? `${courseRatings[course.id].average} (${course.totalViews || 0} lượt xem)`
+                : `${course.rating || '5.0'} (${course.totalViews || 0} lượt xem)`}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -388,21 +462,7 @@ function UAVLandingPage() {
         <div className="container">
           <h2 className="section-title">Khóa học mới nhất</h2>
           <div className="courses-grid">
-            {newestCourses.map((course) => (
-              <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
-                <div className="course-image-wrapper">
-                  <img src={course.image} alt={course.title} onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} />
-                  {course.badge && <div className="course-badge">{course.badge}</div>}
-                </div>
-                <div className="course-content">
-                  <h3 className="course-title">{course.title}</h3>
-                  <div className="course-rating">
-                    <div className="stars" style={{ display: "flex" }}>{[...Array(5)].map((_, i) => <StarIcon key={i} />)}</div>
-                    <span style={{ marginLeft: "8px", fontSize: "14px", color: "#b0b0b0" }}>{course.rating} ({course.reviews})</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {newestCourses.map((course) => renderCourseCard(course))}
           </div>
         </div>
       </section>
