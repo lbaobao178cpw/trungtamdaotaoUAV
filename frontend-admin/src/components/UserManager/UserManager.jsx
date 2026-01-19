@@ -203,7 +203,7 @@ export default function UserManager() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           <div style={{display:'flex', gap:'6px', alignItems:'center'}}><CreditCard size={14} color="#666"/> <strong>CCCD:</strong> {user.identity_number || "Chưa cập nhật"}</div>
                           <div style={{display:'flex', gap:'6px', alignItems:'center'}}><Calendar size={14} color="#666"/> <strong>Ngày sinh:</strong> {user.birth_date ? new Date(user.birth_date).toLocaleDateString('vi-VN') : "--"}</div>
-                          <div style={{display:'flex', gap:'6px', alignItems:'center'}}><UserCircle size={14} color="#666"/> <strong>Giới tính:</strong> {user.gender === 'male' ? 'Nam' : user.gender === 'female' ? 'Nữ' : '--'}</div>
+                          <div style={{display:'flex', gap:'6px', alignItems:'center'}}><UserCircle size={14} color="#666"/> <strong>Giới tính:</strong> {user.gender || '--'}</div>
                           <div style={{display:'flex', gap:'6px', alignItems:'center'}}><Award size={14} color="#666"/> <strong>Hạng thi:</strong> {user.target_tier || "Chưa đăng ký"}</div>
                       </div>
                       <div style={{marginTop: '8px', display:'flex', gap:'6px', alignItems:'flex-start'}}>

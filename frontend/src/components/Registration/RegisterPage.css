@@ -1,13 +1,8 @@
-/* =========================================
-   REGISTER PAGE - DARK NEON THEME
-   Màu chủ đạo: Vàng Neon #0050b8 trên nền tối
-   ========================================= */
-
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
 
 :root {
     /* Theme Colors */
-    --primary-yellow: #0050b8;
+    --primary-blue: #0050b8;
     --bg-body: #222222;
     --bg-card: #e1e1e1;
     --bg-card-hover: #454545;
@@ -59,8 +54,8 @@
 }
 
 .step-bar.active {
-    background-color: var(--primary-yellow);
-    box-shadow: 0 0 10px rgba(255, 202, 5, 0.5);
+    background-color: var(--primary-blue);
+    box-shadow: 0 0 10px #0050b8;
 }
 
 /* =========================================
@@ -83,7 +78,7 @@
     border-radius: 8px;
     padding: 24px;
     margin-bottom: 32px;
-    border: 1px solid rgba(255, 202, 5, 0.2);
+    border: 1px solid #0050b8;
 }
 
 .info-title {
@@ -246,7 +241,6 @@
 .form-select:focus {
     outline: none;
     border-color: var(--primary-yellow);
-    box-shadow: 0 0 0 3px rgba(255, 202, 5, 0.2);
     background-color: #e1e1e1 !important;
 }
 
@@ -423,7 +417,6 @@
 .btn-primary {
     background-color: var(--primary-yellow) !important;
     color: var(--text-black) !important;
-    box-shadow: 0 0 20px rgba(255, 202, 5, 0.3);
 }
 
 .btn-primary:hover {
@@ -454,7 +447,6 @@
 
 .btn-disabled:hover {
     transform: none;
-    box-shadow: 0 0 20px rgba(255, 202, 5, 0.3);
     background-color: var(--primary-yellow) !important;
 }
 

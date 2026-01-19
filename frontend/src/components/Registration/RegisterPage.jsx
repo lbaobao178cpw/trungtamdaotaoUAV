@@ -530,8 +530,8 @@ function RegisterPage() {
               className={`form-select ${errors.gender ? "input-error" : ""}`}
             >
               <option value="">--Chọn giới tính--</option>
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
+              <option value="Nam">Nam</option>
+              <option value="Nữ">Nữ</option>
             </select>
 
             {errors.gender && (

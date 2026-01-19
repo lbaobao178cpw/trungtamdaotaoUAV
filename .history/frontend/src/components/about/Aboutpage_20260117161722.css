@@ -589,7 +589,7 @@
 .btn-primary {
   background: var(--about-primary);
   color: var(--about-text-black);
-  /* box-shadow: 0 0 10px rgba(255, 202, 5, 0.3); */
+  /* box-shadow: 0 0 10px #0050b8; */
 }
 
 .btn-primary:hover {

@@ -1,5 +1,4 @@
 # .gitignore - Updated
-node_modules
 .env
 dist
 build

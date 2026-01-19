@@ -207,7 +207,6 @@
 .form-select:focus {
     outline: none;
     border-color: var(--primary-yellow);
-    box-shadow: 0 0 0 3px rgba(255, 202, 5, 0.2);
     background-color: #e1e1e1;
 }
 
@@ -452,13 +451,11 @@
 .btn-primary {
     background-color: var(--primary-yellow);
     color: var(--text-black);
-    box-shadow: 0 0 20px rgba(255, 202, 5, 0.3);
 }
 
 .btn-primary:hover {
     background-color: #e6b804;
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(255, 202, 5, 0.5);
 }
 
 .btn-search {
