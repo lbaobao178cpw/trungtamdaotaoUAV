@@ -111,15 +111,29 @@ router.post("/", async (req, res) => {
 // --- PUT: Cập nhật thông tin người dùng ---
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { full_name, email, phone, role, is_active } = req.body;
+  const { full_name, email, phone, role, is_active, gender, birth_date, address } = req.body;
 
   try {
+    // Cập nhật bảng users
     await db.query(
       `UPDATE users 
        SET full_name=?, email=?, phone=?, role=?, is_active=? 
        WHERE id=?`,
       [full_name, email, phone, role, is_active ? 1 : 0, id]
     );
+
+    // Cập nhật bảng user_profiles (gender, birth_date, address)
+    if (gender !== undefined || birth_date !== undefined || address !== undefined) {
+      await db.query(
+        `UPDATE user_profiles 
+         SET gender = COALESCE(?, gender), 
+             birth_date = COALESCE(?, birth_date), 
+             address = COALESCE(?, address)
+         WHERE user_id = ?`,
+        [gender, birth_date, address, id]
+      );
+    }
+
     res.json({ message: "Cập nhật thành công" });
   } catch (error) {
     console.error(error);

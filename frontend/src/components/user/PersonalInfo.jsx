@@ -316,9 +316,8 @@ function PersonalInfo() {
                       style={{ flex: 1 }}
                     >
                       <option value="">--Chọn--</option>
-                      <option value="male">Nam</option>
-                      <option value="female">Nữ</option>
-                      <option value="other">Khác</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
                     </select>
                   </div>
 
