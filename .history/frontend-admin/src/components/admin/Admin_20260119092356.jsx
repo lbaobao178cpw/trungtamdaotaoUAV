@@ -15,9 +15,9 @@ import "./AdminStyles.css";
 export default function Admin() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
-
+  
   // Đổi tab mặc định hoặc giữ nguyên tùy bạn
-  const [activeTab, setActiveTab] = useState("model3d");
+  const [activeTab, setActiveTab] = useState("model3d"); 
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -129,6 +129,13 @@ export default function Admin() {
           >
             Giao diện & Thông báo
           </button>
+
+          <button
+            className={`nav-item ${activeTab === "study-materials" ? "active" : ""}`}
+            onClick={() => setActiveTab("study-materials")}
+          >
+            📚 Tài liệu Ôn thi
+          </button>
         </nav>
       </header>
 
@@ -153,6 +160,8 @@ export default function Admin() {
             <DisplaySettingsManager />
           </div>
         )}
+
+        {activeTab === "study-materials" && <StudyMaterialsManager />}
       </div>
     </div>
   );

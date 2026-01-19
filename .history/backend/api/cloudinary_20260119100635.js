@@ -23,7 +23,7 @@ const upload = multer({
  * POST /api/cloudinary/upload
  * Upload file lên Cloudinary qua backend
  */
-router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
+router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
     console.log("🚀 Upload request received");
     console.log("File object:", req.file);
@@ -90,15 +90,8 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
       folder,
       resourceType,
       displayName,
-      sanitizedName: sanitized,
-      bufferLength: req.file.buffer?.length || 0,
-      bufferExists: !!req.file.buffer
+      sanitizedName: sanitized
     });
-
-    if (!req.file.buffer || req.file.buffer.length === 0) {
-      console.error("❌ Buffer is empty!");
-      throw new Error('File buffer is empty - cannot upload');
-    }
 
     // Upload to Cloudinary from buffer
     const result = await new Promise((resolve, reject) => {
@@ -120,7 +113,6 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
         }
       );
 
-      console.log("📝 Writing buffer to upload stream, size:", req.file.buffer.length);
       uploadStream.end(req.file.buffer);
     });
 

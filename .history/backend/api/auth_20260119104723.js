@@ -118,9 +118,9 @@ router.post("/login", async (req, res) => {
 
     // 4. Tạo Token (JWT)
     const token = generateToken(
-      {
-        id: user.id,
-        role: user.role,
+      { 
+        id: user.id, 
+        role: user.role, 
         fullName: user.full_name,
         email: user.email
       },
@@ -129,9 +129,9 @@ router.post("/login", async (req, res) => {
 
     // 5. Tạo Refresh Token
     const refreshToken = generateToken(
-      {
-        id: user.id,
-        role: user.role
+      { 
+        id: user.id, 
+        role: user.role 
       },
       'refresh'
     );
@@ -194,9 +194,9 @@ router.post("/login-admin", async (req, res) => {
 
     // Tạo Token
     const token = generateToken(
-      {
-        id: admin.id,
-        role: admin.role,
+      { 
+        id: admin.id, 
+        role: admin.role, 
         fullName: admin.full_name,
         email: admin.email
       },
@@ -205,9 +205,9 @@ router.post("/login-admin", async (req, res) => {
 
     // Tạo Refresh Token
     const refreshToken = generateToken(
-      {
-        id: admin.id,
-        role: admin.role
+      { 
+        id: admin.id, 
+        role: admin.role 
       },
       'refresh'
     );
@@ -231,141 +231,6 @@ router.post("/login-admin", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi đăng nhập admin" });
-  }
-});
-
-// --- REFRESH TOKEN ---
-router.post("/refresh-token", async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        error: "Refresh token không tìm thấy",
-        code: 'NO_REFRESH_TOKEN'
-      });
-    }
-
-    // Verify refresh token
-    const decoded = verifyTokenData(refreshToken, 'refresh');
-
-    // Lấy thông tin user từ database
-    const [rows] = await db.query(
-      "SELECT id, role, full_name, email FROM users WHERE id = ?",
-      [decoded.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(401).json({
-        success: false,
-        error: "User không tồn tại",
-        code: 'USER_NOT_FOUND'
-      });
-    }
-
-    const user = rows[0];
-
-    // Tạo token mới
-    const newToken = generateToken(
-      {
-        id: user.id,
-        role: user.role,
-        fullName: user.full_name,
-        email: user.email
-      },
-      'access'
-    );
-
-    res.json({
-      success: true,
-      message: "Token mới được tạo thành công",
-      token: newToken
-    });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: "Refresh token đã hết hạn",
-        code: 'REFRESH_TOKEN_EXPIRED'
-      });
-    }
-
-    res.status(401).json({
-      success: false,
-      error: "Refresh token không hợp lệ",
-      code: 'INVALID_REFRESH_TOKEN'
-    });
-  }
-});
-
-// --- LOGOUT ---
-router.post("/logout", (req, res) => {
-  try {
-    res.json({
-      success: true,
-      message: "Đăng xuất thành công. Vui lòng xóa token từ client."
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Lỗi đăng xuất"
-    });
-  }
-});
-
-// --- VERIFY TOKEN (Kiểm tra token hợp lệ) ---
-router.get("/verify", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: "Token không tìm thấy",
-        code: 'NO_TOKEN'
-      });
-    }
-
-    const decoded = verifyTokenData(token, 'access');
-
-    // Lấy thông tin user
-    const [rows] = await db.query(
-      "SELECT id, full_name, email, phone, role, avatar FROM users WHERE id = ?",
-      [decoded.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "User không tồn tại",
-        code: 'USER_NOT_FOUND'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Token hợp lệ",
-      user: rows[0]
-    });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: "Token đã hết hạn",
-        code: 'TOKEN_EXPIRED'
-      });
-    }
-
-    res.status(401).json({
-      success: false,
-      error: "Token không hợp lệ",
-      code: 'INVALID_TOKEN'
-    });
   }
 });
 

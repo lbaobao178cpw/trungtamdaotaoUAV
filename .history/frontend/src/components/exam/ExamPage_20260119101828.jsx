@@ -40,7 +40,7 @@ const ExamPage = () => {
         }
 
         // Fetch study materials
-        const materialsResponse = await fetch("http://localhost:5000/api/study-materials");
+        const materialsResponse = await fetch("http://localhost:5000/api/study-materials?page=1&limit=50");
         if (materialsResponse.ok) {
           const materialsData = await materialsResponse.json();
           if (materialsData.success) {

@@ -91,8 +91,12 @@ const ExamPage = () => {
     { label: "Nhận chứng chỉ", icon: Award, desc: "Chứng chỉ điện tử sẽ được cấp trong vòng 5 ngày làm việc sau khi thi đạt." },
   ];
 
-  // Lấy danh sách tài liệu từ studyMaterials
-  const documentsList = studyMaterials && studyMaterials.length > 0 ? studyMaterials : [];
+  // Lấy danh sách tài liệu từ studyMaterials, nếu không có dữ liệu từ API thì dùng danh sách tĩnh
+  const documentsList = studyMaterials.length > 0 ? studyMaterials : [
+    { id: 0, title: "Đề thi mẫu lý thuyết", file_size_formatted: "2.3 MB" },
+    { id: 0, title: "Hướng dẫn thi thực hành", file_size_formatted: "3.5 MB" },
+    { id: 0, title: "Quy định an toàn bay UAV", file_size_formatted: "1.8 MB" }
+  ];
 
   const faqList = [
     {
@@ -538,90 +542,29 @@ const ExamPage = () => {
               {/* Tài liệu ôn thi */}
               <div className="card p-6">
                 <h3 className="font-bold mb-4 text-lg">Tài liệu ôn thi</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                  {documentsList && documentsList.length > 0 ? (
-                    documentsList.map((doc) => (
-                      <div
-                        key={doc.id}
-                        style={{
-                          padding: '15px',
-                          background: '#ffffff',
-                          borderRadius: '8px',
-                          border: '1px solid #e0e0e0',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          position: 'relative',
-                          height: 'fit-content',
-                          minHeight: '60px'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.borderColor = 'var(--primary-color, #0050b8)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.borderColor = '#e0e0e0';
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontSize: '1rem',
-                            fontWeight: '700',
-                            color: 'var(--primary-color, #0050b8)',
-                            margin: '0',
-                            marginRight: '45px',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            flexShrink: 0
-                          }}
-                        >
-                          {doc.title}
-                        </p>
-                        {doc.file_url && (
-                          <a
-                            href={`http://localhost:5000/api/study-materials/${doc.id}/download`}
-                            title="Tải xuống"
-                            style={{
-                              color: 'var(--primary-color, #0050b8)',
-                              textDecoration: 'none',
-                              transition: 'all 0.2s ease',
-                              position: 'absolute',
-                              right: '15px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '6px',
-                              background: 'rgba(0, 80, 184, 0.08)',
-                              padding: '0',
-                              zIndex: 10
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(0, 80, 184, 0.15)';
-                              e.currentTarget.style.transform = 'translateY(calc(-50% - 2px))';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(0, 80, 184, 0.08)';
-                              e.currentTarget.style.transform = 'translateY(-50%)';
-                            }}
-                          >
-                            <FileDown size={18} />
-                          </a>
-                        )}
+                <div className="flex flex-col gap-2 mb-4">
+                  {documentsList.map((doc, idx) => (
+                    <a
+                      key={idx}
+                      href={doc.file_url ? `http://localhost:5000/api/study-materials/${doc.id}/download` : '#'}
+                      target={doc.file_url ? '_blank' : undefined}
+                      rel={doc.file_url ? 'noopener noreferrer' : undefined}
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-secondary transition-colors cursor-pointer group"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-all">
+                        <FileDown className="w-5 h-5 text-primary" />
                       </div>
-                    ))
-                  ) : (
-                    <p style={{ color: '#999' }}>Không có tài liệu ôn thi</p>
-                  )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate text-primary group-hover:underline">{doc.title}</p>
+                        <p className="text-xs text-muted-foreground">{doc.file_type || 'PDF'}, {doc.file_size_formatted || doc.size || 'N/A'}</p>
+                      </div>
+                    </a>
+                  ))}
                 </div>
+                <button className="w-full mt-2 border text-primary hover:bg-primary/5 py-2 rounded-lg text-sm font-medium transition-colors">
+                  Xem tất cả tài liệu
+                </button>
               </div>
 
               {/* Thống kê */}

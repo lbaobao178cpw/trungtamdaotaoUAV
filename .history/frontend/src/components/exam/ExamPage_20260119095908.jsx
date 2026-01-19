@@ -91,8 +91,12 @@ const ExamPage = () => {
     { label: "Nhận chứng chỉ", icon: Award, desc: "Chứng chỉ điện tử sẽ được cấp trong vòng 5 ngày làm việc sau khi thi đạt." },
   ];
 
-  // Lấy danh sách tài liệu từ studyMaterials
-  const documentsList = studyMaterials && studyMaterials.length > 0 ? studyMaterials : [];
+  // Lấy danh sách tài liệu từ studyMaterials, nếu không có dữ liệu từ API thì dùng danh sách tĩnh
+  const documentsList = studyMaterials.length > 0 ? studyMaterials : [
+    { id: 0, title: "Đề thi mẫu lý thuyết", file_size_formatted: "2.3 MB" },
+    { id: 0, title: "Hướng dẫn thi thực hành", file_size_formatted: "3.5 MB" },
+    { id: 0, title: "Quy định an toàn bay UAV", file_size_formatted: "1.8 MB" }
+  ];
 
   const faqList = [
     {

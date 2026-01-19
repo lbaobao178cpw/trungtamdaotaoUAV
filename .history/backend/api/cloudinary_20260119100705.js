@@ -23,7 +23,7 @@ const upload = multer({
  * POST /api/cloudinary/upload
  * Upload file lên Cloudinary qua backend
  */
-router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
+router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
     console.log("🚀 Upload request received");
     console.log("File object:", req.file);

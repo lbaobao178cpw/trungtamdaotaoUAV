@@ -677,11 +677,10 @@ export default function DisplaySettingsManager() {
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {/* TÀI LIỆU ÔN THI */}
-        {activeTab === 'study-materials' && <StudyMaterialsManager />}
+            {/* TÀI LIỆU ÔN THI */}
+            {activeTab === 'study-materials' && <StudyMaterialsManager />}
+
       </main>
     </div>
   );

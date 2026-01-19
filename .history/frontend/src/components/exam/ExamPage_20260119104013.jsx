@@ -74,6 +74,19 @@ const ExamPage = () => {
     if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Helper function để lấy kiểu file từ URL hoặc file_type
+  const getFileType = (doc) => {
+    if (doc.file_type) {
+      return doc.file_type.toUpperCase();
+    }
+    if (doc.file_url) {
+      const url = doc.file_url;
+      const ext = url.split('.').pop()?.split('?')[0] || '';
+      return ext.toUpperCase();
+    }
+    return '';
+  };
+
   const toggleFAQ = (index) => setOpenFAQ(openFAQ === index ? null : index);
   const formatDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
   const getTierFromType = (t) => t?.toLowerCase().includes("hạng a") ? "A" : "B";
@@ -555,7 +568,7 @@ const ExamPage = () => {
                           gap: '8px',
                           position: 'relative',
                           height: 'fit-content',
-                          minHeight: '60px'
+                          minHeight: '80px'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
@@ -568,20 +581,34 @@ const ExamPage = () => {
                           e.currentTarget.style.borderColor = '#e0e0e0';
                         }}
                       >
-                        <p
-                          style={{
-                            fontSize: '1rem',
-                            fontWeight: '700',
-                            color: 'var(--primary-color, #0050b8)',
-                            margin: '0',
-                            marginRight: '45px',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            flexShrink: 0
-                          }}
-                        >
-                          {doc.title}
-                        </p>
+                        <div>
+                          <p
+                            style={{
+                              fontSize: '1rem',
+                              fontWeight: '700',
+                              color: 'var(--primary-color, #0050b8)',
+                              margin: '0 45px 4px 0',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              flexShrink: 0
+                            }}
+                          >
+                            {doc.title}
+                          </p>
+                          {getFileType(doc) && (
+                            <p
+                              style={{
+                                fontSize: '0.75rem',
+                                color: '#999',
+                                margin: '0',
+                                fontWeight: '500',
+                                letterSpacing: '0.5px'
+                              }}
+                            >
+                              {getFileType(doc)}
+                            </p>
+                          )}
+                        </div>
                         {doc.file_url && (
                           <a
                             href={`http://localhost:5000/api/study-materials/${doc.id}/download`}

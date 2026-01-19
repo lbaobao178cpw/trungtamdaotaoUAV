@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require('../config/db');
+const db = require('../config/db'); // Đảm bảo đường dẫn này đúng tới file db.js của bạn
 const bcrypt = require('bcryptjs');
-const { generateToken, verifyTokenData, JWT_REFRESH_SECRET } = require('../middleware/verifyToken');
 const jwt = require('jsonwebtoken');
 
 // --- ĐĂNG KÝ ---
@@ -117,26 +116,13 @@ router.post("/login", async (req, res) => {
     }
 
     // 4. Tạo Token (JWT)
-    const token = generateToken(
-      {
-        id: user.id,
-        role: user.role,
-        fullName: user.full_name,
-        email: user.email
-      },
-      'access'
+    const token = jwt.sign(
+      { id: user.id, role: user.role, fullName: user.full_name },
+      process.env.JWT_SECRET || "YOUR_SECRET_KEY", // Thay bằng chuỗi bí mật của bạn (nên để trong .env)
+      { expiresIn: "1d" }
     );
 
-    // 5. Tạo Refresh Token
-    const refreshToken = generateToken(
-      {
-        id: user.id,
-        role: user.role
-      },
-      'refresh'
-    );
-
-    // 6. Lấy dữ liệu khác nhau dựa vào role
+    // 5. Lấy dữ liệu khác nhau dựa vào role
     let responseData = {
       id: user.id,
       full_name: user.full_name,
@@ -152,10 +138,8 @@ router.post("/login", async (req, res) => {
     }
 
     res.json({
-      success: true,
       message: "Đăng nhập thành công",
       token,
-      refreshToken,
       user: responseData
     });
 
@@ -171,8 +155,8 @@ router.post("/login-admin", async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT * FROM users WHERE (email = ? OR phone = ?) AND role = 'admin'",
-      [identifier, identifier]
+        "SELECT * FROM users WHERE (email = ? OR phone = ?) AND role = 'admin'", 
+        [identifier, identifier]
     );
 
     if (rows.length === 0) {
@@ -193,30 +177,15 @@ router.post("/login-admin", async (req, res) => {
     }
 
     // Tạo Token
-    const token = generateToken(
-      {
-        id: admin.id,
-        role: admin.role,
-        fullName: admin.full_name,
-        email: admin.email
-      },
-      'access'
-    );
-
-    // Tạo Refresh Token
-    const refreshToken = generateToken(
-      {
-        id: admin.id,
-        role: admin.role
-      },
-      'refresh'
+    const token = jwt.sign(
+        { id: admin.id, role: admin.role, fullName: admin.full_name }, 
+        process.env.JWT_SECRET || "YOUR_SECRET_KEY",
+        { expiresIn: "1d" }
     );
 
     res.json({
-      success: true,
       message: "Đăng nhập Admin thành công",
       token,
-      refreshToken,
       user: {
         id: admin.id,
         full_name: admin.full_name,
@@ -231,141 +200,6 @@ router.post("/login-admin", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi đăng nhập admin" });
-  }
-});
-
-// --- REFRESH TOKEN ---
-router.post("/refresh-token", async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        error: "Refresh token không tìm thấy",
-        code: 'NO_REFRESH_TOKEN'
-      });
-    }
-
-    // Verify refresh token
-    const decoded = verifyTokenData(refreshToken, 'refresh');
-
-    // Lấy thông tin user từ database
-    const [rows] = await db.query(
-      "SELECT id, role, full_name, email FROM users WHERE id = ?",
-      [decoded.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(401).json({
-        success: false,
-        error: "User không tồn tại",
-        code: 'USER_NOT_FOUND'
-      });
-    }
-
-    const user = rows[0];
-
-    // Tạo token mới
-    const newToken = generateToken(
-      {
-        id: user.id,
-        role: user.role,
-        fullName: user.full_name,
-        email: user.email
-      },
-      'access'
-    );
-
-    res.json({
-      success: true,
-      message: "Token mới được tạo thành công",
-      token: newToken
-    });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: "Refresh token đã hết hạn",
-        code: 'REFRESH_TOKEN_EXPIRED'
-      });
-    }
-
-    res.status(401).json({
-      success: false,
-      error: "Refresh token không hợp lệ",
-      code: 'INVALID_REFRESH_TOKEN'
-    });
-  }
-});
-
-// --- LOGOUT ---
-router.post("/logout", (req, res) => {
-  try {
-    res.json({
-      success: true,
-      message: "Đăng xuất thành công. Vui lòng xóa token từ client."
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Lỗi đăng xuất"
-    });
-  }
-});
-
-// --- VERIFY TOKEN (Kiểm tra token hợp lệ) ---
-router.get("/verify", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: "Token không tìm thấy",
-        code: 'NO_TOKEN'
-      });
-    }
-
-    const decoded = verifyTokenData(token, 'access');
-
-    // Lấy thông tin user
-    const [rows] = await db.query(
-      "SELECT id, full_name, email, phone, role, avatar FROM users WHERE id = ?",
-      [decoded.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "User không tồn tại",
-        code: 'USER_NOT_FOUND'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Token hợp lệ",
-      user: rows[0]
-    });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: "Token đã hết hạn",
-        code: 'TOKEN_EXPIRED'
-      });
-    }
-
-    res.status(401).json({
-      success: false,
-      error: "Token không hợp lệ",
-      code: 'INVALID_TOKEN'
-    });
   }
 });
 

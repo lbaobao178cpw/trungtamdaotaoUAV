@@ -74,6 +74,19 @@ const ExamPage = () => {
     if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Helper function để lấy kiểu file từ URL hoặc file_type
+  const getFileType = (doc) => {
+    if (doc.file_type) {
+      return doc.file_type.toUpperCase();
+    }
+    if (doc.file_url) {
+      const url = doc.file_url;
+      const ext = url.split('.').pop()?.split('?')[0] || '';
+      return ext.toUpperCase();
+    }
+    return '';
+  };
+
   const toggleFAQ = (index) => setOpenFAQ(openFAQ === index ? null : index);
   const formatDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
   const getTierFromType = (t) => t?.toLowerCase().includes("hạng a") ? "A" : "B";

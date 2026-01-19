@@ -302,14 +302,11 @@ export default function DisplaySettingsManager() {
           <button style={tabBtnStyle(activeTab === 'notifications')} onClick={() => { setActiveTab('notifications'); setMessage(null); }}>
             Quản lý Thông báo
           </button>
+          <button style={tabBtnStyle(activeTab === 'study-materials')} onClick={() => { setActiveTab('study-materials'); setMessage(null); }}>
+            📚 Tài liệu Ôn thi
+          </button>
           <button style={tabBtnStyle(activeTab === 'policies')} onClick={() => { setActiveTab('policies'); setMessage(null); }}>
             Chính sách & Điều khoản
-          </button>
-
-          <div style={{ height: '1px', background: '#ddd', margin: '12px 0', opacity: 0.5 }} />
-
-          <button style={tabBtnStyle(activeTab === 'study-materials')} onClick={() => { setActiveTab('study-materials'); setMessage(null); }}>
-            Tài liệu Ôn thi
           </button>
         </div>
 
@@ -677,11 +674,11 @@ export default function DisplaySettingsManager() {
                 </div>
               </div>
             )}
+
+            {/* TÀI LIỆU ÔN THI */}
+            {activeTab === 'study-materials' && <StudyMaterialsManager />}
           </>
         )}
-
-        {/* TÀI LIỆU ÔN THI */}
-        {activeTab === 'study-materials' && <StudyMaterialsManager />}
       </main>
     </div>
   );

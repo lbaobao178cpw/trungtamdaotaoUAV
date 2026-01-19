@@ -118,9 +118,9 @@ router.post("/login", async (req, res) => {
 
     // 4. Tạo Token (JWT)
     const token = generateToken(
-      {
-        id: user.id,
-        role: user.role,
+      { 
+        id: user.id, 
+        role: user.role, 
         fullName: user.full_name,
         email: user.email
       },
@@ -129,9 +129,9 @@ router.post("/login", async (req, res) => {
 
     // 5. Tạo Refresh Token
     const refreshToken = generateToken(
-      {
-        id: user.id,
-        role: user.role
+      { 
+        id: user.id, 
+        role: user.role 
       },
       'refresh'
     );
@@ -194,9 +194,9 @@ router.post("/login-admin", async (req, res) => {
 
     // Tạo Token
     const token = generateToken(
-      {
-        id: admin.id,
-        role: admin.role,
+      { 
+        id: admin.id, 
+        role: admin.role, 
         fullName: admin.full_name,
         email: admin.email
       },
@@ -205,9 +205,9 @@ router.post("/login-admin", async (req, res) => {
 
     // Tạo Refresh Token
     const refreshToken = generateToken(
-      {
-        id: admin.id,
-        role: admin.role
+      { 
+        id: admin.id, 
+        role: admin.role 
       },
       'refresh'
     );
