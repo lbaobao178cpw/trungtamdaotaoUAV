@@ -227,14 +227,48 @@ function UAVLandingPage() {
   const renderCourseCard = (course) => {
     const rating = courseRatings[course.id]?.average ? parseFloat(courseRatings[course.id].average) : (course.rating || 5.0);
 
+    // --- LOGIC MỚI: Xác định loại Badge (Hạng A / Hạng B) ---
+    const getBadgeInfo = (text) => {
+      if (!text) return null;
+      const t = text.toLowerCase();
+      
+      // Nếu là 'a' hoặc 'cơ bản' -> Style Hạng A (Màu xanh/vàng)
+      if (t.includes('a') || t.includes('cơ bản')) {
+        return { label: 'HẠNG A', className: 'badge-a' };
+      }
+      // Nếu là 'b' hoặc 'nâng cao' -> Style Hạng B (Màu xanh lá)
+      if (t.includes('b') || t.includes('nâng cao')) {
+        return { label: 'HẠNG B', className: 'badge-b' };
+      }
+      // Mặc định dùng style A
+      return { label: text, className: 'badge-a' };
+    };
+
+    // Lấy thông tin badge từ dữ liệu (kiểm tra cả 'level' và 'badge' phòng trường hợp API trả về khác nhau)
+    const badgeInfo = getBadgeInfo(course.level || course.badge);
+
     return (
       <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
         <div className="course-image-wrapper">
-          <img src={course.image} alt={course.title} onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} />
-          {course.badge && <div className="course-badge">{course.badge}</div>}
+          <img 
+            src={course.image} 
+            alt={course.title} 
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} 
+          />
+          {/* Đã XÓA badge cũ ở đây để không hiện đè lên ảnh */}
         </div>
+        
         <div className="course-content">
-          <h3 className="course-title">{course.title}</h3>
+          {/* --- CẤU TRÚC MỚI: Flexbox cho Tiêu đề và Badge --- */}
+          <div className="course-title-row">
+            <h3 className="course-title">{course.title}</h3>
+            {badgeInfo && (
+              <span className={`uav-cert-badge course-inline-badge ${badgeInfo.className}`}>
+                {badgeInfo.label}
+              </span>
+            )}
+          </div>
+
           <div className="course-rating">
             <div className="stars" style={{ display: "flex" }}>
               {[...Array(5)].map((_, i) => (

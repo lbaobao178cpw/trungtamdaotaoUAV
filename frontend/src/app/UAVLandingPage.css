@@ -565,7 +565,7 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 }
 
 .badge-a {
-  background-color: rgba(255, 202, 5, 0.15);
+  background-color:  rgb(0 39 255 / 15%);
   color: var(--primary-yellow);
   border: 1px solid var(--primary-yellow);
 }

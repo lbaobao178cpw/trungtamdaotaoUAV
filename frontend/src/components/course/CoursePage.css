@@ -352,3 +352,56 @@
     grid-template-columns: 1fr;
   }
 }
+/* --- STYLE MỚI CHO BADGE GIỐNG TRANG CHỦ --- */
+
+/* 1. Layout ngang hàng */
+.course-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.course-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-white);
+  line-height: 1.4;
+  text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  flex: 1; /* Để tiêu đề chiếm phần dư */
+}
+
+/* 2. Style chung cho Badge (copy logic từ .uav-cert-badge) */
+.uav-style-badge {
+  display: inline-block;
+  padding: 4px 8px; /* Nhỏ hơn một chút so với trang chủ để vừa thẻ card */
+  border-radius: 20px;
+  font-size: 0.7rem; /* Chữ nhỏ lại cho cân đối */
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  height: fit-content;
+}
+
+/* 3. Style Hạng A (Giống .badge-a bên trang chủ) */
+/* Màu gốc: bg xanh nhạt (rgb 0 39 255 / 15%), chữ/viền vàng (#e6b804) */
+.badge-a {
+  background-color: rgba(0, 39, 255, 0.15);
+  color: #0050b8; 
+  border: 1px solid #0050b8;
+}
+
+/* 4. Style Hạng B (Giống .badge-b bên trang chủ) */
+/* Màu gốc: bg xanh lá nhạt, chữ/viền xanh lá (#81c784) */
+.badge-b {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+  border: 1px solid #81c784;
+}

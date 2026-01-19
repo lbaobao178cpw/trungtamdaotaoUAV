@@ -1,10 +1,10 @@
 import React, { Suspense, useRef, useEffect } from 'react';
 import { CameraControls, Html, useGLTF } from '@react-three/drei';
-import { AlertTriangle, Loader2 } from 'lucide-react'; // 1. IMPORT ICON LUCIDE
+import { AlertTriangle, Loader2 } from 'lucide-react';  
 
 const DRACO_URL = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 
-// === 1. ERROR BOUNDARY (DÙNG ICON LUCIDE) ===
+// === 1. ERROR BOUNDARY ===
 class ErrorBoundary3D extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
   static getDerivedStateFromError(error) { return { hasError: true }; }
@@ -27,9 +27,7 @@ class ErrorBoundary3D extends React.Component {
                 flexDirection: 'column',
                 alignItems: 'center'
             }}>
-                {/* Thay emoji ⚠️ bằng icon AlertTriangle */}
                 <AlertTriangle size={48} strokeWidth={1.5} style={{ marginBottom: 15 }} />
-                
                 <h3 style={{margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold'}}>Lỗi Model 3D</h3>
                 <p style={{fontSize: '13px', margin: 0, color: '#555'}}>
                     Không thể tải file. Vui lòng kiểm tra đường dẫn.
@@ -42,7 +40,7 @@ class ErrorBoundary3D extends React.Component {
   }
 }
 
-// === 2. LOADING FALLBACK (DÙNG ICON LOADER2 XOAY) ===
+// === 2. LOADING FALLBACK ===
 const LoadingFallback = () => (
   <Html center>
     <div style={{
@@ -59,7 +57,6 @@ const LoadingFallback = () => (
         textAlign: 'center',
         pointerEvents: 'none'
     }}>
-      {/* Thay Spinner CSS bằng icon Loader2 có animation xoay */}
       <Loader2 
         size={48} 
         color="#0066cc" 
@@ -74,14 +71,12 @@ const LoadingFallback = () => (
       }}>
           Đang tải dữ liệu 3D...
       </div>
-      
-      {/* Animation xoay */}
       <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
     </div>
   </Html>
 );
 
-// === 3. SCENE CHÍNH (Giữ nguyên) ===
+// === 3. SCENE CHÍNH ===
 function Scene({ onPointClick, points, modelUrl, cameraSettings }) { 
     const controlsRef = useRef();
     const { scene } = useGLTF(modelUrl, DRACO_URL);
