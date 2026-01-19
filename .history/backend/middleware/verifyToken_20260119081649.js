@@ -57,7 +57,7 @@ const verifyStudent = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "YOUR_SECRET_KEY");
+    const decoded = jwt.verify(token, "YOUR_SECRET_KEY");
 
     // Kiểm tra xem user có phải student không
     if (decoded.role !== 'student') {

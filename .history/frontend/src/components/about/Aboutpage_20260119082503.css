@@ -66,13 +66,12 @@
 /* === 1. HERO SECTION (SỬA LẠI THEO YÊU CẦU) === */
 .about-hero {
   /* Dùng màu xanh phẳng thay vì ảnh nền tối */
-  background-color: var(--about-primary);
-
+  background-color: var(--about-primary); 
+  
   /* Nếu muốn gradient nhẹ giống trang chủ thì dùng dòng dưới (tùy chọn) */
   /* background: linear-gradient(180deg, #0050b8 0%, #00387a 100%); */
 
-  padding: 60px 20px;
-  /* Độ cao vừa phải giống hình mẫu */
+  padding: 60px 20px; /* Độ cao vừa phải giống hình mẫu */
   text-align: center;
   color: white;
   position: relative;
@@ -92,7 +91,7 @@
   opacity: 1;
   max-width: 800px;
   margin: 0 auto;
-
+  
   /* Chuyển màu chữ mô tả thành Trắng */
   color: #ffffff !important;
   font-weight: 400;
@@ -373,7 +372,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 15px;
   background: #ffffff;
   border-radius: 6px;
   transition: 0.3s;
@@ -460,8 +459,7 @@
 .requirements-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  /* Giảm khoảng cách giữa 2 cột cho gọn (cũ là 30px) */
+  gap: 20px; /* Giảm khoảng cách giữa 2 cột cho gọn (cũ là 30px) */
 }
 
 .requirement-card {
@@ -473,17 +471,13 @@
 }
 
 .requirement-card h3 {
-  font-size: 1.2rem;
-  /* Giảm nhẹ size chữ tiêu đề */
+  font-size: 1.2rem; /* Giảm nhẹ size chữ tiêu đề */
   font-weight: 700;
-  margin-bottom: 15px;
-  /* Kéo nội dung lên gần tiêu đề hơn */
+  margin-bottom: 15px; /* Kéo nội dung lên gần tiêu đề hơn */
   color: var(--about-primary);
   text-align: center;
-  padding-bottom: 10px;
-  /* Giảm khoảng cách gạch chân */
-  border-bottom: 1px solid #e0e0e0;
-  /* Viền nhạt hơn cho thanh thoát */
+  padding-bottom: 10px; /* Giảm khoảng cách gạch chân */
+  border-bottom: 1px solid #e0e0e0; /* Viền nhạt hơn cho thanh thoát */
 }
 
 .requirement-list {
@@ -494,15 +488,13 @@
 
 .requirement-list li {
   /* Giảm padding trên dưới để danh sách ngắn lại */
-  padding: 8px 0 8px 25px;
+  padding: 8px 0 8px 25px; 
   position: relative;
 
   color: var(--about-text-sub);
-  font-size: 0.9rem;
-  /* Giảm size chữ 1 chút cho vừa vặn */
+  font-size: 0.9rem; /* Giảm size chữ 1 chút cho vừa vặn */
   line-height: 1.4;
-  border-bottom: 1px dashed #eee;
-  /* Thêm dòng kẻ mờ giữa các ý cho dễ nhìn (tuỳ chọn) */
+  border-bottom: 1px dashed #eee; /* Thêm dòng kẻ mờ giữa các ý cho dễ nhìn (tuỳ chọn) */
 }
 
 .requirement-list li:last-child {
@@ -514,8 +506,7 @@
   /* Dùng chấm tròn hoặc dấu tick */
   position: absolute;
   left: 0;
-  top: 6px;
-  /* Căn chỉnh lại vị trí dấu chấm */
+  top: 6px; /* Căn chỉnh lại vị trí dấu chấm */
   color: var(--about-primary);
   font-weight: bold;
   font-size: 1.5rem;
