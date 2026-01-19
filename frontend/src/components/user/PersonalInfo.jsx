@@ -21,6 +21,37 @@ function PersonalInfo() {
     return `${year}-${month}-${day}`;
   };
 
+  // Hàm helper để parse địa chỉ thành các phần riêng biệt
+  const parseAddress = (fullAddress) => {
+    if (!fullAddress) return { street: '', wardName: '', cityName: '' };
+    
+    const parts = fullAddress.split(',').map(p => p.trim());
+    let street = '';
+    let wardName = '';
+    let cityName = '';
+    
+    const streetParts = [];
+    for (const part of parts) {
+      if (/^(Phường|Xã|Thị trấn)/i.test(part)) {
+        wardName = part;
+      } else if (/^(Tỉnh|TP\.?|Tp |Thành phố|Quận|Huyện|Thị xã)/i.test(part)) {
+        if (!cityName) {
+          cityName = part;
+        } else {
+          cityName = cityName + ', ' + part;
+        }
+      } else {
+        streetParts.push(part);
+      }
+    }
+    
+    street = streetParts.join(', ');
+    return { street, wardName, cityName };
+  };
+
+  // Parse địa chỉ ban đầu
+  const initialParsedAddress = parseAddress(profile.address);
+
   const [isEditing, setIsEditing] = useState(false);
   const [provinces, setProvinces] = useState([]);
   const [wards, setWards] = useState([]);
@@ -30,11 +61,11 @@ function PersonalInfo() {
     phone: profile.phone || '',
     birth_date: formatDateToInput(profile.birth_date) || '',
     gender: profile.gender || '',
-    address: profile.address || '',
+    address: initialParsedAddress.street || '',
     cityId: '',
-    cityName: '',
+    cityName: initialParsedAddress.cityName || '',
     wardId: '',
-    wardName: ''
+    wardName: initialParsedAddress.wardName || ''
   });
 
   // Fetch provinces khi component mount
@@ -77,17 +108,18 @@ function PersonalInfo() {
 
   const handleCancel = () => {
     setIsEditing(false);
+    const parsed = parseAddress(profile.address);
     setForm({
       full_name: profile.full_name || '',
       email: profile.email || '',
       phone: profile.phone || '',
       birth_date: formatDateToInput(profile.birth_date) || '',
       gender: profile.gender || '',
-      address: profile.address || '',
+      address: parsed.street || '',
       cityId: '',
-      cityName: '',
+      cityName: parsed.cityName || '',
       wardId: '',
-      wardName: ''
+      wardName: parsed.wardName || ''
     });
     setWards([]);
   };
@@ -354,7 +386,11 @@ function PersonalInfo() {
                         onChange={handleProvinceChange}
                         className="form-input"
                       >
-                        <option value="">-- Chọn tỉnh/thành --</option>
+                        <option value="">
+                          {form.cityName && !form.cityId 
+                            ? `${form.cityName} (nhấn để đổi)` 
+                            : '-- Chọn tỉnh/thành --'}
+                        </option>
                         {provinces.map(p => (
                           <option key={p.id} value={p.id}>
                             {p.name}
@@ -372,9 +408,13 @@ function PersonalInfo() {
                           }));
                         }}
                         className="form-input"
-                        disabled={!wards.length}
+                        disabled={!wards.length && !form.wardName}
                       >
-                        <option value="">-- Chọn xã/phường --</option>
+                        <option value="">
+                          {form.wardName && !form.wardId 
+                            ? `${form.wardName} (chọn tỉnh để đổi)` 
+                            : '-- Chọn xã/phường --'}
+                        </option>
                         {wards.map(w => (
                           <option key={w.id} value={w.id}>
                             {w.name}
@@ -464,17 +504,18 @@ function PersonalInfo() {
               <button
                 className="btn-edit-profile"
                 onClick={() => {
+                  const parsed = parseAddress(profile.address);
                   setForm({
                     full_name: profile.full_name || '',
                     email: profile.email || '',
                     phone: profile.phone || '',
                     birth_date: formatDateToInput(profile.birth_date) || '',
                     gender: profile.gender || '',
-                    address: profile.address || '',
+                    address: parsed.street || '',
                     cityId: '',
-                    cityName: '',
+                    cityName: parsed.cityName || '',
                     wardId: '',
-                    wardName: ''
+                    wardName: parsed.wardName || ''
                   });
                   setIsEditing(true);
                 }}
