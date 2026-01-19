@@ -1,118 +1,89 @@
 const express = require("express");
 const router = express.Router();
-const db = require('../config/db'); // Đảm bảo đường dẫn đúng tới file config db của bạn
+const db = require('../config/db');
 const bcrypt = require('bcryptjs');
-const { generateToken, verifyTokenData } = require('../middleware/verifyToken'); // Đảm bảo đường dẫn đúng
+const { generateToken, verifyTokenData } = require('../middleware/verifyToken');
 
-// --- ĐĂNG KÝ ---
+// --- 1. API CHECK TRÙNG LẶP (Dùng cho Frontend check ngay khi nhập) ---
+router.post("/check-existence", async (req, res) => {
+  try {
+    const { type, value } = req.body;
+    if (!value) return res.json({ exists: false });
+
+    let query = "";
+    if (type === 'email') query = "SELECT id FROM users WHERE email = ?";
+    else if (type === 'phone') query = "SELECT id FROM users WHERE phone = ?";
+    else return res.status(400).json({ error: "Invalid type" });
+
+    const [rows] = await db.query(query, [value]);
+    res.json({ exists: rows.length > 0 });
+  } catch (error) {
+    console.error("Check existence error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --- 2. API ĐĂNG KÝ (Đã sửa lỗi target_tier) ---
 router.post("/register", async (req, res) => {
   const connection = await db.getConnection();
   try {
-    // Bắt đầu Transaction (để đảm bảo lưu cả 2 bảng hoặc không lưu gì cả)
     await connection.beginTransaction();
 
-    // 1. Nhận dữ liệu từ Frontend
     const {
-      // Thông tin đăng nhập
       phone, email, password, fullName,
-      
-      // Thông tin cá nhân & CCCD
       birthDate, cccd, gender, 
-      
-      // Địa chỉ (Frontend gửi dạng chuỗi đã gộp sẵn với key 'final...')
       finalPermanentAddress, finalCurrentAddress,
-      // Fallback nếu frontend gửi lẻ
       address, ward, district, city, 
       permanentAddress, permanentWard, permanentDistrict, permanentCity,
-
-      // Liên hệ khẩn cấp
       emergencyName, emergencyPhone, emergencyRelation,
-
-      // Thông tin UAV
-      uavTypes,       // Mảng []
-      uavPurpose,     // Chuỗi (Mục đích sử dụng)
-      activityArea,   // Chuỗi (Khu vực)
-      experience,     // Chuỗi (Kinh nghiệm bay)
-      certificateType // Chuỗi (Hạng chứng chỉ)
+      uavTypes, uavPurpose, activityArea, experience, certificateType
     } = req.body;
 
-    // 2. Kiểm tra user đã tồn tại chưa
+    // Check trùng lần cuối
     const [existing] = await connection.query("SELECT id FROM users WHERE phone = ? OR email = ?", [phone, email]);
     if (existing.length > 0) {
       connection.release();
       return res.status(400).json({ error: "Số điện thoại hoặc Email đã tồn tại trong hệ thống." });
     }
 
-    // 3. Mã hóa mật khẩu
+    // Hash pass
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    // 4. Insert vào bảng USERS (Bảng cha)
+    // Insert Users
     const [userResult] = await connection.query(
       `INSERT INTO users (phone, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, 'student')`,
       [phone, email, password_hash, fullName]
     );
     const newUserId = userResult.insertId;
 
-    // 5. Xử lý dữ liệu trước khi lưu vào User Profiles
-    
-    // - Chuyển mảng loại UAV thành chuỗi (VD: "DJI Mini, Autel")
+    // Chuẩn bị data Profile
     const uavTypeString = Array.isArray(uavTypes) ? uavTypes.join(', ') : uavTypes;
-    
-    // - Xử lý địa chỉ: Ưu tiên dùng chuỗi 'final' từ frontend, nếu không có thì tự gộp từ các trường lẻ
     const dbCurrentAddress = finalCurrentAddress || [address, ward, district, city].filter(Boolean).join(', ');
     const dbPermanentAddress = finalPermanentAddress || [permanentAddress, permanentWard, permanentDistrict, permanentCity].filter(Boolean).join(', ');
 
-    // 6. Insert vào bảng USER_PROFILES
-    // SQL này khớp chính xác với hình ảnh Database bạn cung cấp
+    // Insert Profile
     const insertProfileSql = `
       INSERT INTO user_profiles 
-      (
-        user_id, 
-        address, 
-        permanent_address, 
-        identity_number, 
-        birth_date, 
-        gender,
-        emergency_contact_name, 
-        emergency_contact_phone, 
-        emergency_contact_relation,
-        uav_type, 
-        usage_purpose, 
-        operation_area, 
-        uav_experience, 
-        target_tier,
-        identity_image_front, 
-        identity_image_back
-      )
+      (user_id, address, permanent_address, identity_number, birth_date, gender,
+        emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
+        uav_type, usage_purpose, operation_area, uav_experience, target_tier,
+        identity_image_front, identity_image_back)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await connection.query(insertProfileSql, [
-      newUserId,
-      dbCurrentAddress,       // address
-      dbPermanentAddress,     // permanent_address
-      cccd,                   // identity_number
-      birthDate || null,      // birth_date
-      gender || null,         // gender
-      emergencyName,          // emergency_contact_name
-      emergencyPhone,         // emergency_contact_phone
-      emergencyRelation,      // emergency_contact_relation (Khớp cột trong ảnh)
-      uavTypeString,          // uav_type
-      uavPurpose,             // usage_purpose (Khớp cột trong ảnh)
-      activityArea,           // operation_area
-      experience,             // uav_experience (Khớp cột trong ảnh)
-      certificateType,        // target_tier
-      null,                   // identity_image_front (Tạm để NULL do frontend đang gửi JSON không kèm file)
-      null                    // identity_image_back (Tạm để NULL)
+      newUserId, dbCurrentAddress, dbPermanentAddress, cccd, birthDate || null, gender || null,
+      emergencyName, emergencyPhone, emergencyRelation,
+      uavTypeString, uavPurpose, activityArea, experience,
+      certificateType || null, // Fix lỗi data truncated
+      null, null
     ]);
 
-    // 7. Hoàn tất Transaction
     await connection.commit();
     res.status(201).json({ message: "Đăng ký thành công", userId: newUserId });
 
   } catch (error) {
-    // Nếu có lỗi, hủy toàn bộ thao tác db
     await connection.rollback();
     console.error("Lỗi đăng ký:", error);
     res.status(500).json({ error: "Lỗi server: " + error.message });
@@ -121,116 +92,100 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// --- ĐĂNG NHẬP (Giữ nguyên logic của bạn) ---
+// --- 3. API ĐĂNG NHẬP (User thường) ---
 router.post("/login", async (req, res) => {
   const { identifier, password } = req.body; 
-
   try {
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ? OR phone = ?", [identifier, identifier]);
+    if (rows.length === 0) return res.status(400).json({ error: "Tài khoản không tồn tại" });
+    
+    const user = rows[0];
+    const validPass = await bcrypt.compare(password, user.password_hash);
+    if (!validPass) return res.status(400).json({ error: "Mật khẩu không đúng" });
+    if (!user.is_active) return res.status(403).json({ error: "Tài khoản bị khóa" });
+
+    const token = generateToken({ id: user.id, role: user.role, fullName: user.full_name, email: user.email }, 'access');
+    const refreshToken = generateToken({ id: user.id, role: user.role }, 'refresh');
+    
+    let responseData = { id: user.id, full_name: user.full_name, email: user.email, phone: user.phone, role: user.role, avatar: user.avatar };
+    if (user.role === 'admin') responseData.permissions = ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings'];
+
+    res.json({ success: true, message: "Đăng nhập thành công", token, refreshToken, user: responseData });
+  } catch (error) { console.error(error); res.status(500).json({ error: "Lỗi đăng nhập" }); }
+});
+
+// --- 4. API ĐĂNG NHẬP ADMIN (ĐÂY LÀ PHẦN BỊ THIẾU TRƯỚC ĐÓ) ---
+router.post("/login-admin", async (req, res) => {
+  const { identifier, password } = req.body;
+  try {
+    // Chỉ lấy user có role = 'admin'
     const [rows] = await db.query(
-      "SELECT * FROM users WHERE email = ? OR phone = ?",
+      "SELECT * FROM users WHERE (email = ? OR phone = ?) AND role = 'admin'",
       [identifier, identifier]
     );
 
     if (rows.length === 0) {
-      return res.status(400).json({ error: "Tài khoản không tồn tại" });
+      return res.status(401).json({ error: "Thông tin đăng nhập admin không hợp lệ hoặc bạn không có quyền admin" });
     }
 
-    const user = rows[0];
+    const admin = rows[0];
+    const validPass = await bcrypt.compare(password, admin.password_hash);
+    if (!validPass) return res.status(401).json({ error: "Mật khẩu không đúng" });
+    if (!admin.is_active) return res.status(403).json({ error: "Tài khoản admin đã bị khóa" });
 
-    const validPass = await bcrypt.compare(password, user.password_hash);
-    if (!validPass) {
-      return res.status(400).json({ error: "Mật khẩu không đúng" });
-    }
-
-    if (!user.is_active) {
-      return res.status(403).json({ error: "Tài khoản của bạn đã bị khóa" });
-    }
-
-    const token = generateToken({ id: user.id, role: user.role, fullName: user.full_name, email: user.email }, 'access');
-    const refreshToken = generateToken({ id: user.id, role: user.role }, 'refresh');
-
-    let responseData = {
-      id: user.id,
-      full_name: user.full_name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      avatar: user.avatar
-    };
-
-    if (user.role === 'admin') {
-      responseData.permissions = ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings'];
-    }
+    const token = generateToken({ id: admin.id, role: admin.role, fullName: admin.full_name, email: admin.email }, 'access');
+    const refreshToken = generateToken({ id: admin.id, role: admin.role }, 'refresh');
 
     res.json({
       success: true,
-      message: "Đăng nhập thành công",
+      message: "Đăng nhập Admin thành công",
       token,
       refreshToken,
-      user: responseData
+      user: {
+        id: admin.id,
+        full_name: admin.full_name,
+        email: admin.email,
+        phone: admin.phone,
+        role: admin.role,
+        avatar: admin.avatar,
+        permissions: ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings', 'view_analytics']
+      }
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Lỗi đăng nhập" });
+    console.error("Lỗi login admin:", error);
+    res.status(500).json({ error: "Lỗi đăng nhập admin" });
   }
 });
 
-// --- REFRESH TOKEN (Giữ nguyên logic của bạn) ---
+// --- 5. REFRESH TOKEN ---
 router.post("/refresh-token", async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({ success: false, error: "Refresh token không tìm thấy", code: 'NO_REFRESH_TOKEN' });
-    }
-
+    if (!refreshToken) return res.status(400).json({ success: false, error: "Thiếu token", code: 'NO_REFRESH_TOKEN' });
+    
     const decoded = verifyTokenData(refreshToken, 'refresh');
-
     const [rows] = await db.query("SELECT id, role, full_name, email FROM users WHERE id = ?", [decoded.id]);
-
-    if (rows.length === 0) {
-      return res.status(401).json({ success: false, error: "User không tồn tại", code: 'USER_NOT_FOUND' });
-    }
-
-    const user = rows[0];
-    const newToken = generateToken({ id: user.id, role: user.role, fullName: user.full_name, email: user.email }, 'access');
-
-    res.json({ success: true, message: "Token mới được tạo thành công", token: newToken });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ success: false, error: "Refresh token đã hết hạn", code: 'REFRESH_TOKEN_EXPIRED' });
-    }
-    res.status(401).json({ success: false, error: "Refresh token không hợp lệ", code: 'INVALID_REFRESH_TOKEN' });
-  }
+    
+    if (rows.length === 0) return res.status(401).json({ success: false, error: "User không tồn tại", code: 'USER_NOT_FOUND' });
+    
+    const newToken = generateToken({ id: rows[0].id, role: rows[0].role, fullName: rows[0].full_name, email: rows[0].email }, 'access');
+    res.json({ success: true, token: newToken });
+  } catch (error) { res.status(401).json({ success: false, error: "Token lỗi", code: 'INVALID_REFRESH_TOKEN' }); }
 });
 
-// --- VERIFY TOKEN (Giữ nguyên logic của bạn) ---
+// --- 6. VERIFY TOKEN ---
 router.get("/verify", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ success: false, error: "Token không tìm thấy", code: 'NO_TOKEN' });
-    }
-
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false, error: "No token", code: 'NO_TOKEN' });
+    
     const decoded = verifyTokenData(token, 'access');
     const [rows] = await db.query("SELECT id, full_name, email, phone, role, avatar FROM users WHERE id = ?", [decoded.id]);
-
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, error: "User không tồn tại", code: 'USER_NOT_FOUND' });
-    }
-
-    res.json({ success: true, message: "Token hợp lệ", user: rows[0] });
-
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ success: false, error: "Token đã hết hạn", code: 'TOKEN_EXPIRED' });
-    }
-    res.status(401).json({ success: false, error: "Token không hợp lệ", code: 'INVALID_TOKEN' });
-  }
+    
+    if (rows.length === 0) return res.status(404).json({ success: false, error: "Not found", code: 'USER_NOT_FOUND' });
+    res.json({ success: true, user: rows[0] });
+  } catch (error) { res.status(401).json({ success: false, error: "Invalid token", code: 'INVALID_TOKEN' }); }
 });
 
 module.exports = router;
