@@ -130,6 +130,12 @@ const StarIcon = () => (
 // =====================================================================
 function UAVLandingPage() {
   const navigate = useNavigate();
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
 
   // State
   const [points, setPoints] = useState([]);
@@ -231,7 +237,7 @@ function UAVLandingPage() {
     const getBadgeInfo = (text) => {
       if (!text) return null;
       const t = text.toLowerCase();
-      
+
       // Nếu là 'a' hoặc 'cơ bản' -> Style Hạng A (Màu xanh/vàng)
       if (t.includes('a') || t.includes('cơ bản')) {
         return { label: 'HẠNG A', className: 'badge-a' };
@@ -250,14 +256,14 @@ function UAVLandingPage() {
     return (
       <div key={course.id} className="course-card" onClick={() => handleCourseClick(course.id)}>
         <div className="course-image-wrapper">
-          <img 
-            src={course.image} 
-            alt={course.title} 
-            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }} 
+          <img
+            src={course.image}
+            alt={course.title}
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200"; }}
           />
           {/* Đã XÓA badge cũ ở đây để không hiện đè lên ảnh */}
         </div>
-        
+
         <div className="course-content">
           {/* --- CẤU TRÚC MỚI: Flexbox cho Tiêu đề và Badge --- */}
           <div className="course-title-row">
