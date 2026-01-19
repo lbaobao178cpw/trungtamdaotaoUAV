@@ -7,7 +7,7 @@ import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 function LoginPage() {
     const navigate = useNavigate();
     const { login } = useAuth();
-
+    
     // State quản lý form
     const [formData, setFormData] = useState({
         phone: '', // Người dùng nhập SĐT (hoặc email)
@@ -36,7 +36,7 @@ function LoginPage() {
         e.preventDefault();
         setLoading(true);
         setError(null);
-
+        
         try {
             // Gọi API Backend
             const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -58,7 +58,7 @@ function LoginPage() {
             }
 
             // --- ĐĂNG NHẬP THÀNH CÔNG ---
-
+            
             // 1. Kiểm tra quyền hạn - chỉ cho phép student/user login tại đây
             if (data.user.role === 'admin') {
                 throw new Error('Tài khoản admin vui lòng truy cập trang quản trị');
@@ -71,7 +71,7 @@ function LoginPage() {
             // 2. Lưu Token và User info vào LocalStorage
             localStorage.setItem('user_token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-
+            
             // 2b. Cập nhật AuthContext
             login(data.token, data.user);
 
@@ -81,7 +81,7 @@ function LoginPage() {
             } else {
                 localStorage.removeItem('rememberedPhone');
             }
-
+            
             // 4. Điều hướng vào trang chủ
             navigate('/');
 
@@ -100,7 +100,7 @@ function LoginPage() {
                     {/* Header */}
                     <div className="login-header">
                         <h1 className="login-title">Đăng nhập</h1>
-
+                        
                     </div>
 
                     {/* Hiển thị thông báo lỗi nếu có */}
@@ -119,7 +119,7 @@ function LoginPage() {
                                 Nhập SĐT hoặc Email
                             </label>
                             <input
-                                type="text"
+                                type="text" 
                                 id="phone"
                                 name="phone"
                                 value={formData.phone}
@@ -179,8 +179,8 @@ function LoginPage() {
                         </p>
 
                         {/* Submit Button */}
-                        <button
-                            type="submit"
+                        <button 
+                            type="submit" 
                             className="btn btn-primary"
                             disabled={loading} // Vô hiệu hóa khi đang tải
                         >
@@ -196,7 +196,7 @@ function LoginPage() {
                     </form>
                 </div>
             </div>
-
+            
             {/* CSS inline cho animation xoay (hoặc bạn có thể thêm vào file css) */}
             <style>{`
                 @keyframes spin {

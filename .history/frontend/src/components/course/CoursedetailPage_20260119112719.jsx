@@ -113,25 +113,25 @@ function CourseDetailPage() {
   }, [id, token]);
 
 
-  // === UTILITY: Decode JWT để lấy user info ===
-  const decodeToken = (token) => {
-    try {
-      const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
-      return decoded;
-    } catch (e) {
-      console.error('Lỗi decode token:', e);
-      return null;
-    }
-  };
+    // === UTILITY: Decode JWT để lấy user info ===
+    const decodeToken = (token) => {
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded;
+      } catch (e) {
+        console.error('Lỗi decode token:', e);
+        return null;
+      }
+    };
 
-  // === SET CURRENT USER KHI TOKEN THAY ĐỔI ===
-  useEffect(() => {
-    if (token) {
-      const user = decodeToken(token);
-      setCurrentUser(user);
-    }
-  }, [token]);
+    // === SET CURRENT USER KHI TOKEN THAY ĐỔI ===
+    useEffect(() => {
+      if (token) {
+        const user = decodeToken(token);
+        setCurrentUser(user);
+      }
+    }, [token]);
 
   // === FETCH COMMENTS ===
   const fetchComments = async () => {
@@ -472,7 +472,7 @@ function CourseDetailPage() {
 
             {!activeLesson && (
               <div style={{ color: '#fff', padding: 20, textAlign: 'center' }}>
-                <img src={noVideoImage} alt="No Video" style={{ maxWidth: '100%' }} />
+                <img src={noVideoImage} alt="No Video" style={{ maxWidth: '100%' }} /> 
               </div>
             )}
           </div>
@@ -524,7 +524,7 @@ function CourseDetailPage() {
                   {token ? (
                     <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #333' }}>
                       <h4 style={{ color: '#000', marginBottom: '15px' }}>Nhận xét của bạn</h4>
-
+                      
                       {/* Chọn số sao */}
                       <div style={{ marginBottom: '15px' }}>
                         <label style={{ color: '#000', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Đánh giá:</label>

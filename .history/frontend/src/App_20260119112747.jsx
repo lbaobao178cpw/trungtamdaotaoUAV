@@ -90,9 +90,9 @@ function App() {
                 </Route>
               </Routes>
             </AliveScope>
-          </AuthInitializer>
         </Router>
-      </AuthProvider>
+      </AuthInitializer>
+    </AuthProvider >
     </>
   );
 }

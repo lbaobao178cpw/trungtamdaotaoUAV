@@ -41,57 +41,57 @@ function App() {
               <Routes>
                 <Route element={<MainLayout />}>
 
-                  {/* 1. TRANG CHỦ (Ưu tiên cao nhất) */}
-                  <Route
-                    path="/"
-                    element={
-                      <KeepAlive cacheKey="home-3d-cache" saveScrollPosition="screen">
-                        <UAVLandingPage />
-                      </KeepAlive>
-                    }
-                  />
+              {/* 1. TRANG CHỦ (Ưu tiên cao nhất) */}
+              <Route
+                path="/"
+                element={
+                  <KeepAlive cacheKey="home-3d-cache" saveScrollPosition="screen">
+                    <UAVLandingPage />
+                  </KeepAlive>
+                }
+              />
 
-                  {/* 2. CÁC TRANG TĨNH (Phải đặt trước các route động) */}
-                  <Route path="/gioi-thieu" element={<AboutPage />} />
-                  <Route path="/thi-sat-hach" element={<ExamPage />} />
-                  <Route path="/tra-cuu" element={<LookupPage />} />
-                  <Route path="/dang-nhap" element={<LoginPage />} />
-                  <Route path="/dang-ky" element={<RegisterPage />} />
-                  <Route path="/dat-lich-thi" element={<ExamBookingPage />} />
-                  <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicyPage />} />
-                  <Route path="/dieu-khoan-su-dung" element={<TermsOfServicePage />} />
+              {/* 2. CÁC TRANG TĨNH (Phải đặt trước các route động) */}
+              <Route path="/gioi-thieu" element={<AboutPage />} />
+              <Route path="/thi-sat-hach" element={<ExamPage />} />
+              <Route path="/tra-cuu" element={<LookupPage />} />
+              <Route path="/dang-nhap" element={<LoginPage />} />
+              <Route path="/dang-ky" element={<RegisterPage />} />
+              <Route path="/dat-lich-thi" element={<ExamBookingPage />} />
+              <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicyPage />} />
+              <Route path="/dieu-khoan-su-dung" element={<TermsOfServicePage />} />
 
-                  {/* Route Khóa học */}
-                  <Route path="/khoa-hoc" element={<CoursesPage />} />
-                  <Route path="/khoa-hoc/:id" element={<CourseDetailPage />} />
+              {/* Route Khóa học */}
+              <Route path="/khoa-hoc" element={<CoursesPage />} />
+              <Route path="/khoa-hoc/:id" element={<CourseDetailPage />} />
 
-                  {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
+              {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
             {/* Route Thông tin user */}
-                  <Route path="/profile/:id" element={<UserProfile />}>
-                    <Route index element={<PersonalInfo />} />
-                    {/* <Route path="learning-history" element={<LearningHistory />} /> */}
-                    <Route path="comments" element={< MyComments />} />
-                  </Route>
+              <Route path="/profile/:id" element={<UserProfile />}>
+                <Route index element={<PersonalInfo />} />
+                {/* <Route path="learning-history" element={<LearningHistory />} /> */}
+                <Route path="comments" element={< MyComments />} />
+              </Route>
 
 
-                  {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
+              {/* 3. ROUTE GIẢI PHÁP (Dynamic Slug) 
                - Lưu ý: Vì SQL bạn lưu link là "/khai-khoang", "/lam-nghiep"... 
                  nên ta dùng path="/:id" để bắt các link này.
                - Quan trọng: Route này bắt buộc đặt CUỐI CÙNG trong danh sách để tránh
                  nó nhận nhầm các trang như "/gioi-thieu" là một "id" giải pháp.
             */}
-                  <Route path="/:id" element={<SolutionDetail />} />
+              <Route path="/:id" element={<SolutionDetail />} />
 
-                  {/* 4. Route 404 (Dành cho các link linh tinh không khớp cái nào ở trên) */}
-                  {/* React Router v6 thông minh hơn trong việc matching, nhưng nếu cần 
+              {/* 4. Route 404 (Dành cho các link linh tinh không khớp cái nào ở trên) */}
+              {/* React Router v6 thông minh hơn trong việc matching, nhưng nếu cần 
                 catch-all thực sự thì có thể dùng path="*" */}
-                  <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<NotFound />} />
 
-                </Route>
+            </Route>
               </Routes>
             </AliveScope>
-          </AuthInitializer>
-        </Router>
+          </Router>
+        </AuthInitializer>
       </AuthProvider>
     </>
   );
