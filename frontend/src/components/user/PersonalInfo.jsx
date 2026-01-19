@@ -31,21 +31,20 @@ function PersonalInfo() {
               </div>
 
               <div className="info-row">
+                <span className="info-label">Mã định danh</span>
+                <span className="info-value">{profile.identity_number || '--'}</span>
+              </div>
+              <div className="info-row">
                 <span className="info-label">Giới tính</span>
                 <span className="info-value">{profile.gender || '--'}</span>
               </div>
 
               <div className="info-row">
-                <span className="info-label">Mã định danh</span>
-                <span className="info-value">{profile.identity_number || '--'}</span>
-              </div>
-
-              {/* <div className="info-row">
-                <span className="info-label">Sinh nhật</span>
+                <span className="info-label">Ngày sinh</span>
                 <span className="info-value">
                   {profile.birth_date ? formatDate(profile.birth_date) : '--'}
                 </span>
-              </div> */}
+              </div>
 
               <div className="info-row">
                 <span className="info-label">Địa chỉ</span>
@@ -53,12 +52,12 @@ function PersonalInfo() {
               </div>
 
               <div className="info-row">
-                <span className="info-label">Hạng</span>
+                <span className="info-label">Hạng thi</span>
                 <span className="info-value">{profile.target_tier || '--'}</span>
               </div>
 
               <div className="info-row">
-                <span className="info-label">Loại UAV</span>
+                <span className="info-label">Loại UAV đăng kí</span>
                 <span className="info-value">{profile.uav_type || '--'}</span>
               </div>
 
