@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 // Hằng số
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key';
-const TOKEN_EXPIRY = '1s';  // Access token: 1 giờ
+const TOKEN_EXPIRY = '1h';  // Access token: 1 giờ
 const REFRESH_TOKEN_EXPIRY = '7d';  // Refresh token: 7 ngày
 
 /**
