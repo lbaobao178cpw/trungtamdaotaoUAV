@@ -27,13 +27,13 @@ function PersonalInfo() {
 
               <div className="info-row">
                 <span className="info-label">Số điện thoại</span>
-                <span className="info-value">(+84) {profile.phone || '--'}</span>
+                <span className="info-value">{profile.phone || '--'}</span>
               </div>
 
-              {/* <div className="info-row">
+              <div className="info-row">
                 <span className="info-label">Giới tính</span>
                 <span className="info-value">{profile.gender || '--'}</span>
-              </div> */}
+              </div>
 
               <div className="info-row">
                 <span className="info-label">Mã định danh</span>

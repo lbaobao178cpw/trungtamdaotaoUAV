@@ -375,24 +375,40 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    const submitData = {
+      ...formData,
+      address: [
+        formData.address,
+        formData.wardName,
+        formData.cityName,
+      ].filter(Boolean).join(", "),
+    };
+
+
+    // ❌ không cần gửi mấy cái này
+    delete submitData.cityId;
+    delete submitData.wardId;
+
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại");
 
-      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      toast.success("Đăng ký thành công!");
       navigate("/dang-nhap");
-    } catch (error) {
-      console.error("Lỗi:", error);
-      alert(error.message);
+    } catch (err) {
+      alert(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const renderStepIndicator = () => (
     <div className="step-indicator">
