@@ -3,6 +3,21 @@ const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const { verifyToken, verifyAdmin } = require('../middleware/verifyToken');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+// Setup multer for avatar upload
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ hỗ trợ file ảnh'), false);
+    }
+  }
+});
 
 // --- GET: Lấy danh sách người dùng (Kèm thông tin chi tiết) ---
 router.get("/", async (req, res) => {
@@ -41,6 +56,7 @@ router.get("/:id/profile", verifyToken, async (req, res) => {
         u.email,
         u.phone,
         u.created_at,
+        u.avatar,
 
         p.gender,
         p.identity_number,
@@ -119,6 +135,50 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi xóa người dùng" });
+  }
+});
+
+// --- POST: Upload avatar ---
+router.post("/:id/avatar", verifyToken, avatarUpload.single('avatar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Chỉ chính chủ hoặc admin mới được upload
+    if (req.user.role !== 'admin' && req.user.id !== Number(id)) {
+      return res.status(403).json({ error: "Bạn không có quyền cập nhật avatar này" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Không có file được upload" });
+    }
+
+    // Upload lên Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'uav-training/avatars',
+          transformation: [
+            { width: 300, height: 300, crop: 'fill', gravity: 'face' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    // Cập nhật avatar URL vào database
+    await db.query("UPDATE users SET avatar = ? WHERE id = ?", [uploadResult.secure_url, id]);
+
+    res.json({ 
+      message: "Upload avatar thành công",
+      avatar: uploadResult.secure_url
+    });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    res.status(500).json({ error: "Lỗi khi upload avatar" });
   }
 });
 

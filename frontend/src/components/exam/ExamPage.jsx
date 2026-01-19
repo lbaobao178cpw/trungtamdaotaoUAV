@@ -140,7 +140,7 @@ const ExamPage = () => {
                             top: '48px',
                             width: '2px',
                             height: 'calc(100% + 24px)',
-                            background: '#555555'
+                            background: '#555555',
                           }}
                         />
                       )}
@@ -153,7 +153,9 @@ const ExamPage = () => {
                           background: '#0050b8',
                           color: '#ffffff',
                           position: 'relative',
-                          zIndex: 1
+                          bottom: '-20px',
+                          zIndex: 1,
+
                         }}
                       >
                         <step.icon className="w-6 h-6" />
