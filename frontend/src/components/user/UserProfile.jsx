@@ -124,7 +124,20 @@ function UserProfile() {
           {/* User Card */}
           <div className="user-card">
             <div className="user-avatar">
-              {profile.full_name?.charAt(0).toUpperCase() || 'U'}
+              {profile.avatar ? (
+                <img 
+                  src={profile.avatar} 
+                  alt="Avatar" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover',
+                    borderRadius: '50%'
+                  }} 
+                />
+              ) : (
+                profile.full_name?.charAt(0).toUpperCase() || 'U'
+              )}
             </div>
             <h3 className="user-name">{profile.full_name}</h3>
             <p className="user-id">{profile.email || profile.phone}</p>
@@ -210,7 +223,7 @@ function UserProfile() {
             </div>
           </div> */}
           <main className="profile-main">
-            <Outlet context={{ profile, formatDate }} />
+            <Outlet context={{ profile, formatDate, setProfile }} />
           </main>
 
         </main>
