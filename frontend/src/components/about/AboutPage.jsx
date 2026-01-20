@@ -330,7 +330,7 @@ function AboutPage() {
                     <div className="cta-buttons">
                         {/* Sử dụng Link cho chuyển trang nội bộ */}
                         <Link to="/dang-ky" className="btn btn-primary">Đăng ký ngay</Link>
-                        <button className="btn btn-secondary btn-large">Tìm hiểu thêm</button>
+                        <button className="btn btn-secondary">Tìm hiểu thêm</button>
                     </div>
                 </div>
             </section>

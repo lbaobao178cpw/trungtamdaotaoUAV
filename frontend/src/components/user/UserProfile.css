@@ -33,7 +33,7 @@
   padding: 20px;
   text-align: center;
   border-bottom: 1px solid #f0f0f0;
-  height:170px
+  height:190px
 }
 
 .user-avatar {
@@ -55,7 +55,17 @@
   font-weight: 700;
   margin: 0 0 5px;
   color: #000;
+
+  max-width: 14ch;        /* ~2 chữ / dòng */
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+
+  text-align: center;    /* 👉 CENTER CHỮ */
+  margin-left: auto;     /* 👉 CENTER KHỐI */
+  margin-right: auto;
 }
+
 
 .user-id {
   font-size: 0.8rem;

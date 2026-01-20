@@ -236,13 +236,8 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng A - nếu đã đăng ký A HOẶC đang chọn A */}
                 {((registeredTier === 'A') || (!registeredTier && selectedCertificate === "hang-a")) && (
                   <div className="p-6 border rounded-lg" style={{
-<<<<<<< HEAD
                     // borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
-                    background: registeredTier === 'A' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
-=======
-                    borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
                     background: 'transparent'
->>>>>>> a372f982c21e1a4170968623de70d1636883b7f8
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                       <div>
@@ -349,13 +344,8 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng B - nếu đã đăng ký B HOẶC đang chọn B */}
                 {((registeredTier === 'B') || (!registeredTier && selectedCertificate === "hang-b")) && (
                   <div className="p-6 border rounded-lg" style={{
-<<<<<<< HEAD
                     // borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
-                    background: registeredTier === 'B' ? 'rgba(255, 202, 5, 0.05)' : 'transparent'
-=======
-                    borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
                     background: 'transparent'
->>>>>>> a372f982c21e1a4170968623de70d1636883b7f8
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                       <div>
