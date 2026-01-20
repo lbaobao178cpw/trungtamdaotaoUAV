@@ -81,7 +81,7 @@ function CoursesPage() {
           const accessibleRes = await fetch(`${API_URL}/my-accessible`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          
+
           if (accessibleRes.ok) {
             const accessibleData = await accessibleRes.json();
             setUserTier(accessibleData.userTier);
@@ -115,7 +115,7 @@ function CoursesPage() {
   // Fetch ratings riêng sau khi có courses
   useEffect(() => {
     if (courses.length === 0) return;
-    
+
     const fetchRatings = async () => {
       const ratings = {};
       for (const course of courses) {
@@ -294,16 +294,10 @@ function CoursesPage() {
             {newestCourses.length > 0 ? (
               newestCourses.map((course) => renderCourseCard(course))
             ) : (
-              <p
-                style={{
-                  gridColumn: "1 / -1",
-                  textAlign: "center",
-                  color: "#666",
-                  padding: "40px 0",
-                }}
-              >
+              <p className="courses-empty">
                 Chưa có khóa học nào.
               </p>
+
             )}
           </div>
         </div>
@@ -323,14 +317,7 @@ function CoursesPage() {
             {featuredCourses.length > 0 ? (
               featuredCourses.map((course) => renderCourseCard(course))
             ) : (
-              <p
-                style={{
-                  gridColumn: "1 / -1",
-                  textAlign: "center",
-                  color: "#666",
-                  padding: "40px 0",
-                }}
-              >
+              <p className="courses-empty">
                 Chưa có khóa học nào.
               </p>
             )}
@@ -343,34 +330,24 @@ function CoursesPage() {
           <div className="section-header">
             <h2 className="section-title">Tất cả khóa học</h2>
             {userTier && (
-              <span style={{ 
-                background: userTier === 'B' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                color: '#fff',
-                padding: '6px 16px',
-                borderRadius: '20px',
-                fontSize: '0.85rem',
-                fontWeight: '600'
-              }}>
+              <span
+                className={`user-tier-badge ${userTier === 'B' ? 'tier-b' : 'tier-a'}`}
+              >
                 Hạng của bạn: {userTier}
               </span>
+
             )}
           </div>
           <div className="courses-grid">
             {accessibleCourses.length > 0 ? (
               accessibleCourses.map((course) => renderCourseCard(course))
             ) : (
-              <p
-                style={{
-                  gridColumn: "1 / -1",
-                  textAlign: "center",
-                  color: "#666",
-                  padding: "40px 0",
-                }}
-              >
-                {isLoggedIn 
+              <p className="courses-empty">
+                {isLoggedIn
                   ? "Bạn chưa đăng ký hạng nào. Vui lòng đăng ký để xem khóa học."
                   : "Vui lòng đăng nhập để xem khóa học."}
               </p>
+
             )}
           </div>
         </div>

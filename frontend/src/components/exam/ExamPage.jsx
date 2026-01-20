@@ -147,35 +147,15 @@ const ExamPage = () => {
                 <div className="space-y-6">
                   {processSteps.map((step, idx) => (
                     <div key={idx} className="flex gap-4 items-start relative">
-                      {/* Đường dọc nối các icon */}
+                      {/* Đường dọc nối icon */}
                       {idx < processSteps.length - 1 && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: '23px',
-                            top: '48px',
-                            width: '2px',
-                            height: 'calc(100% + 24px)',
-                            background: '#555555',
-                          }}
-                        />
+                        <div className="process-line" />
                       )}
 
-                      <div
-                        className="flex items-center justify-center flex-shrink-0 rounded-full"
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          background: '#0050b8',
-                          color: '#ffffff',
-                          position: 'relative',
-                          bottom: '-20px',
-                          zIndex: 1,
-
-                        }}
-                      >
+                      <div className="process-icon flex items-center justify-center flex-shrink-0 rounded-full">
                         <step.icon className="w-6 h-6" />
                       </div>
+
                       <div className="flex-1">
                         <h4 className="font-semibold mb-2 text-white text-base">
                           {step.label}
@@ -187,6 +167,7 @@ const ExamPage = () => {
                     </div>
                   ))}
                 </div>
+
               </div>
 
               {/* Chi tiết chứng chỉ */}
@@ -203,50 +184,38 @@ const ExamPage = () => {
                   <div className="flex gap-2 mb-6">
                     <button
                       onClick={() => setSelectedCertificate("hang-a")}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${selectedCertificate === "hang-a"
-                        ? "text-black"
-                        : "bg-transparent text-white border"
+                      className={`certificate-btn ${selectedCertificate === "hang-a" ? "active" : ""
                         }`}
-                      style={{
-
-                        color: selectedCertificate === "hang-a" ? '#fff ' : '#000',
-                        background: selectedCertificate === "hang-a" ? '#0050b8' : 'transparent',
-                        borderColor: selectedCertificate === "hang-a" ? '#0050b8' : '#555555'
-                      }}
                     >
                       Hạng A
                     </button>
+
                     <button
                       onClick={() => setSelectedCertificate("hang-b")}
-                      className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${selectedCertificate === "hang-b"
-                        ? "text-black"
-                        : "bg-transparent text-white border"
+                      className={`certificate-btn ${selectedCertificate === "hang-b" ? "active" : ""
                         }`}
-                      style={{
-                        color: selectedCertificate === "hang-b" ? '#fff ' : '#000',
-                        background: selectedCertificate === "hang-b" ? '#0050b8' : 'transparent',
-                        borderColor: selectedCertificate === "hang-b" ? '#0050b8' : '#555555'
-                      }}
                     >
                       Hạng B
                     </button>
                   </div>
                 )}
 
+
                 {/* Hiển thị Hạng A - nếu đã đăng ký A HOẶC đang chọn A */}
                 {((registeredTier === 'A') || (!registeredTier && selectedCertificate === "hang-a")) && (
-                  <div className="p-6 border rounded-lg" style={{
-                    // borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
-                    background: 'transparent'
-                  }}>
+                  <div className="tier-card tier-a-card p-6 border rounded-lg">
+
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                       <div>
                         {registeredTier === 'A' && (
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold" style={{
-                              background: 'transparent',
-                              color: '#0050b8'
-                            }}>
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold"
+                              style={{
+                                background: 'transparent',
+                                color: '#0050b8'
+                              }}
+                            >
                               <CheckCircle2 className="w-3 h-3" /> ĐÃ ĐĂNG KÝ
                             </span>
                           </div>
@@ -255,18 +224,7 @@ const ExamPage = () => {
                           Hạng A (Cơ bản)
                         </h3>
                         {/* BADGE HẠNG A */}
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '12px 32px',
-                          fontSize: '1rem',
-                          fontWeight: '700',
-                          borderRadius: '50px',
-                          background: '#0050b8',
-                          color: '#ffffff',
-                          whiteSpace: 'nowrap',
-                          width: 'fit-content',
-                          marginTop: '8px'
-                        }}>
+                        <span className="tier-uav-badge">
                           UAV &lt; 250g
                         </span>
                       </div>
@@ -327,13 +285,7 @@ const ExamPage = () => {
                       <Link
                         to="/dang-ky"
                         state={{ preSelectedTier: "A" }}
-                        className="mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
-                        style={{
-                          textDecoration: 'none',
-                          padding: '12px 32px', // Tăng padding giống badge
-                          fontSize: '1rem',     // Tăng font chữ
-                          width: 'fit-content',  // Co gọn lại
-                        }}
+                        className="tier-register-btn mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
                       >
                         Đăng ký thi Hạng A
                       </Link>
@@ -343,18 +295,13 @@ const ExamPage = () => {
 
                 {/* Hiển thị Hạng B - nếu đã đăng ký B HOẶC đang chọn B */}
                 {((registeredTier === 'B') || (!registeredTier && selectedCertificate === "hang-b")) && (
-                  <div className="p-6 border rounded-lg" style={{
-                    // borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
-                    background: 'transparent'
-                  }}>
+                  <div className="tier-card tier-b-card p-6 border rounded-lg">
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                       <div>
                         {registeredTier === 'B' && (
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold" style={{
-                              background: 'transparent',
-                              color: '#0050b8'
-                            }}>
+                            <span className="tier-registered-badge inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold">
+
                               <CheckCircle2 className="w-3 h-3" /> ĐÃ ĐĂNG KÝ
                             </span>
                           </div>
@@ -363,18 +310,7 @@ const ExamPage = () => {
                           Hạng B (Trung cấp)
                         </h3>
                         {/* BADGE HẠNG B */}
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '12px 32px',
-                          fontSize: '1rem',
-                          fontWeight: '700',
-                          borderRadius: '50px',
-                          background: '#0050b8',
-                          color: '#ffffff',
-                          whiteSpace: 'nowrap',
-                          width: 'fit-content',
-                          marginTop: '8px'
-                        }}>
+                        <span className="tier-uav-badge">
                           UAV 250g - 2kg
                         </span>
                       </div>
@@ -433,15 +369,7 @@ const ExamPage = () => {
 
                     {!registeredTier && (
                       <Link
-                        to="/dang-ky"
-                        state={{ preSelectedTier: "B" }}
-                        className="mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
-                        style={{
-                          textDecoration: 'none',
-                          padding: '12px 32px', // Tăng padding giống badge
-                          fontSize: '1rem',     // Tăng font chữ
-                          width: 'fit-content'  // Co gọn lại
-                        }}
+                        className="tier-register-btn mt-6 inline-block text-center rounded-lg font-bold transition-all bg-primary hover:bg-primary/90"
                       >
                         Đăng ký thi Hạng B
                       </Link>
@@ -527,7 +455,7 @@ const ExamPage = () => {
               </div>
 
               {/* Tài liệu ôn thi */}
-              <div className="card p-6">
+              {/* <div className="card p-6">
                 <h3 className="font-bold mb-4 text-lg">Tài liệu ôn thi</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                   {documentsList && documentsList.length > 0 ? (
@@ -613,6 +541,31 @@ const ExamPage = () => {
                     <p style={{ color: '#999' }}>Không có tài liệu ôn thi</p>
                   )}
                 </div>
+              </div> */}
+              <div className="card p-6">
+                <h3 className="font-bold mb-4 text-lg">Tài liệu ôn thi</h3>
+
+                <div className="exam-docs-grid">
+                  {documentsList && documentsList.length > 0 ? (
+                    documentsList.map((doc) => (
+                      <div key={doc.id} className="exam-doc-item">
+                        <p className="exam-doc-title">{doc.title}</p>
+
+                        {doc.file_url && (
+                          <a
+                            href={`http://localhost:5000/api/study-materials/${doc.id}/download`}
+                            title="Tải xuống"
+                            className="exam-doc-download"
+                          >
+                            <FileDown size={18} />
+                          </a>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="exam-doc-empty">Không có tài liệu ôn thi</p>
+                  )}
+                </div>
               </div>
 
               {/* Thống kê */}
@@ -621,53 +574,62 @@ const ExamPage = () => {
                   <BarChart3 className="w-5 h-5 text-primary" />
                   Thống kê
                 </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+                <div className="space-y-3 text-sm stats-list">
+                  <div className="stats-row">
                     <span className="text-muted-foreground">Tổng số đã cấp chứng chỉ:</span>
                     <span className="font-bold text-white">12,548</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+
+                  <div className="stats-row">
                     <span className="text-muted-foreground">Tỷ lệ đậu trung bình:</span>
                     <span className="font-bold text-green-600">78%</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2" style={{ borderColor: '#555555' }}>
+
+                  <div className="stats-row">
                     <span className="text-muted-foreground">Kỳ thi gần nhất:</span>
                     <span className="font-bold text-white">25/12/2025</span>
                   </div>
+
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Số lượng trung tâm:</span>
                     <span className="font-bold text-white">15</span>
                   </div>
                 </div>
               </div>
-
               {/* Support */}
-              <div className="card p-6" style={{ border: '1px solid #e0e0e0', backgroundColor: '#fafafa' }}>
-                <h3 className="font-bold mb-6 text-lg" style={{ color: '#000' }}>Liên hệ hỗ trợ</h3>
+              <div className="card p-6 support-card">
+                <h3 className="font-bold mb-6 text-lg support-title">
+                  Liên hệ hỗ trợ
+                </h3>
+
                 <div className="space-y-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#d4e4f7' }}>
-                      <Phone className="w-5 h-5" style={{ color: '#0050b8' }} />
+                    <div className="support-icon-wrapper">
+                      <Phone className="support-icon" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium" style={{ color: '#666' }}>Tổng đài hỗ trợ</p>
-                      <p className="font-semibold text-sm" style={{ color: '#000', marginTop: '4px' }}>{footerConfig.phone || '1900 xxxx'}</p>
+                      <p className="support-label">Tổng đài hỗ trợ</p>
+                      <p className="support-text">{footerConfig.phone || '1900 xxxx'}</p>
                       {footerConfig.workingHours && (
-                        <p className="text-xs" style={{ color: '#666', marginTop: '4px' }}>{footerConfig.workingHours}</p>
+                        <p className="support-subtext">{footerConfig.workingHours}</p>
                       )}
                     </div>
                   </div>
+
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#d4e4f7' }}>
-                      <Mail className="w-5 h-5" style={{ color: '#0050b8' }} />
+                    <div className="support-icon-wrapper">
+                      <Mail className="support-icon" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium" style={{ color: '#666' }}>Email hỗ trợ</p>
-                      <p className="font-semibold text-sm" style={{ color: '#0050b8', marginTop: '4px' }}>{footerConfig.email || 'support@UAVcert.gov.vn'}</p>
+                      <p className="support-label">Email hỗ trợ</p>
+                      <p className="support-email">
+                        {footerConfig.email || 'support@UAVcert.gov.vn'}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

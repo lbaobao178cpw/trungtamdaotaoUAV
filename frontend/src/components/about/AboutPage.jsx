@@ -217,6 +217,7 @@ function AboutPage() {
                     <div className="organization-grid">
                         {/* Card 1: Đào tạo và ứng dụng công nghệ */}
                         <div className="organization-card">
+                            {/* Icon */}
                             <div className="organization-icon">
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -224,7 +225,7 @@ function AboutPage() {
                                     <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                                 </svg>
-                            </div>
+                            </div> 
                             <h3 className="organization-title">Đào tạo và ứng dụng công nghệ</h3>
                             <p className="organization-subtitle">Công ty TNHH Khoa Học Roboboss</p>
                             <p className="organization-desc">Chịu trách nhiệm quản lý, giám sát và cấp chứng chỉ cho người điều khiển thiết bị bay không người lái.</p>

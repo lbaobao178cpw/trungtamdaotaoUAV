@@ -8,7 +8,7 @@
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition: background 0.25s ease;
+    transition:  0.25s ease;
 }
 
 .user-icon:hover {

@@ -450,3 +450,32 @@
   color: #81c784;
   border: 1px solid #81c784;
 }
+/* ===== Courses Section ===== */
+/* ===== User Tier Badge ===== */
+
+.user-tier-badge {
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.user-tier-badge.tier-b {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-tier-badge.tier-a {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+/* ===== Courses Empty State ===== */
+
+.courses-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #666;
+  padding: 40px 0;
+}
+

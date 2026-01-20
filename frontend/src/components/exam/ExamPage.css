@@ -987,3 +987,206 @@ a.bg-primary:active {
 a.bg-primary:hover {
   color: #000000 !important;
 }
+
+/* ===== Process Steps ===== */
+
+.process-line {
+  position: absolute;
+  left: 23px;
+  top: 48px;
+  width: 2px;
+  height: calc(100% + 24px);
+  background: #555555;
+}
+
+.process-icon {
+  width: 48px;
+  height: 48px;
+  background: #0050b8;
+  color: #ffffff;
+  position: relative;
+  bottom: -20px;
+  z-index: 1;
+}
+/* ===== Certificate Selector ===== */
+
+.certificate-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: #000;
+  border: 1px solid #555555;
+  cursor: pointer;
+}
+
+.certificate-btn.active {
+  background: #0050b8;
+  color: #ffffff;
+  border-color: #0050b8;
+}
+/* ===== Tier Card ===== */
+
+.tier-card {
+  background: transparent;
+}
+
+/* ===== Registered Badge ===== */
+
+.tier-registered-badge {
+  background: transparent;
+  color: #0050b8;
+}
+
+/* ===== UAV Badge ===== */
+
+.tier-uav-badge {
+  display: inline-block;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 50px;
+  background: #0050b8;
+  color: #ffffff;
+  white-space: nowrap;
+  width: fit-content;
+  margin-top: 8px;
+}
+
+/* ===== Register Button ===== */
+
+.tier-register-btn {
+  text-decoration: none;
+  padding: 12px 32px;
+  font-size: 1rem;
+  width: fit-content;
+}
+.exam-docs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.exam-doc-item {
+  padding: 15px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  min-height: 60px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.exam-doc-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--primary-color, #0050b8);
+}
+
+.exam-doc-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-color, #0050b8);
+  margin: 0;
+  margin-right: 45px;
+  word-break: break-word;
+}
+
+.exam-doc-download {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 6px;
+  background: rgba(0, 80, 184, 0.08);
+  color: var(--primary-color, #0050b8);
+  text-decoration: none;
+
+  transition: all 0.2s ease;
+}
+
+.exam-doc-download:hover {
+  background: rgba(0, 80, 184, 0.15);
+  transform: translateY(calc(-50% - 2px));
+}
+
+.exam-doc-empty {
+  color: #999;
+}
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #555555;
+  padding-bottom: 8px;
+}
+/* ===== Support Card ===== */
+
+.support-card {
+  border: 1px solid #e0e0e0;
+  background-color: #fafafa;
+}
+
+.support-title {
+  color: #000;
+}
+
+/* Icon */
+.support-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #d4e4f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 20px;
+}
+
+.support-icon {
+  width: 20px;
+  height: 20px;
+  color: #0050b8;
+}
+
+/* Text */
+.support-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+.support-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  margin-top: 4px;
+}
+
+.support-subtext {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.support-email {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0050b8;
+  margin-top: 4px;
+}

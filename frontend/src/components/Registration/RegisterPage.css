@@ -594,3 +594,17 @@
     font-size: 13px;
     margin-top: 4px;
 }
+
+.info-box-exam {
+  border: 1px solid #0066cc;
+  background: #f0f9ff;
+}
+
+.info-box-exam-title {
+  color: #0066cc;
+}
+
+.info-box-exam-text {
+  font-weight: bold;
+  color: #0066cc;
+}
