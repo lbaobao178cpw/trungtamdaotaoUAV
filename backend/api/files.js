@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs-extra");
 const path = require("path");
-const { 
-  resolvePath, 
-  getThumbPath, 
-  getFileType, 
-  generateThumbnail, 
-  upload, 
-  THUMB_ROOT 
+const {
+  resolvePath,
+  getThumbPath,
+  getFileType,
+  generateThumbnail,
+  upload,
+  THUMB_ROOT
 } = require("../utils/fileHelpers");
 
 // GET /api/files
@@ -28,7 +28,7 @@ router.get("/files", async (req, res) => {
         const itemRelPath = path.join(relativePath, item.name).replace(/\\/g, "/");
         const isDir = item.isDirectory();
         let hasThumb = false;
-        
+
         if (!isDir) {
           hasThumb = await fs.pathExists(getThumbPath(itemRelPath));
         }
@@ -56,10 +56,10 @@ router.delete("/files", async (req, res) => {
   try {
     const { fullPath, relativePath } = resolvePath(req.query.path);
     if (await fs.pathExists(fullPath)) await fs.remove(fullPath);
-    
+
     const thumbPath = getThumbPath(relativePath);
     if (await fs.pathExists(thumbPath)) await fs.remove(thumbPath);
-    
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ message: "Lỗi xóa file" });
@@ -71,10 +71,24 @@ router.post("/upload", upload.single("mediaFile"), async (req, res) => {
   if (req.file) {
     const folder = req.body.folderPath || "";
     const { relativePath } = resolvePath(folder);
-    generateThumbnail(req.file.path, relativePath);
-    res.json({ success: true, filename: req.file.filename });
+
+    // Tạo file path trong uploads folder
+    const filePath = relativePath ? `${relativePath}/${req.file.filename}` : req.file.filename;
+
+    // Generate thumbnail nếu là ảnh
+    await generateThumbnail(req.file.path, relativePath);
+
+    const port = req.socket.localPort || process.env.PORT || 5000;
+
+    res.json({
+      success: true,
+      filename: req.file.filename,
+      path: filePath,
+      url: `http://localhost:${port}/uploads/${filePath}`,
+      type: getFileType(req.file.filename)
+    });
   } else {
-    res.status(400).json({ message: "Lỗi upload" });
+    res.status(400).json({ success: false, message: "Lỗi upload" });
   }
 });
 
@@ -105,9 +119,9 @@ router.post("/rename", async (req, res) => {
 
     const oldThumbPath = getThumbPath(oldRelPath);
     if (await fs.pathExists(oldThumbPath)) {
-        const thumbParent = path.dirname(oldThumbPath);
-        const newThumbPath = path.join(thumbParent, newName);
-        await fs.rename(oldThumbPath, newThumbPath);
+      const thumbParent = path.dirname(oldThumbPath);
+      const newThumbPath = path.join(thumbParent, newName);
+      await fs.rename(oldThumbPath, newThumbPath);
     }
     res.json({ success: true });
   } catch (e) {
@@ -124,23 +138,23 @@ router.post("/copy", async (req, res) => {
     let destPath = path.join(destParent, itemName);
 
     if (await fs.pathExists(destPath)) {
-        const ext = path.extname(itemName);
-        const name = path.basename(itemName, ext);
-        destPath = path.join(destParent, `${name} (copy)${ext}`);
-        let i = 1;
-        while (await fs.pathExists(destPath)) {
-            destPath = path.join(destParent, `${name} (copy ${i})${ext}`);
-            i++;
-        }
+      const ext = path.extname(itemName);
+      const name = path.basename(itemName, ext);
+      destPath = path.join(destParent, `${name} (copy)${ext}`);
+      let i = 1;
+      while (await fs.pathExists(destPath)) {
+        destPath = path.join(destParent, `${name} (copy ${i})${ext}`);
+        i++;
+      }
     }
     await fs.copy(sourcePath, destPath);
 
     const oldThumbPath = getThumbPath(oldRelPath);
     if (await fs.pathExists(oldThumbPath)) {
-        const destFileName = path.basename(destPath);
-        const newThumbPath = path.join(THUMB_ROOT, newRelParent, destFileName);
-        await fs.ensureDir(path.dirname(newThumbPath));
-        await fs.copy(oldThumbPath, newThumbPath);
+      const destFileName = path.basename(destPath);
+      const newThumbPath = path.join(THUMB_ROOT, newRelParent, destFileName);
+      await fs.ensureDir(path.dirname(newThumbPath));
+      await fs.copy(oldThumbPath, newThumbPath);
     }
     res.json({ success: true, message: "Sao chép thành công" });
   } catch (e) {
@@ -164,9 +178,9 @@ router.post("/move", async (req, res) => {
 
     const oldThumbPath = getThumbPath(oldRelPath);
     if (await fs.pathExists(oldThumbPath)) {
-        const newThumbPath = path.join(THUMB_ROOT, newRelParent, itemName);
-        await fs.ensureDir(path.dirname(newThumbPath));
-        await fs.move(oldThumbPath, newThumbPath, { overwrite: true });
+      const newThumbPath = path.join(THUMB_ROOT, newRelParent, itemName);
+      await fs.ensureDir(path.dirname(newThumbPath));
+      await fs.move(oldThumbPath, newThumbPath, { overwrite: true });
     }
     res.json({ success: true });
   } catch (e) {

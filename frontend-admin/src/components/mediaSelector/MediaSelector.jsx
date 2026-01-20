@@ -265,15 +265,40 @@ export default function MediaSelector({ onSelect, onClose }) {
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length === 0) return;
         setUploading(true);
-        await Promise.all(acceptedFiles.map(async (file) => {
-            const formData = new FormData();
-            formData.append('folderPath', currentPath || "");
-            formData.append('mediaFile', file);
-            try { await fetch(`${MEDIA_API_URL}/upload`, { method: 'POST', body: formData }); } catch (e) { }
-        }));
-        setUploading(false);
-        fetchFiles(currentPath);
+        console.log("⬆️  Starting upload for", acceptedFiles.length, "files");
+
+        try {
+            await Promise.all(acceptedFiles.map(async (file) => {
+                const formData = new FormData();
+                formData.append('folderPath', currentPath || "");
+                formData.append('mediaFile', file);
+
+                try {
+                    const response = await fetch(`${MEDIA_API_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    console.log("✅ Upload response:", result);
+                } catch (e) {
+                    console.error("❌ Upload error:", e);
+                }
+            }));
+        } finally {
+            setUploading(false);
+            console.log("🔄 Refreshing file list...");
+            fetchFiles(currentPath);
+        }
     }, [currentPath, fetchFiles]);
+
+    // Handler riêng cho input file upload (hỗ trợ await)
+    const handleFileInputUpload = useCallback(async (e) => {
+        const files = Array.from(e.target.files);
+        console.log("📁 File selected:", files);
+        await onDrop(files);
+        // Reset input để có thể upload file cùng tên lần khác
+        e.target.value = '';
+    }, [onDrop]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true, noKeyboard: true, noDrag: true });
 
@@ -328,7 +353,7 @@ export default function MediaSelector({ onSelect, onClose }) {
                     {/* --- TOOLBAR --- */}
                     <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-light)', display: 'flex', gap: 10, alignItems: 'center', background: 'white' }}>
                         <button onClick={() => { const name = prompt("Tên thư mục:"); if (name) fetch(`${MEDIA_API_URL}/create-folder`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderName: name, currentPath }) }).then(() => fetchFiles(currentPath)); }} className="btn btn-warning btn-sm"> + Thư mục </button>
-                        <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', margin: 0 }}> {uploading ? "Đang tải..." : "Tải lên"} <input type="file" hidden multiple onChange={(e) => onDrop(Array.from(e.target.files))} /> </label>
+                        <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', margin: 0 }}> {uploading ? "Đang tải..." : "Tải lên"} <input type="file" hidden multiple onChange={handleFileInputUpload} /> </label>
                         {clipboard.items.length > 0 && (<button onClick={handlePaste} className="btn btn-secondary btn-sm" style={{ display: 'flex', gap: 5, alignItems: 'center', border: '1px solid var(--primary)', color: 'var(--primary)' }}> Dán ({clipboard.items.length}) </button>)}
                         <div style={{ marginLeft: 'auto', fontSize: 13, color: '#666' }}> {selectedPaths.size > 0 ? <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedPaths.size} mục đã chọn</span> : ""} </div>
                     </div>

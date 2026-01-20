@@ -35,6 +35,8 @@ export default function CourseManager() {
   const [isVideoUploadingOpen, setIsVideoUploadingOpen] = useState(false);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
+  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
 
   // Form States
   const [courseFormData, setCourseFormData] = useState({
@@ -108,6 +110,63 @@ export default function CourseManager() {
     setIsCourseFormOpen(true);
   };
 
+  // Helper: Upload ảnh lên Cloudinary với progress tracking
+  const uploadImageWithProgress = async (file) => {
+    try {
+      setIsThumbnailUploading(true);
+      setThumbnailUploadProgress(0);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "uav-training/images");
+      formData.append("displayName", file.name);
+
+      const token = localStorage.getItem("admin_token");
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            setThumbnailUploadProgress(Math.round(percentComplete));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              setThumbnailUploadProgress(100);
+              setTimeout(() => {
+                setIsThumbnailUploading(false);
+                setThumbnailUploadProgress(0);
+              }, 500);
+              resolve(response.url);
+            } else {
+              reject(new Error(response.error || "Upload failed"));
+            }
+          } else {
+            reject(new Error(`HTTP ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload error"));
+        });
+
+        xhr.open("POST", "http://localhost:5000/api/cloudinary/upload");
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.send(formData);
+      });
+    } catch (err) {
+      console.error("Upload error:", err);
+      setIsThumbnailUploading(false);
+      throw err;
+    }
+  };
+
   const handleSaveCourseInfo = async (e) => {
     e.preventDefault();
 
@@ -125,8 +184,7 @@ export default function CourseManager() {
           const file = new File([blob], "course-thumbnail.jpg", {
             type: blob.type,
           });
-          const result = await uploadImage(file);
-          if (result.success) thumbnailUrl = result.url;
+          thumbnailUrl = await uploadImageWithProgress(file);
         } catch (err) {
           console.error("Error uploading thumbnail:", err);
         }
@@ -746,11 +804,40 @@ export default function CourseManager() {
                     type="button"
                     onClick={() => openMediaSelector("thumbnail")}
                     className="cm-btn cm-btn-secondary"
+                    disabled={isThumbnailUploading}
                   >
                     📁 Chọn ảnh
                   </button>
                 </div>
-                {courseFormData.thumbnail && (
+                {isThumbnailUploading && (
+                  <div style={{ marginTop: "15px" }}>
+                    <div style={{
+                      fontSize: "12px",
+                      marginBottom: "8px",
+                      textAlign: "center",
+                      color: "#0066cc",
+                      fontWeight: "600"
+                    }}>
+                      Đang upload... {thumbnailUploadProgress}%
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "6px",
+                      background: "#e2e8f0",
+                      borderRadius: "3px",
+                      overflow: "hidden"
+                    }}>
+                      <div style={{
+                        width: `${thumbnailUploadProgress}%`,
+                        height: "100%",
+                        background: "linear-gradient(90deg, #0066cc, #0052a3)",
+                        transition: "width 0.3s ease",
+                        borderRadius: "3px"
+                      }} />
+                    </div>
+                  </div>
+                )}
+                {courseFormData.thumbnail && !isThumbnailUploading && (
                   <div style={{ marginTop: "15px", textAlign: "center" }}>
                     <img
                       src={courseFormData.thumbnail}
