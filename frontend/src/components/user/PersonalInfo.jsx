@@ -348,7 +348,7 @@ function PersonalInfo() {
                         className="form-input"
                         style={{ flex: 1 }}
                       >
-                        <option value="">--Chọn--</option>
+                        {/* <option value="">--Chọn--</option> */}
                         <option value="Nam">Nam</option>
                         <option value="Nữ">Nữ</option>
                       </select>
