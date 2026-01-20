@@ -173,6 +173,64 @@ router.get("/", async (req, res) => {
   }
 });
 
+// --- GET: Lấy danh sách khóa học MÀ USER ĐƯỢC PHÉP XEM (Theo hạng đăng ký) ---
+router.get("/my-accessible", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log("[my-accessible] userId:", userId);
+
+    // Lấy target_tier của user
+    const [userProfile] = await db.query(
+      "SELECT target_tier FROM user_profiles WHERE user_id = ?",
+      [userId]
+    );
+
+    console.log("[my-accessible] userProfile:", userProfile);
+    const userTier = userProfile[0]?.target_tier?.toUpperCase() || null;
+    console.log("[my-accessible] userTier:", userTier);
+
+    // Logic phân quyền:
+    // - Khóa học level B hoặc "Nâng cao": chỉ user hạng B mới xem được
+    // - Khóa học level A hoặc "Cơ bản": user hạng A hoặc B đều xem được
+    // - Nếu user chưa đăng ký hạng: không xem được gì (trừ khóa miễn phí nếu có)
+    let query = `
+      SELECT 
+        c.*,
+        COUNT(cv.id) as totalViews,
+        COUNT(DISTINCT cv.user_id) as uniqueViewers,
+        CASE 
+          WHEN (UPPER(c.level) = 'B' OR LOWER(c.level) LIKE '%nâng cao%') AND ? != 'B' THEN 0
+          WHEN (UPPER(c.level) = 'A' OR LOWER(c.level) LIKE '%cơ bản%') AND ? IS NULL THEN 0
+          ELSE 1
+        END as canAccess
+      FROM courses c
+      LEFT JOIN course_views cv ON c.id = cv.course_id
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `;
+
+    const [courses] = await db.query(query, [userTier, userTier]);
+
+    // Phân loại khóa học
+    const accessibleCourses = courses.filter(c => c.canAccess === 1);
+    const lockedCourses = courses.filter(c => c.canAccess === 0);
+
+    res.json({
+      userTier: userTier || 'Chưa đăng ký',
+      accessibleCount: accessibleCourses.length,
+      lockedCount: lockedCourses.length,
+      courses: courses.map(c => ({
+        ...c,
+        canAccess: c.canAccess === 1
+      }))
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy danh sách khóa học theo quyền:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy danh sách khóa học" });
+  }
+});
+
 // --- GET: Lấy chi tiết 1 BÀI HỌC (Dùng cho trang học/Quiz lẻ) ---
 router.get("/lesson/:id", async (req, res) => {
   try {
@@ -209,18 +267,68 @@ router.get("/lesson/:id", async (req, res) => {
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const courseId = req.params.id;
+    const userId = req.user.id;
+    
+    console.log("[course/:id] courseId:", courseId, "userId:", userId, "role:", req.user.role);
 
     // 1. Lấy thông tin khóa học
     const [courseRows] = await db.query("SELECT * FROM courses WHERE id = ?", [courseId]);
     if (courseRows.length === 0) return res.status(404).json({ error: "Không tìm thấy khóa học" });
 
-    // 2. Lấy danh sách CHƯƠNG (Chapters)
+    const course = courseRows[0];
+    const courseLevel = course.level?.toUpperCase(); // A hoặc B
+    console.log("[course/:id] course.level:", course.level, "courseLevel:", courseLevel);
+
+    // 2. Lấy target_tier của user từ user_profiles
+    const [userProfile] = await db.query(
+      "SELECT target_tier FROM user_profiles WHERE user_id = ?",
+      [userId]
+    );
+
+    const userTier = userProfile[0]?.target_tier?.toUpperCase() || null;
+    console.log("[course/:id] userProfile:", userProfile, "userTier:", userTier);
+
+    // 3. Kiểm tra quyền xem khóa học
+    // - Hạng A: chỉ xem được khóa học level A (hoặc Cơ bản)
+    // - Hạng B: xem được cả khóa học level A và B
+    // - Admin luôn được xem tất cả
+    // - Nếu user chưa đăng ký hạng nào thì không xem được
+    
+    // Admin bypass tất cả
+    if (req.user.role === 'admin') {
+      // Admin được xem tất cả, không cần kiểm tra tier
+    } else {
+      // Kiểm tra level B hoặc "Nâng cao"
+      const isLevelB = courseLevel === 'B' || (course.level && course.level.toLowerCase().includes('nâng cao'));
+      // Kiểm tra level A hoặc "Cơ bản"
+      const isLevelA = courseLevel === 'A' || (course.level && course.level.toLowerCase().includes('cơ bản'));
+      
+      if (isLevelB && userTier !== 'B') {
+        return res.status(403).json({ 
+          error: "Bạn cần đăng ký hạng B để xem khóa học này",
+          code: 'TIER_REQUIRED',
+          requiredTier: 'B',
+          currentTier: userTier || 'Chưa đăng ký'
+        });
+      }
+      
+      if (isLevelA && !userTier) {
+        return res.status(403).json({ 
+          error: "Bạn cần đăng ký khóa học để xem nội dung này",
+          code: 'TIER_REQUIRED',
+          requiredTier: 'A',
+          currentTier: 'Chưa đăng ký'
+        });
+      }
+    }
+
+    // 4. Lấy danh sách CHƯƠNG (Chapters)
     const [chapterRows] = await db.query(
       "SELECT * FROM chapters WHERE course_id = ? ORDER BY order_index ASC", 
       [courseId]
     );
 
-    // 3. Lấy danh sách BÀI HỌC (Lessons) thuộc khóa học này (join qua bảng chapters để lấy hết 1 lần cho tối ưu)
+    // 5. Lấy danh sách BÀI HỌC (Lessons) thuộc khóa học này (join qua bảng chapters để lấy hết 1 lần cho tối ưu)
     // Lưu ý: Cần join bảng chapters để lọc theo course_id
     const [lessonRows] = await db.query(
       `SELECT l.* FROM lessons l 
@@ -230,7 +338,7 @@ router.get("/:id", verifyToken, async (req, res) => {
       [courseId]
     );
 
-    // 4. Ghép bài học vào chương tương ứng (Mapping Data)
+    // 6. Ghép bài học vào chương tương ứng (Mapping Data)
     const chapters = chapterRows.map(chapter => {
       // Lọc các bài học thuộc chương này
       const lessonsInChapter = lessonRows.filter(l => l.chapter_id === chapter.id);

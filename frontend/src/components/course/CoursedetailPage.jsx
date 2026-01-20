@@ -23,6 +23,7 @@ function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const [relatedCourses, setRelatedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(null); // State cho lỗi quyền truy cập
 
   // === UI STATE ===
   const [activeTab, setActiveTab] = useState('intro');
@@ -217,8 +218,24 @@ function CourseDetailPage() {
             navigate('/dang-nhap');
             return;
           }
+          
+          // Xử lý lỗi 403 - Không có quyền xem theo hạng đăng ký
+          if (resCourse.status === 403) {
+            const errorData = await resCourse.json();
+            setAccessDenied({
+              message: errorData.error,
+              requiredTier: errorData.requiredTier,
+              currentTier: errorData.currentTier
+            });
+            setLoading(false);
+            return;
+          }
+          
           throw new Error("Lỗi tải khóa học");
         }
+
+        // Reset access denied nếu thành công
+        setAccessDenied(null);
 
         const data = await resCourse.json();
 
@@ -332,6 +349,136 @@ function CourseDetailPage() {
   const handleRetryQuiz = () => { setQuizSubmitted(false); setUserAnswers({}); setCurrentQuestionIdx(0); setScore(0); setQuizStarted(false); };
 
   if (loading) return <div className="lms-page"><div style={{ padding: 40, textAlign: 'center', color: '#fff' }}>Đang tải dữ liệu...</div></div>;
+  
+  // Hiển thị UI khi bị từ chối quyền truy cập theo hạng
+  if (accessDenied) {
+    return (
+      <div className="lms-page" ref={topRef}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          minHeight: '60vh',
+          padding: '40px 20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+            borderRadius: '20px',
+            padding: '50px 40px',
+            maxWidth: '500px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            {/* Icon khóa */}
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+
+            <h2 style={{ 
+              color: '#fff', 
+              fontSize: '1.8rem', 
+              marginBottom: '16px',
+              fontWeight: '600'
+            }}>
+              Khóa học bị khóa
+            </h2>
+
+            <p style={{ 
+              color: '#b0b0b0', 
+              fontSize: '1rem', 
+              lineHeight: '1.6',
+              marginBottom: '24px'
+            }}>
+              {accessDenied.message}
+            </p>
+
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '30px'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                marginBottom: '12px'
+              }}>
+                <span style={{ color: '#888' }}>Hạng của bạn:</span>
+                <span style={{ 
+                  color: accessDenied.currentTier === 'Chưa đăng ký' ? '#ff6b6b' : '#4ecdc4',
+                  fontWeight: '600'
+                }}>
+                  {accessDenied.currentTier}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#888' }}>Yêu cầu:</span>
+                <span style={{ 
+                  color: '#ffd93d',
+                  fontWeight: '600'
+                }}>
+                  Hạng {accessDenied.requiredTier}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate('/khoa-hoc')}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'transparent',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  transition: 'all 0.3s'
+                }}
+                onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={(e) => e.target.style.background = 'transparent'}
+              >
+                ← Quay lại
+              </button>
+              <button
+                onClick={() => navigate('/dang-ky-thi')}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  transition: 'all 0.3s'
+                }}
+                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                Nâng cấp hạng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) return <div className="lms-page"><div style={{ padding: 40, textAlign: 'center', color: '#fff' }}>Không tìm thấy khóa học</div></div>;
 
   return (

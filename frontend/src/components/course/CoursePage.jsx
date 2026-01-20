@@ -52,6 +52,8 @@ function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [courseRatings, setCourseRatings] = useState({});
+  const [userTier, setUserTier] = useState(null); // Hạng của user
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // --- STATE CHO SLIDER ---
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -69,39 +71,37 @@ function CoursesPage() {
 
   // Fetch dữ liệu từ API
   useEffect(() => {
+    const token = localStorage.getItem('user_token');
+    setIsLoggedIn(!!token);
+
     const fetchCourses = async () => {
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Không thể kết nối Server");
-        const data = await response.json();
-        setCourses(data);
-
-        // Fetch ratings cho từng course
-        const ratings = {};
-        for (const course of data) {
-          try {
-            const res = await fetch(`${COMMENTS_API}/course/${course.id}`);
-            if (res.ok) {
-              const comments = await res.json();
-              const ratedComments = (comments.comments || []).filter(
-                (c) => c.rating,
-              );
-              if (ratedComments.length > 0) {
-                const avg = (
-                  ratedComments.reduce((sum, c) => sum + c.rating, 0) /
-                  ratedComments.length
-                ).toFixed(1);
-                ratings[course.id] = {
-                  average: avg,
-                  count: ratedComments.length,
-                };
-              }
-            }
-          } catch (err) {
-            console.error(`Lỗi fetch comments cho course ${course.id}:`, err);
+        // Nếu đã đăng nhập, fetch danh sách khóa học theo quyền
+        if (token) {
+          const accessibleRes = await fetch(`${API_URL}/my-accessible`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (accessibleRes.ok) {
+            const accessibleData = await accessibleRes.json();
+            setUserTier(accessibleData.userTier);
+            setCourses(accessibleData.courses);
+          } else {
+            // Fallback về API công khai nếu lỗi
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error("Không thể kết nối Server");
+            const data = await response.json();
+            setCourses(data.map(c => ({ ...c, canAccess: true })));
           }
+        } else {
+          // Chưa đăng nhập - fetch danh sách công khai, hiển thị tất cả
+          const response = await fetch(API_URL);
+          if (!response.ok) throw new Error("Không thể kết nối Server");
+          const data = await response.json();
+          setCourses(data.map(c => ({ ...c, canAccess: true }))); // Hiển thị tất cả khi chưa đăng nhập
         }
-        setCourseRatings(ratings);
+
+        // Fetch ratings cho từng course (dùng courses đã set)
       } catch (err) {
         console.error("Lỗi fetch courses:", err);
         setError(err.message);
@@ -111,6 +111,40 @@ function CoursesPage() {
     };
     fetchCourses();
   }, []);
+
+  // Fetch ratings riêng sau khi có courses
+  useEffect(() => {
+    if (courses.length === 0) return;
+    
+    const fetchRatings = async () => {
+      const ratings = {};
+      for (const course of courses) {
+        try {
+          const res = await fetch(`${COMMENTS_API}/course/${course.id}`);
+          if (res.ok) {
+            const comments = await res.json();
+            const ratedComments = (comments.comments || []).filter(
+              (c) => c.rating,
+            );
+            if (ratedComments.length > 0) {
+              const avg = (
+                ratedComments.reduce((sum, c) => sum + c.rating, 0) /
+                ratedComments.length
+              ).toFixed(1);
+              ratings[course.id] = {
+                average: avg,
+                count: ratedComments.length,
+              };
+            }
+          }
+        } catch (err) {
+          console.error(`Lỗi fetch comments cho course ${course.id}:`, err);
+        }
+      }
+      setCourseRatings(ratings);
+    };
+    fetchRatings();
+  }, [courses]);
 
   const handleCourseClick = (id) => {
     navigate(`/khoa-hoc/${id}`);
@@ -125,11 +159,14 @@ function CoursesPage() {
     return `${MEDIA_BASE_URL}${cleanPath}`;
   };
 
-  const newestCourses = [...courses]
+  // Lọc chỉ hiển thị khóa học mà user có quyền xem
+  const accessibleCourses = courses.filter(c => c.canAccess === true);
+
+  const newestCourses = [...accessibleCourses]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 4);
 
-  const featuredCourses = [...courses]
+  const featuredCourses = [...accessibleCourses]
     .sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0))
     .slice(0, 4);
 
@@ -165,7 +202,6 @@ function CoursesPage() {
       >
         <div className="course-image-wrapper">
           <img src={getImageUrl(course.image)} alt={course.title} />
-          {/* Đã xóa badge cũ đè lên ảnh */}
         </div>
 
         <div className="course-content">
@@ -306,9 +342,36 @@ function CoursesPage() {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Tất cả khóa học</h2>
+            {userTier && (
+              <span style={{ 
+                background: userTier === 'B' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                color: '#fff',
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontWeight: '600'
+              }}>
+                Hạng của bạn: {userTier}
+              </span>
+            )}
           </div>
           <div className="courses-grid">
-            {courses.map((course) => renderCourseCard(course))}
+            {accessibleCourses.length > 0 ? (
+              accessibleCourses.map((course) => renderCourseCard(course))
+            ) : (
+              <p
+                style={{
+                  gridColumn: "1 / -1",
+                  textAlign: "center",
+                  color: "#666",
+                  padding: "40px 0",
+                }}
+              >
+                {isLoggedIn 
+                  ? "Bạn chưa đăng ký hạng nào. Vui lòng đăng ký để xem khóa học."
+                  : "Vui lòng đăng nhập để xem khóa học."}
+              </p>
+            )}
           </div>
         </div>
       </section>
