@@ -320,7 +320,7 @@ body .btn-primary:hover,
 }
 
 section.section-white {
-  background: #eef2f7;
+  background: #f8fafb !important;
 }
 
 .section-gray {
@@ -630,7 +630,7 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
 .uav-cert-btn,
 .uav-cert-btn-detail {
   width: 100%;
-  padding: 12px;
+  padding: 8px 12px;
   background: #0050b800;
   border: 1px solid var(--primary-yellow);
   color: #0050b8;
@@ -1291,7 +1291,7 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
   /* 4. CHỨNG CHỈ - 2 CỘT & MỞ RỘNG KHÔNG GIAN */
   .uav-cert-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr !important;
     gap: 5px !important;
     /* Gap cực nhỏ để tiết kiệm chỗ */
     margin: 20px 0 !important;
@@ -1556,4 +1556,19 @@ filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%
   cursor: pointer;
   font-size: 12px;
   transition: all 0.3s;
+}
+.news-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.news-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.link-button {
+  margin-top: 6px;  /* đẩy xuống dưới */
 }

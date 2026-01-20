@@ -242,7 +242,10 @@ function PersonalInfo() {
                       <span className="info-label">Số điện thoại</span>
                       <span className="info-value">{profile.phone || '--'}</span>
                     </div>
-
+                    <div className="info-row">
+                      <span className="info-label">Mã định danh</span>
+                      <span className="info-value">{profile.identity_number || '--'}</span>
+                    </div>
                     <div className="info-row">
                       <span className="info-label">Giới tính</span>
                       <span className="info-value">{profile.gender || '--'}</span>
@@ -255,10 +258,7 @@ function PersonalInfo() {
                       </span>
                     </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Mã định danh</span>
-                      <span className="info-value">{profile.identity_number || '--'}</span>
-                    </div>
+
 
                     <div className="info-row">
                       <span className="info-label">Địa chỉ</span>
@@ -312,6 +312,10 @@ function PersonalInfo() {
                         style={{ flex: 1 }}
                       />
                     </div>
+                    <div className="info-row">
+                      <span className="info-label">Mã định danh</span>
+                      <span className="info-value">{profile.identity_number || '--'}</span>
+                    </div>
 
                     <div className="info-row">
                       <span className="info-label">Giới tính</span>
@@ -325,10 +329,6 @@ function PersonalInfo() {
                       </span>
                     </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Mã định danh</span>
-                      <span className="info-value">{profile.identity_number || '--'}</span>
-                    </div>
 
                     <div className="info-row">
                       <span className="info-label">Địa chỉ</span>
