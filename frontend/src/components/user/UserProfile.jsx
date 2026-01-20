@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation, Outlet } from 'react-router-dom';
+import { apiClient } from '../../lib/apiInterceptor';
 
 import './UserProfile.css';
 
@@ -56,22 +57,16 @@ function UserProfile() {
         }
 
         setLoading(true);
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE}/${id}/profile`, { headers });
-
-        if (!res.ok) {
-          if (res.status === 401) {
-            alert('Vui lòng đăng nhập');
-            navigate('/dang-nhap');
-            return;
-          }
-          throw new Error('Lỗi tải profile');
-        }
-
-        const data = await res.json();
+        const res = await apiClient.get(`/users/${id}/profile`);
+        const data = res.data;
         setProfile(data);
       } catch (err) {
         console.error('Lỗi fetch profile:', err);
+        if (err.response?.status === 401) {
+          alert('Vui lòng đăng nhập');
+          navigate('/dang-nhap');
+          return;
+        }
         alert('Không thể tải thông tin người dùng');
       } finally {
         setLoading(false);
@@ -125,15 +120,15 @@ function UserProfile() {
           <div className="user-card">
             <div className="user-avatar">
               {profile.avatar ? (
-                <img 
-                  src={profile.avatar} 
-                  alt="Avatar" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
+                <img
+                  src={profile.avatar}
+                  alt="Avatar"
+                  style={{
+                    width: '100%',
+                    height: '100%',
                     objectFit: 'cover',
                     borderRadius: '50%'
-                  }} 
+                  }}
                 />
               ) : (
                 profile.full_name?.charAt(0).toUpperCase() || 'U'

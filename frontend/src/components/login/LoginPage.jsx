@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiClient } from '../../lib/apiInterceptor';
 import './LoginPage.css';
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -38,24 +39,13 @@ function LoginPage() {
         setError(null);
 
         try {
-            // Gọi API Backend
-            const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                // Backend nhận 'identifier' và 'password'
-                body: JSON.stringify({
-                    identifier: formData.phone, // Map phone từ form sang identifier của API
-                    password: formData.password
-                })
+            // Gọi API Backend qua apiClient (có interceptor refresh token)
+            const response = await apiClient.post('/auth/login', {
+                identifier: formData.phone, // Map phone từ form sang identifier của API
+                password: formData.password
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Đăng nhập thất bại');
-            }
+            const data = response.data;
 
             // --- ĐĂNG NHẬP THÀNH CÔNG ---
 
@@ -90,7 +80,7 @@ function LoginPage() {
 
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.message);
+            setError(err.response?.data?.error || err.message || 'Đăng nhập thất bại');
         } finally {
             setLoading(false);
         }

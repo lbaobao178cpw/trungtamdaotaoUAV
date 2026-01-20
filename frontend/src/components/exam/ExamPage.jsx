@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { apiClient } from "../../lib/apiInterceptor";
 import "./ExamPage.css";
 import {
   FileText, CheckCircle2, Plane, Award, ChevronDown, Phone, Mail, FileDown,
@@ -31,60 +32,50 @@ const ExamPage = () => {
         setLoading(true);
 
         // Fetch exams (API công khai, không cần token)
-        const examResponse = await fetch("http://localhost:5000/api/exams");
-        if (examResponse.ok) {
-          const data = await examResponse.json();
+        try {
+          const examResponse = await apiClient.get("/exams");
+          const data = examResponse.data;
           const activeExams = Array.isArray(data)
             ? data.filter(exam => exam.is_active === 1 || exam.is_active === true)
             : [];
           setUpcomingExams(activeExams);
+        } catch (err) {
+          console.error("Error fetching exams:", err);
         }
 
         // Fetch study materials (API công khai)
-        const materialsResponse = await fetch("http://localhost:5000/api/study-materials");
-        if (materialsResponse.ok) {
-          const materialsData = await materialsResponse.json();
+        try {
+          const materialsResponse = await apiClient.get("/study-materials");
+          const materialsData = materialsResponse.data;
           if (materialsData.success) {
             setStudyMaterials(materialsData.data || []);
           }
+        } catch (err) {
+          console.error("Error fetching materials:", err);
         }
 
         // Fetch FAQs (API công khai)
-        const faqResponse = await fetch("http://localhost:5000/api/faqs?category=exam");
-        if (faqResponse.ok) {
-          const faqData = await faqResponse.json();
+        try {
+          const faqResponse = await apiClient.get("/faqs?category=exam");
+          const faqData = faqResponse.data;
           setFaqList(faqData.data || []);
+        } catch (err) {
+          console.error("Error fetching FAQs:", err);
         }
 
         // --- PHẦN SỬA LỖI 401 ---
         if (user) {
-          // 1. Lấy token từ localStorage (kiểm tra lại key bạn dùng lúc login, thường là "token" hoặc "accessToken")
-          const token = localStorage.getItem("token"); 
-
-          if (token) {
-            const profileResponse = await fetch(`http://localhost:5000/api/users/${user.id}/profile`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                // 2. Gửi token kèm theo trong header Authorization
-                "Authorization": `Bearer ${token}` 
-              }
-            });
-
-            if (profileResponse.ok) {
-              const profileData = await profileResponse.json();
-              if (profileData.target_tier) {
-                setRegisteredTier(profileData.target_tier);
-                setSelectedCertificate(profileData.target_tier === "B" ? "hang-b" : "hang-a");
-              }
-            } else if (profileResponse.status === 401) {
-               // Token hết hạn hoặc không hợp lệ -> Có thể logout hoặc yêu cầu đăng nhập lại
-               console.warn("Token hết hạn, vui lòng đăng nhập lại");
+          try {
+            const profileResponse = await apiClient.get(`/users/${user.id}/profile`);
+            const profileData = profileResponse.data;
+            if (profileData.target_tier) {
+              setRegisteredTier(profileData.target_tier);
+              setSelectedCertificate(profileData.target_tier === "B" ? "hang-b" : "hang-a");
             }
+          } catch (err) {
+            console.error("Error fetching profile:", err);
           }
         }
-        // -----------------------
-
       } catch (error) {
         console.error("Lỗi tải dữ liệu:", error);
       } finally {
