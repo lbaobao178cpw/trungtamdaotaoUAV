@@ -39,4 +39,17 @@ backend/uploads/*
 
 # Nhưng giữ lại file .gitkeep (nếu có) để giữ cấu trúc thư mục
 !backend/uploads/.gitkeep
-node_modules
+
+# Chặn node_modules ở mọi nơi
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Chặn lock files (optional - nên giữ)
+# package-lock.json
+# yarn.lock
+
+# Chặn log files
+*.log
+npm-debug.log*
+yarn-error.log*
