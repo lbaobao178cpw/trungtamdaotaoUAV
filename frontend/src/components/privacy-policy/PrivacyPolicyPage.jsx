@@ -192,7 +192,7 @@ Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng các bi
             </div>
 
             <div className="policy-footer">
-                <p>Bằng việc sử dụng dịch vụ của chúng tôi, bạn đồng ý với các điều khoản trong Chính sách Bảo mật này.</p>
+                <p>Bằng việc sử dụng dịch vụ của chúng tôi, bạn đồng ý với các điều khoản trong Chính sách Bảo mật.</p>
                 <div className="policy-links">
                     <a href="/dieu-khoan-su-dung" className="policy-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

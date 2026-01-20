@@ -16,6 +16,7 @@ const ExamPage = () => {
   const [loading, setLoading] = useState(true);
   const [studyMaterials, setStudyMaterials] = useState([]);
   const [faqList, setFaqList] = useState([]);
+  const [footerConfig, setFooterConfig] = useState({ phone: "", email: "", workingHours: "" });
   const formRef = useRef(null);
   useEffect(() => {
     window.scrollTo({
@@ -62,7 +63,13 @@ const ExamPage = () => {
         } catch (err) {
           console.error("Error fetching FAQs:", err);
         }
-
+        // Fetch footer config (for phone and email)
+        try {
+          const footerResponse = await apiClient.get("/display/footer-config");
+          setFooterConfig(footerResponse.data);
+        } catch (err) {
+          console.error("Error fetching footer config:", err);
+        }
         // --- PHẦN SỬA LỖI 401 ---
         if (user) {
           try {
@@ -85,22 +92,6 @@ const ExamPage = () => {
 
     fetchData();
   }, []);
-
-  // Load Bitrix24 script và function mở form
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.setAttribute('data-b24-form', 'inline/212/snz64s');
-    script.setAttribute('data-skip-moving', 'true');
-    script.async = true;
-    script.textContent = `(function(w,d,u){var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);})(window,document,'https://cdn.bitrix24.com/b20658409/crm/form/loader_212.js');`;
-    document.body.appendChild(script);
-  }, []);
-
-  const openBitrix24Form = () => {
-    if (window.B24 && window.B24.openFormModal) {
-      window.B24.openFormModal('snz64s');
-    }
-  };
 
   const scrollToExams = () => {
     const section = document.getElementById("exam-list-section");
@@ -245,7 +236,7 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng A - nếu đã đăng ký A HOẶC đang chọn A */}
                 {((registeredTier === 'A') || (!registeredTier && selectedCertificate === "hang-a")) && (
                   <div className="p-6 border rounded-lg" style={{
-                    borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
+                    // borderColor: registeredTier === 'A' ? '#0050b8' : '#555555',
                     background: 'transparent'
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
@@ -341,7 +332,7 @@ const ExamPage = () => {
                           textDecoration: 'none',
                           padding: '12px 32px', // Tăng padding giống badge
                           fontSize: '1rem',     // Tăng font chữ
-                          width: 'fit-content'  // Co gọn lại
+                          width: 'fit-content',  // Co gọn lại
                         }}
                       >
                         Đăng ký thi Hạng A
@@ -353,7 +344,7 @@ const ExamPage = () => {
                 {/* Hiển thị Hạng B - nếu đã đăng ký B HOẶC đang chọn B */}
                 {((registeredTier === 'B') || (!registeredTier && selectedCertificate === "hang-b")) && (
                   <div className="p-6 border rounded-lg" style={{
-                    borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
+                    // borderColor: registeredTier === 'B' ? '#0050b8' : '#555555',
                     background: 'transparent'
                   }}>
                     <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
@@ -660,7 +651,10 @@ const ExamPage = () => {
                     </div>
                     <div>
                       <p className="text-xs font-medium" style={{ color: '#666' }}>Tổng đài hỗ trợ</p>
-                      <p className="font-semibold text-sm" style={{ color: '#000', marginTop: '4px' }}>1900 xxxx (8h-17h, T2-T6)</p>
+                      <p className="font-semibold text-sm" style={{ color: '#000', marginTop: '4px' }}>{footerConfig.phone || '1900 xxxx'}</p>
+                      {footerConfig.workingHours && (
+                        <p className="text-xs" style={{ color: '#666', marginTop: '4px' }}>{footerConfig.workingHours}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -669,24 +663,10 @@ const ExamPage = () => {
                     </div>
                     <div>
                       <p className="text-xs font-medium" style={{ color: '#666' }}>Email hỗ trợ</p>
-                      <p className="font-semibold text-sm" style={{ color: '#0050b8', marginTop: '4px' }}>support@UAVcert.gov.vn</p>
+                      <p className="font-semibold text-sm" style={{ color: '#0050b8', marginTop: '4px' }}>{footerConfig.email || 'support@UAVcert.gov.vn'}</p>
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={openBitrix24Form}
-                  className="w-full mt-6 py-3 rounded-lg font-semibold transition-all"
-                  style={{
-                    backgroundColor: '#0050b8',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#003a82'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#0050b8'}
-                >
-                  Gửi yêu cầu hỗ trợ
-                </button>
               </div>
             </div>
           </div>

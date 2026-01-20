@@ -29,6 +29,7 @@ router.get("/footer-config", async (req, res) => {
         companyName: row.company_name,
         branch: row.branch_name,
         address: row.address,
+        phone: row.phone,
         email: row.email,
         workingHours: row.working_hours,
         copyright: row.copyright_text,
@@ -47,25 +48,26 @@ router.get("/footer-config", async (req, res) => {
 router.post("/footer-config", async (req, res) => {
   try {
     // Nhận thêm legalDocuments từ Frontend
-    const { companyName, branch, address, email, workingHours, copyright, legalDocuments } = req.body;
+    const { companyName, branch, address, phone, email, workingHours, copyright, legalDocuments } = req.body;
 
     // Chuyển mảng thành chuỗi JSON để lưu vào MySQL
     const legalDocsString = JSON.stringify(legalDocuments || []);
 
     const sql = `
-      INSERT INTO footer_config (id, company_name, branch_name, address, email, working_hours, copyright_text, legal_documents)
-      VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO footer_config (id, company_name, branch_name, address, phone, email, working_hours, copyright_text, legal_documents)
+      VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         company_name = VALUES(company_name),
         branch_name = VALUES(branch_name),
         address = VALUES(address),
+        phone = VALUES(phone),
         email = VALUES(email),
         working_hours = VALUES(working_hours),
         copyright_text = VALUES(copyright_text),
         legal_documents = VALUES(legal_documents)
     `;
 
-    const values = [companyName, branch, address, email, workingHours, copyright, legalDocsString];
+    const values = [companyName, branch, address, phone, email, workingHours, copyright, legalDocsString];
     await pool.execute(sql, values);
 
     res.json({ success: true, message: "Cập nhật Footer thành công" });

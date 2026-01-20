@@ -7,6 +7,7 @@ const Footer = () => {
         companyName: "Đang tải...",
         branch: "",
         address: "",
+        phone: "",
         email: "",
         workingHours: "",
         copyright: "",
@@ -37,6 +38,9 @@ const Footer = () => {
                 {/* Cột 2 */}
                 <div className="footer-section">
                     <h4 style={{ color: '#ffcc00' }}>Hỗ trợ</h4>
+                    {config.phone && (
+                        <a href={`tel:${config.phone}`} style={{ display: 'block', marginBottom: '8px' }}>Số điện thoại: {config.phone}</a>
+                    )}
                     <a href={`mailto:${config.email}`}>Email: {config.email}</a>
                     <p>Thời gian: {config.workingHours}</p>
                 </div>

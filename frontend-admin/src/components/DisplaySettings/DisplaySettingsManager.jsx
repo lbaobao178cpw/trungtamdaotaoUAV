@@ -16,6 +16,7 @@ const initialFooterState = {
   companyName: "Công Ty TNHH Đào Tạo Robot Robotone",
   branch: "Chi Nhánh: Phòng Đào Tạo - UAV Lab",
   address: "572 Liên Phương, Long Thượng, Hồ Chí Minh",
+  phone: "1900 xxxx",
   email: "khaodao@uavtrainingcenter.vn",
   workingHours: "8:00 - 17:00 | Thứ 2 - Thứ 6",
   copyright: "© 2025 Hệ thống Đào tạo và Cấp Chứng chỉ Điều khiển UAV Quốc gia.",
@@ -426,9 +427,10 @@ export default function DisplaySettingsManager() {
                 <div className="ds-form-group"><label className="ds-form-label">Chi nhánh</label><input type="text" className="ds-form-control" value={footerConfig.branch} onChange={e => setFooterConfig({ ...footerConfig, branch: e.target.value })} /></div>
                 <div className="ds-form-group"><label className="ds-form-label">Địa chỉ</label><input type="text" className="ds-form-control" value={footerConfig.address} onChange={e => setFooterConfig({ ...footerConfig, address: e.target.value })} /></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div className="ds-form-group"><label className="ds-form-label">Số điện thoại tổng đài</label><input type="text" className="ds-form-control" value={footerConfig.phone} onChange={e => setFooterConfig({ ...footerConfig, phone: e.target.value })} /></div>
                   <div className="ds-form-group"><label className="ds-form-label">Email</label><input type="text" className="ds-form-control" value={footerConfig.email} onChange={e => setFooterConfig({ ...footerConfig, email: e.target.value })} /></div>
-                  <div className="ds-form-group"><label className="ds-form-label">Giờ làm việc</label><input type="text" className="ds-form-control" value={footerConfig.workingHours} onChange={e => setFooterConfig({ ...footerConfig, workingHours: e.target.value })} /></div>
                 </div>
+                <div className="ds-form-group"><label className="ds-form-label">Giờ làm việc</label><input type="text" className="ds-form-control" value={footerConfig.workingHours} onChange={e => setFooterConfig({ ...footerConfig, workingHours: e.target.value })} /></div>
 
                 {/* 2. VĂN BẢN PHÁP LÝ */}
                 <h5 style={{ borderBottom: '2px solid #0066cc', paddingBottom: '8px', marginBottom: '15px', marginTop: '30px', color: '#0066cc', fontWeight: '600' }}>
