@@ -87,10 +87,9 @@ function UserProfile() {
   const menuItems = [
 
     { id: 'learning', label: 'Lịch Sử Học tập', path: `/profile/${id}/learning-history` },
-
     { id: 'comments', label: 'Bình Luận', path: `/profile/${id}/comments` },
     { id: 'personal', label: 'Thông Tin Cá Nhân', path: `/profile/${id}` },
-
+    { id: 'changePassword', label: 'Đổi mật khẩu', path: `/profile/${id}/doi-mat-khau` }
   ];
 
   const isMenuActive = (path) => location.pathname === path;

@@ -226,8 +226,8 @@ function PersonalInfo() {
               <h3 className="info-name">{profile.full_name}</h3>
 
               <div className="info-grid">
-                {!isEditing ? (
-                  <>
+                
+                  
                     <div className="info-row">
                       <span className="info-label">Họ tên</span>
                       <span className="info-value">{profile.full_name}</span>
@@ -281,9 +281,9 @@ function PersonalInfo() {
                         {profile.created_at ? formatDate(profile.created_at) : '--'}
                       </span>
                     </div>
-                  </>
-                ) : (
-                  <>
+                
+                 
+                  {/* <>
                     <div className="info-row">
                       <span className="info-label">Họ tên</span>
                       <span className="info-value">{profile.full_name}</span>
@@ -401,7 +401,7 @@ function PersonalInfo() {
                       </span>
                     </div>
                   </>
-                )}
+                )} */}
               </div>
 
             </div>
@@ -467,7 +467,7 @@ function PersonalInfo() {
           </div>
         </div>
       </div>
-      <div>
+      {/* <div>
         {!isEditing ? (
           <button
             className="btn-edit-profile"
@@ -510,7 +510,7 @@ function PersonalInfo() {
           </div>
 
         )}
-      </div>
+      </div> */}
     </>
   );
 }
