@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { 
-  Calendar, MapPin, User, CheckCircle, AlertTriangle, ArrowLeft 
+import { apiClient } from "../../lib/apiInterceptor";
+import {
+  Calendar, MapPin, User, CheckCircle, AlertTriangle, ArrowLeft
 } from "lucide-react";
 import "../Registration/RegisterPage.css"; // Đảm bảo đường dẫn CSS đúng
 
@@ -9,7 +10,7 @@ const ExamBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   console.log("Dữ liệu nhận được từ ExamPage:", location.state);
-  
+
   const { examId, examInfo, preSelectedTier, examLocation } = location.state || {};
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,23 +36,17 @@ const ExamBookingPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/exams/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          exam_schedule_id: examId,
-        }),
+      const response = await apiClient.post("/exams/book", {
+        user_id: user.id,
+        exam_schedule_id: examId,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Lỗi đăng ký");
+      const data = response.data;
 
       alert("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.");
       navigate("/"); // Hoặc chuyển về trang profile/lịch sử
     } catch (error) {
-      alert(error.message);
+      alert(error.response?.data?.error || error.message || "Lỗi đăng ký");
     } finally {
       setLoading(false);
     }
@@ -61,9 +56,9 @@ const ExamBookingPage = () => {
 
   return (
     <div className="register-page" style={{ background: '#222222', minHeight: '100vh' }}>
-      <div className="register-container" style={{maxWidth: '600px'}}>
-        <div className="register-card" style={{ 
-          background: '#e1e1e1', 
+      <div className="register-container" style={{ maxWidth: '600px' }}>
+        <div className="register-card" style={{
+          background: '#e1e1e1',
           border: '1px solid #555555',
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
         }}>
@@ -73,7 +68,7 @@ const ExamBookingPage = () => {
 
           {/* Box Thông tin Lịch thi */}
           <div className="info-box" style={{
-            background: 'rgba(255, 202, 5, 0.05)', 
+            background: 'rgba(255, 202, 5, 0.05)',
             borderColor: '#0050b8',
             border: '1px solid #0050b8',
             borderRadius: '8px',
@@ -90,14 +85,14 @@ const ExamBookingPage = () => {
             }}>
               <Calendar size={20} /> Thông tin kỳ thi
             </h3>
-            <div style={{marginTop: '10px', fontSize: '0.95rem', color: '#e0e0e0'}}>
-              <p style={{marginBottom: '8px'}}>
+            <div style={{ marginTop: '10px', fontSize: '0.95rem', color: '#e0e0e0' }}>
+              <p style={{ marginBottom: '8px' }}>
                 <strong style={{ color: '#0050b8' }}>Nội dung:</strong> {examInfo}
               </p>
-              <p style={{marginBottom: '8px'}}>
+              <p style={{ marginBottom: '8px' }}>
                 <strong style={{ color: '#0050b8' }}>Địa điểm:</strong> {examLocation}
               </p>
-              <p style={{marginBottom: '0', color: '#f59e0b', fontWeight: 'bold'}}>
+              <p style={{ marginBottom: '0', color: '#f59e0b', fontWeight: 'bold' }}>
                 Hạng chứng chỉ: {preSelectedTier}
               </p>
             </div>
@@ -121,7 +116,7 @@ const ExamBookingPage = () => {
             }}>
               <User size={18} /> Thông tin thí sinh
             </h3>
-            <div className="summary-item" style={{ 
+            <div className="summary-item" style={{
               color: '#b0b0b0',
               marginBottom: '10px',
               borderBottom: '1px solid #444',
@@ -129,7 +124,7 @@ const ExamBookingPage = () => {
             }}>
               <strong style={{ color: '#0050b8' }}>Họ và tên:</strong> {user.full_name}
             </div>
-            <div className="summary-item" style={{ 
+            <div className="summary-item" style={{
               color: '#b0b0b0',
               marginBottom: '10px',
               borderBottom: '1px solid #444',
@@ -137,7 +132,7 @@ const ExamBookingPage = () => {
             }}>
               <strong style={{ color: '#0050b8' }}>Email:</strong> {user.email || "Chưa cập nhật"}
             </div>
-            <div className="summary-item" style={{ 
+            <div className="summary-item" style={{
               color: '#b0b0b0',
               marginBottom: '0'
             }}>
@@ -147,20 +142,20 @@ const ExamBookingPage = () => {
 
           {/* Điều khoản */}
           <div className="form-section">
-             <div style={{
-               display: 'flex', 
-               gap: '10px', 
-               padding: '12px', 
-               background: 'rgba(245, 158, 11, 0.1)', 
-               borderRadius: '8px', 
-               border: '1px solid rgba(245, 158, 11, 0.3)',
-               marginBottom: '1.5rem'
-             }}>
-                <AlertTriangle size={20} color="#f59e0b" style={{ flexShrink: 0 }} />
-                <span style={{fontSize: '0.9rem', color: '#e0e0e0'}}>
-                  Nhấn xác nhận đồng nghĩa với việc bạn cam kết tham gia và thanh toán lệ phí thi.
-                </span>
-             </div>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              padding: '12px',
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              marginBottom: '1.5rem'
+            }}>
+              <AlertTriangle size={20} color="#f59e0b" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '0.9rem', color: '#e0e0e0' }}>
+                Nhấn xác nhận đồng nghĩa với việc bạn cam kết tham gia và thanh toán lệ phí thi.
+              </span>
+            </div>
           </div>
 
           {/* Nút bấm */}
@@ -169,9 +164,9 @@ const ExamBookingPage = () => {
             gap: '1rem',
             marginTop: '1.5rem'
           }}>
-            <button 
-              type="button" 
-              onClick={() => navigate("/thi-sat-hach")} 
+            <button
+              type="button"
+              onClick={() => navigate("/thi-sat-hach")}
               className="btn btn-secondary"
               style={{
                 flex: 1,
@@ -198,9 +193,9 @@ const ExamBookingPage = () => {
             >
               <ArrowLeft size={20} /> Hủy bỏ
             </button>
-            <button 
-              onClick={handleConfirmBooking} 
-              className="btn btn-primary" 
+            <button
+              onClick={handleConfirmBooking}
+              className="btn btn-primary"
               disabled={loading}
               style={{
                 flex: 1,

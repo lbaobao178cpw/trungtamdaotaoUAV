@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../Comments/MyComments.css';
 import { Link } from "react-router-dom";
-
+import { apiClient } from '../../../lib/apiInterceptor';
 
 const API_BASE = 'http://localhost:5000/api/comments';
 
@@ -15,18 +15,8 @@ function MyComments() {
   useEffect(() => {
     const fetchMyComments = async () => {
       try {
-        const res = await fetch(`${API_BASE}/my-comments`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (!res.ok) {
-          throw new Error('Không thể tải lịch sử bình luận');
-        }
-
-        const data = await res.json();
-        setComments(data.comments || []);
+        const res = await apiClient.get(`/comments/my-comments`);
+        setComments(res.data.comments || []);
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -50,16 +40,7 @@ function MyComments() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`${API_BASE}/${commentId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error("Xóa bình luận thất bại");
-      }
+      const res = await apiClient.delete(`/comments/${commentId}`);
 
       // Xóa comment khỏi UI (không cần reload)
       setComments(prev =>

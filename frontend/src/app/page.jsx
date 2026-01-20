@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { Experience } from "../components/3d/Experience"; // Đảm bảo đường dẫn đúng
 import { useNavigate, Link } from "react-router-dom";
 import { useActivate } from "react-activation";
+import { apiClient } from "../lib/apiInterceptor";
 import "./UAVLandingPage.css";
 
 // =====================================================================
@@ -206,26 +207,27 @@ function UAVLandingPage() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/points")
-      .then((res) => res.json()).then((data) => setPoints(data)).catch((err) => console.error(err));
-    fetch("http://localhost:5000/api/solutions")
-      .then((res) => res.json()).then((data) => setSolutions(data)).catch((err) => console.error(err));
-    fetch("http://localhost:5000/api/display/notifications")
-      .then((res) => res.json()).then((data) => setNotifications(Array.isArray(data) ? data : data.data || [])).catch((err) => console.error(err));
+    apiClient.get("/points")
+      .then((res) => setPoints(res.data))
+      .catch((err) => console.error(err));
+    apiClient.get("/solutions")
+      .then((res) => setSolutions(res.data))
+      .catch((err) => console.error(err));
+    apiClient.get("/display/notifications")
+      .then((res) => setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []))
+      .catch((err) => console.error(err));
 
     // Fetch courses và ratings
-    fetch("http://localhost:5000/api/courses")
-      .then((res) => res.json())
-      .then((data) => {
-        setCourses(data);
+    apiClient.get("/courses")
+      .then((res) => {
+        setCourses(res.data);
 
         // Fetch ratings cho từng course
         const ratings = {};
-        data.forEach((course) => {
-          fetch(`http://localhost:5000/api/comments/course/${course.id}`)
-            .then((res) => res.json())
-            .then((comments) => {
-              const ratedComments = (comments.comments || []).filter(c => c.rating);
+        res.data.forEach((course) => {
+          apiClient.get(`/comments/course/${course.id}`)
+            .then((commentsRes) => {
+              const ratedComments = (commentsRes.data.comments || []).filter(c => c.rating);
               if (ratedComments.length > 0) {
                 const avg = (ratedComments.reduce((sum, c) => sum + c.rating, 0) / ratedComments.length).toFixed(1);
                 ratings[course.id] = { average: avg, count: ratedComments.length };
@@ -237,10 +239,12 @@ function UAVLandingPage() {
       })
       .catch((err) => console.error(err));
 
-    fetch("http://localhost:5000/api/settings/current_model_url")
-      .then((res) => res.json()).then((data) => setModelUrl(data.value || "/models/scene.glb")).catch(() => setModelUrl("/models/scene.glb"));
-    fetch("http://localhost:5000/api/settings/default_camera_view")
-      .then((res) => res.json()).then((data) => { if (data.value) try { setCameraSettings(JSON.parse(data.value)); } catch (e) { } }).catch(() => { });
+    apiClient.get("/settings/current_model_url")
+      .then((res) => setModelUrl(res.data.value || "/models/scene.glb"))
+      .catch(() => setModelUrl("/models/scene.glb"));
+    apiClient.get("/settings/default_camera_view")
+      .then((res) => { if (res.data.value) try { setCameraSettings(JSON.parse(res.data.value)); } catch (e) { } })
+      .catch(() => { });
   }, []);
 
   useEffect(() => {

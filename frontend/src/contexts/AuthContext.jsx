@@ -85,6 +85,42 @@ export const AuthProvider = ({ children }) => {
         verifyToken();
     }, []);
 
+    // === Proactive token refresh: refresh định kỳ để tránh token hết hạn ===
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const interval = setInterval(async () => {
+            const userToken = localStorage.getItem('user_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+
+            console.log('[AuthContext Refresh] Checking token...');
+
+            if (!userToken || !refreshToken) {
+                console.log('[AuthContext Refresh] No token/refreshToken, skipping');
+                return;
+            }
+
+            // Gọi verify endpoint qua apiClient (request interceptor sẽ tự refresh nếu cần)
+            try {
+                const res = await apiClient.get('/auth/verify');
+                if (res.data?.success) {
+                    console.log('[AuthContext Refresh] ✅ Token valid or refreshed');
+                    // Update token state nếu đã được refresh bởi interceptor
+                    const currentToken = localStorage.getItem('user_token');
+                    if (currentToken !== token) {
+                        setToken(currentToken);
+                    }
+                }
+            } catch (error) {
+                console.warn('[AuthContext Refresh] Token check failed:', error.message);
+                // Logout nếu token không hợp lệ
+                logout();
+            }
+        }, 5000); // Kiểm tra mỗi 5 giây
+
+        return () => clearInterval(interval);
+    }, [isAuthenticated, token]);
+
     const login = (newToken, userData, refreshToken) => {
         localStorage.setItem('user_token', newToken);
         if (refreshToken) {

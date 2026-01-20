@@ -71,9 +71,8 @@ function PersonalInfo() {
 
   // Fetch provinces khi component mount
   useEffect(() => {
-    fetch('http://localhost:5000/api/location/provinces')
-      .then(res => res.json())
-      .then(data => setProvinces(data))
+    apiClient.get('/location/provinces')
+      .then(res => setProvinces(res.data))
       .catch(err => console.error('Lỗi fetch provinces:', err));
   }, []);
 
@@ -94,11 +93,8 @@ function PersonalInfo() {
       return;
     }
 
-    fetch(`http://localhost:5000/api/location/wards?province_id=${provinceId}`, {
-      cache: "no-store",
-    })
-      .then(res => res.json())
-      .then(data => setWards(data))
+    apiClient.get(`/location/wards?province_id=${provinceId}`)
+      .then(res => setWards(res.data))
       .catch(console.error);
   };
 
@@ -194,33 +190,24 @@ function PersonalInfo() {
         // Nếu chỉ có YYYY-MM-DD, giữ nguyên
       }
 
-      const res = await fetch(`http://localhost:5000/api/users/${params.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          full_name: form.full_name,
-          email: form.email,
-          phone: form.phone,
-          birth_date: birthDateFormatted || null,
-          gender: form.gender,
-          address: fullAddress
-        })
+      // Dùng apiClient để có request interceptor tự động refresh token
+      const res = await apiClient.put(`/users/${params.id}`, {
+        full_name: form.full_name,
+        email: form.email,
+        phone: form.phone,
+        birth_date: birthDateFormatted || null,
+        gender: form.gender,
+        address: fullAddress
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Lỗi khi cập nhật');
+      if (!res.data) {
+        throw new Error(res.data?.error || 'Lỗi khi cập nhật');
       }
 
       // Refetch updated profile
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const profileRes = await fetch(`http://localhost:5000/api/users/${params.id}/profile`, { headers });
-      if (profileRes.ok) {
-        const updated = await profileRes.json();
-        if (setProfile) setProfile(updated);
+      const profileRes = await apiClient.get(`/users/${params.id}/profile`);
+      if (profileRes.data) {
+        if (setProfile) setProfile(profileRes.data);
       }
 
       setIsEditing(false);
