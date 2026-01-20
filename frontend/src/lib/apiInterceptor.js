@@ -25,18 +25,97 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
+// === HELPER: Decode JWT để lấy exp ===
+const decodeToken = (token) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null;
+    }
+};
+
+// === HELPER: Kiểm tra token hết hạn ===
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    const decoded = decodeToken(token);
+    if (!decoded || !decoded.exp) return true;
+    // exp tính bằng giây, so với hiện tại + 10s buffer
+    const now = Math.floor(Date.now() / 1000);
+    return decoded.exp < now + 10; // Refresh trước 10s
+};
+
+// === HELPER: Refresh access token (dùng axios mới, KHÔNG dùng apiClient để tránh infinite loop) ===
+const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+        throw new Error('Không có refresh token');
+    }
+
+    try {
+        // Tạo instance axios mới để tránh interceptor infinite loop
+        const freshAxios = axios.create({ baseURL: API_BASE, timeout: 10000 });
+        const response = await freshAxios.post('/auth/refresh-token', { refreshToken });
+        const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
+
+        // Cập nhật localStorage
+        localStorage.setItem('user_token', newAccessToken);
+        if (newRefreshToken) {
+            localStorage.setItem('refresh_token', newRefreshToken);
+        }
+
+        console.log('[Token Refresh] Token refreshed, new exp:', decodeToken(newAccessToken)?.exp);
+        return newAccessToken;
+    } catch (error) {
+        console.error('[Token Refresh] Failed:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
 /**
- * Request Interceptor: Thêm Access Token vào header
+ * Request Interceptor: Kiểm tra token hết hạn TRƯỚC khi gửi request
  */
 apiClient.interceptors.request.use(
-    (config) => {
+    async (config) => {
         const token = localStorage.getItem('user_token');
+
+        console.log('[API Request] Token exists:', !!token, 'Token expired:', token && isTokenExpired(token));
+
+        // Nếu token hết hạn, refresh ngay trước khi gửi request
+        if (token && isTokenExpired(token)) {
+            console.log('[API Request] Token sắp hết hạn, refresh ngay...');
+            try {
+                const newToken = await refreshAccessToken();
+                console.log('[API Request] Token refreshed successfully');
+                config.headers.Authorization = `Bearer ${newToken}`;
+                return config;
+            } catch (err) {
+                console.error('[API Request] Lỗi refresh token:', err.message);
+                // Nếu refresh thất bại, logout
+                localStorage.removeItem('user_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+                window.location.href = '/dang-nhap?expired=true';
+                // Return rejected promise
+                return Promise.reject(new Error('Token refresh failed'));
+            }
+        }
+
+        // Token còn hợp lệ, thêm vào header
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('[API Request] Using existing token');
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        console.error('[API Request] Interceptor error:', error);
+        return Promise.reject(error);
+    }
 );
 
 /**

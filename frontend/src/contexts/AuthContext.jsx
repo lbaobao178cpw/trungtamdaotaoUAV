@@ -85,8 +85,11 @@ export const AuthProvider = ({ children }) => {
         verifyToken();
     }, []);
 
-    const login = (newToken, userData) => {
+    const login = (newToken, userData, refreshToken) => {
         localStorage.setItem('user_token', newToken);
+        if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(userData));
         setToken(newToken);
         setUser(userData);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
+import { apiClient } from '../../lib/apiInterceptor';
 
 function PersonalInfo() {
 
@@ -147,24 +148,17 @@ function PersonalInfo() {
 
     setIsUploadingAvatar(true);
     try {
-      const token = localStorage.getItem('user_token');
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const res = await fetch(`http://localhost:5000/api/users/${params.id}/avatar`, {
-        method: 'POST',
+      // Dùng apiClient để có request interceptor tự động refresh token
+      const res = await apiClient.post(`/users/${params.id}/avatar`, formData, {
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Lỗi khi upload avatar');
-      }
-
-      const data = await res.json();
+      const data = res.data;
 
       // Cập nhật profile với avatar mới
       if (setProfile) {

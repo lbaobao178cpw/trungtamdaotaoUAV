@@ -39,3 +39,4 @@ backend/uploads/*
 
 # Nhưng giữ lại file .gitkeep (nếu có) để giữ cấu trúc thư mục
 !backend/uploads/.gitkeep
+node_modules

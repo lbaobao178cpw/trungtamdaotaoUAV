@@ -76,7 +76,7 @@ function LoginPage() {
             localStorage.setItem('user', JSON.stringify(data.user));
 
             // 2b. Cập nhật AuthContext
-            login(data.token, data.user);
+            login(data.token, data.user, data.refreshToken);
 
             // 3. Kiểm tra "Ghi nhớ đăng nhập" (Demo logic)
             if (formData.rememberMe) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '../../lib/apiInterceptor';
 import './LegalManagement.css';
 
 const API_URL = "http://localhost:5000/api/study-materials";
@@ -96,17 +97,16 @@ export default function StudyMaterialsManager() {
             formDataCloud.append('originalFilename', utf8FileName);
             formDataCloud.append('displayName', utf8FileName);
 
-            console.log('🚀 Gửi upload request với Bearer token');
-            const res = await fetch('http://localhost:5000/api/cloudinary/upload', {
-                method: 'POST',
+            console.log('🚀 Gửi upload request với apiClient');
+            // Dùng apiClient có request interceptor để tự động refresh token
+            const res = await apiClient.post('/cloudinary/upload', formDataCloud, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formDataCloud
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
             console.log('📥 Response status:', res.status);
-            const data = await res.json();
+            const data = res.data;
             console.log('📦 Response data:', data);
 
             if (data.success && data.url) {
