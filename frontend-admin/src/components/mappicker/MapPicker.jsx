@@ -1,9 +1,9 @@
 import React, { Suspense, useEffect, useState, useRef, memo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { CameraControls, Html, useGLTF, Environment, Bvh } from '@react-three/drei'; // 1. THÊM Bvh
-import ErrorBoundary from '../ErrorBoundary';
+import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { MonitorX } from 'lucide-react';
-import "../admin/AdminStyles.css";
+import "../admin/Admin/Admin.css";
 
 const DRAG_THRESHOLD = 5;
 const API_SETTINGS = "http://localhost:5000/api/settings";

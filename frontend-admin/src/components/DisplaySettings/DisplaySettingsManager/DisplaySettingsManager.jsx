@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './DisplaySettingsManager.css';
-import './LegalManagement.css'; // Thêm CSS cho legal management
+import '../LegalManagement/LegalManagement.css'; // Thêm CSS cho legal management
 
 const API_URL = "http://localhost:5000/api/display";
 
 // Import các component mới
-import LegalDocumentsManager from './LegalManagement';
-import AuthoritiesManager from './AuthoritiesManager';
-import FormsManager from './FormsManager';
-import StudyMaterialsManager from './StudyMaterialsManager';
-import FAQManager from './FAQManager';
+import LegalDocumentsManager from '../LegalManagement/LegalManagement';
+import AuthoritiesManager from '../AuthoritiesManager/AuthoritiesManager';
+import FormsManager from '../FormsManager/FormsManager';
+import StudyMaterialsManager from '../StudyMaterialsManager/StudyMaterialsManager';
+import FAQManager from '../FAQManager/FAQManager';
 
 // --- STATE MẶC ĐỊNH ---
 const initialFooterState = {

@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // --- IMPORT MANAGERS ---
-import PointManager from "../points/PointManager";
-import SolutionManager from "../solutions/SolutionManager";
-import Model3DManager from "../model3d/Model3DManager";
-import CourseManager from "../course/CourseManager";
-import ExamManager from "../exam/ExamManager";
-import UserManager from "../UserManager/UserManager";
-import DisplaySettingsManager from "../DisplaySettings/DisplaySettingsManager";
+import PointManager from "../../points/PointManager";
+import SolutionManager from "../../Solutions/SolutionManager";
+import Model3DManager from "../../Model3D/Model3DManager";
+import CourseManager from "../../course/CourseManager";
+import ExamManager from "../../exam/ExamManager";
+import UserManager from "../../UserManager/UserManager";
+import DisplaySettingsManager from "../../DisplaySettings/DisplaySettingsManager/DisplaySettingsManager";
 
-import "./AdminStyles.css";
+import "./Admin.css";
 
 export default function Admin() {
   const navigate = useNavigate();

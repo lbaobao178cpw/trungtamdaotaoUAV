@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 // Đảm bảo đường dẫn CSS đúng với cấu trúc dự án của bạn
-import "../admin/AdminStyles.css";
+import "../admin/Admin/Admin.css";
 import MediaSelector from "../mediaSelector/MediaSelector";
-
-// === CẤU HÌNH SERVER ===
-const API_BASE_URL = "http://localhost:5000";
-const API_SOLUTION_URL = `${API_BASE_URL}/api/solutions`;
+import { useApi, useApiMutation } from "../../hooks/useApi";
+import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 
 const initialSolutionState = {
   id: "",
@@ -40,14 +38,12 @@ const getImageUrl = (path) => {
   if (!cleanPath.startsWith("uploads/")) {
     cleanPath = `uploads/${cleanPath}`;
   }
-  return `${API_BASE_URL}/${cleanPath}`;
+  return `${API_ENDPOINTS.SOLUTIONS.split('/api')[0]}/api/${cleanPath}`;
 };
 
 export default function SolutionManager() {
-  const [solutions, setSolutions] = useState([]);
   const [form, setForm] = useState(initialSolutionState);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
   const [sections, setSections] = useState([]);
@@ -60,25 +56,10 @@ export default function SolutionManager() {
     imgIdx: null,
   });
 
-  // === FETCH DATA ===
-  const fetchSolutions = async () => {
-    try {
-      const response = await fetch(API_SOLUTION_URL);
-      if (!response.ok) throw new Error("Không thể kết nối Server");
-      const data = await response.json();
-      setSolutions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Lỗi fetch:", error);
-      setMessage({
-        type: "error",
-        text: "Lỗi kết nối Server: " + error.message,
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchSolutions();
-  }, []);
+  // === FETCH DATA WITH CUSTOM HOOK ===
+  const { data: solutionsData, loading, refetch: refreshSolutions } = useApi(API_ENDPOINTS.SOLUTIONS);
+  const solutions = useMemo(() => Array.isArray(solutionsData) ? solutionsData : [], [solutionsData]);
+  const { mutate: saveSolution } = useApiMutation();
 
   // === HANDLERS ===
   const handleAddNew = () => {
@@ -87,7 +68,6 @@ export default function SolutionManager() {
     setClients([]);
     setIsEditing(false);
     setMessage(null);
-    // ĐÃ XÓA: window.scrollTo({ top: 0, behavior: "smooth" }); -> Giúp giữ nguyên vị trí chuột
   };
 
   const handleEditClick = (sol) => {
@@ -268,9 +248,8 @@ export default function SolutionManager() {
         <div className="form-section">
           {message && (
             <div
-              className={`message-box ${
-                message.type === "success" ? "msg-success" : "msg-error"
-              }`}
+              className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"
+                }`}
             >
               {message.text}
             </div>
@@ -771,8 +750,8 @@ export default function SolutionManager() {
                 {loading
                   ? "Đang xử lý..."
                   : isEditing
-                  ? "LƯU CẬP NHẬT"
-                  : "TẠO GIẢI PHÁP MỚI"}
+                    ? "LƯU CẬP NHẬT"
+                    : "TẠO GIẢI PHÁP MỚI"}
               </button>
             </div>
           </form>

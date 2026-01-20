@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense, useCallback, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Html } from "@react-three/drei";
-import { AlertTriangle, Loader2, Box, MonitorX } from "lucide-react"; // 1. IMPORT ICON LUCIDE
+import { AlertTriangle, Loader2, Box, MonitorX } from "lucide-react";
 import MediaSelector from "../mediaSelector/MediaSelector";
+import { useApi, useApiMutation } from "../../hooks/useApi";
+import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import { STYLES, ANIMATIONS } from "../../constants/styles";
 import "./Model3DManager.css";
-
-const API_SETTINGS = "http://localhost:5000/api/settings";
-const API_POINTS = "http://localhost:5000/api/points";
 
 // === 0. WEBGL SUPPORT CHECK ===
 const checkWebGLSupport = () => {
@@ -20,29 +20,16 @@ const checkWebGLSupport = () => {
 };
 
 // Fallback component khi WebGL không khả dụng
-const WebGLFallback = () => (
-  <div style={{
-    width: '100%',
-    height: '100%',
-    minHeight: '400px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-    borderRadius: '12px',
-    color: '#92400e',
-    textAlign: 'center',
-    padding: '40px'
-  }}>
-    <MonitorX size={48} strokeWidth={1.5} style={{ marginBottom: '20px' }} />
-    <h3 style={{ margin: '0 0 10px', fontSize: '18px', fontWeight: 'bold' }}>WebGL Không Khả Dụng</h3>
-    <p style={{ margin: 0, opacity: 0.8, fontSize: '13px', maxWidth: '300px', lineHeight: '1.5' }}>
+const WebGLFallback = React.memo(() => (
+  <div style={STYLES.WEBGL_FALLBACK}>
+    <MonitorX size={48} strokeWidth={1.5} style={STYLES.WEBGL_ICON} />
+    <h3 style={STYLES.WEBGL_TITLE}>WebGL Không Khả Dụng</h3>
+    <p style={{ ...STYLES.TEXT_SMALL, ...STYLES.TEXT_MUTED }}>
       Trình duyệt không hỗ trợ WebGL hoặc GPU đang bận.<br />
       Thử refresh trang hoặc đóng các tab khác.
     </p>
   </div>
-);
+));
 
 // === 1. ERROR BOUNDARY (DÙNG ICON LUCIDE) ===
 class ErrorBoundary3D extends React.Component {
@@ -99,51 +86,25 @@ class ErrorBoundary3D extends React.Component {
   }
 }
 
-// === 2. LOADING FALLBACK (DÙNG ICON LOADER2 XOAY) ===
-const LoadingFallback = () => (
+// === 2. LOADING FALLBACK ===
+const LoadingFallback = React.memo(() => (
   <Html center zIndexRange={[1000, 0]}>
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'rgba(255, 255, 255, 0.95)',
-      padding: '20px 40px',
-      borderRadius: '12px',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-      backdropFilter: 'blur(5px)',
-      minWidth: '250px',
-      pointerEvents: 'none'
-    }}>
-      {/* Thay Spinner CSS bằng icon Loader2 có animation xoay */}
-      <Loader2
-        size={40}
-        color="#0066cc"
-        style={{ marginBottom: '10px', animation: 'spin 1s linear infinite' }}
-      />
-
-      <div style={{
-        color: '#0066cc',
-        fontSize: '15px',
-        fontWeight: '600',
-        whiteSpace: 'nowrap'
-      }}>
-        Đang tải dữ liệu 3D...
-      </div>
-
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    <div style={STYLES.LOADING_CONTAINER}>
+      <Loader2 size={40} color="#0066cc" style={STYLES.LOADING_ICON} />
+      <div style={STYLES.LOADING_TEXT}>Đang tải dữ liệu 3D...</div>
+      <style>{ANIMATIONS.SPIN}</style>
     </div>
   </Html>
-);
+));
 
 // === MODEL PREVIEW ===
-const ModelPreview = ({ url }) => {
+const ModelPreview = React.memo(({ url }) => {
   const { scene } = useGLTF(url);
   return <primitive object={scene} scale={0.4} />;
-};
+});
 
 // === POINTS LAYER ===
-const PointsLayer = ({ points }) => {
+const PointsLayer = React.memo(({ points }) => {
   return (
     <>
       {points.map((point) => (
@@ -154,25 +115,15 @@ const PointsLayer = ({ points }) => {
           zIndexRange={[100, 0]}
           style={{ pointerEvents: "none" }}
         >
-          <div
-            title={point.title}
-            style={{
-              width: "12px",
-              height: "12px",
-              background: "#ef4444",
-              borderRadius: "50%",
-              border: "2px solid white",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            }}
-          />
+          <div title={point.title} style={STYLES.POINT_MARKER} />
         </Html>
       ))}
     </>
   );
-};
+});
 
 // === CAMERA HANDLER ===
-const CameraHandler = ({ defaultView, onControlReady }) => {
+const CameraHandler = React.memo(({ defaultView, onControlReady }) => {
   const { camera, gl } = useThree();
   const controlsRef = useRef();
   useEffect(() => {
@@ -193,64 +144,58 @@ const CameraHandler = ({ defaultView, onControlReady }) => {
       autoRotate={false}
     />
   );
-};
+});
 
 // === MAIN COMPONENT ===
 export default function Model3DManager() {
   const [currentModel, setCurrentModel] = useState("");
   const [defaultView, setDefaultView] = useState(null);
-  const [points, setPoints] = useState([]);
   const [showMediaModal, setShowMediaModal] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const controlsRef = useRef(null);
 
+  // Fetch data using custom hook
+  const { data: pointsData } = useApi(API_ENDPOINTS.POINTS);
+  const { data: currentModelData } = useApi(`${API_ENDPOINTS.SETTINGS}/current_model_url`);
+  const { data: defaultViewData } = useApi(`${API_ENDPOINTS.SETTINGS}/default_camera_view`);
+  const points = useMemo(() => Array.isArray(pointsData) ? pointsData : [], [pointsData]);
+
+  // Initialize model and camera view from API data
   useEffect(() => {
-    fetch(`${API_SETTINGS}/current_model_url`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.value) setCurrentModel(data.value);
-      })
-      .catch((e) => console.error("Lỗi model:", e));
+    if (currentModelData?.value) setCurrentModel(currentModelData.value);
+  }, [currentModelData]);
 
-    fetch(`${API_SETTINGS}/default_camera_view`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.value) {
-          try {
-            setDefaultView(JSON.parse(data.value));
-          } catch (e) { }
-        }
-      })
-      .catch((e) => console.error("Lỗi camera:", e));
+  useEffect(() => {
+    if (defaultViewData?.value) {
+      try {
+        setDefaultView(JSON.parse(defaultViewData.value));
+      } catch (e) {
+        console.error("Invalid camera view data:", e);
+      }
+    }
+  }, [defaultViewData]);
 
-    fetch(API_POINTS)
-      .then((res) => res.json())
-      .then((data) => setPoints(Array.isArray(data) ? data : []))
-      .catch((e) => console.error("Lỗi points:", e));
-  }, []);
+  // Memoized API mutation for saving settings
+  const { mutate: saveSettings, loading } = useApiMutation();
 
-  const handleSelectModel = async (url) => {
-    if (!url.toLowerCase().endsWith(".glb"))
-      return alert("Chỉ chọn file .glb!");
-    setLoading(true);
+  const handleSelectModel = useCallback(async (url) => {
+    if (!VALIDATION.GLB_ONLY(url)) return alert("Chỉ chọn file .glb!");
+
     try {
-      await fetch(API_SETTINGS, {
+      await saveSettings({
+        url: API_ENDPOINTS.SETTINGS,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "current_model_url", value: url }),
+        data: { key: "current_model_url", value: url },
       });
       setCurrentModel(url);
       setMessage({ type: "success", text: "Đã đổi Model!" });
+      setShowMediaModal(false);
     } catch (err) {
       setMessage({ type: "error", text: err.message });
-    } finally {
-      setLoading(false);
-      setShowMediaModal(false);
     }
-  };
+  }, [saveSettings]);
 
-  const handleSaveCameraView = async () => {
+  const handleSaveCameraView = useCallback(async () => {
     const controls = controlsRef.current?.current;
     if (!controls) return alert("Chưa tải xong khung 3D...");
 
@@ -263,24 +208,21 @@ export default function Model3DManager() {
       target: [controls.target.x, controls.target.y, controls.target.z],
     };
 
-    setLoading(true);
     try {
-      await fetch(API_SETTINGS, {
+      await saveSettings({
+        url: API_ENDPOINTS.SETTINGS,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        data: {
           key: "default_camera_view",
           value: JSON.stringify(viewData),
-        }),
+        },
       });
       setMessage({ type: "success", text: "Đã lưu góc nhìn!" });
       setDefaultView(viewData);
     } catch (err) {
       setMessage({ type: "error", text: "Lỗi lưu góc nhìn" });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [saveSettings]);
 
   return (
     <div className="split-layout">

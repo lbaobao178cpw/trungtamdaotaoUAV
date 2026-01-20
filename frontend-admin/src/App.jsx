@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 /* === CHỈ IMPORT ADMIN VÀ LOGIN === */
-import Admin from "./components/admin/Admin";
+import Admin from "./components/admin/Admin/Admin";
 import LoginPage from "./components/login/LoginPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
