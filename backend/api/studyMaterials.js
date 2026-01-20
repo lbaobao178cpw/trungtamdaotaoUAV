@@ -153,10 +153,10 @@ router.get('/:id/download', async (req, res) => {
         try {
             if (displayName.match(/[Ã¡-ÿ]/g)) {
                 displayName = Buffer.from(displayName, 'latin1').toString('utf8');
-                console.log("🔧 Fixed display_name encoding:", displayName);
+                
             }
         } catch (e) {
-            console.log("⚠️ Display name encoding fix failed");
+            
         }
 
         // Get file from Cloudinary using native https module

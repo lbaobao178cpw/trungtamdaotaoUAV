@@ -76,8 +76,7 @@ export default function StudyMaterialsManager() {
         setUploading(true);
         try {
             const token = localStorage.getItem('admin_token');
-            console.log('📝 Token retrieved:', token ? `${token.substring(0, 20)}...` : 'NULL');
-            console.log('📄 File name:', file.name);
+
 
             if (!token) {
                 setMessage({ type: 'error', text: 'Lỗi: Token không tìm thấy. Vui lòng đăng nhập lại!' });
@@ -97,7 +96,7 @@ export default function StudyMaterialsManager() {
             formDataCloud.append('originalFilename', utf8FileName);
             formDataCloud.append('displayName', utf8FileName);
 
-            console.log('🚀 Gửi upload request với apiClient');
+
             // Dùng apiClient có request interceptor để tự động refresh token
             const res = await apiClient.post('/cloudinary/upload', formDataCloud, {
                 headers: {
@@ -105,9 +104,9 @@ export default function StudyMaterialsManager() {
                 }
             });
 
-            console.log('📥 Response status:', res.status);
+
             const data = res.data;
-            console.log('📦 Response data:', data);
+
 
             if (data.success && data.url) {
                 setFormData(prev => ({

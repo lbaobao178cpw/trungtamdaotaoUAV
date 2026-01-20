@@ -13,7 +13,7 @@ const pool = mysql.createPool({
 
 async function debugStatusColumn() {
     try {
-        console.log("=== DEBUG: Checking legal_documents table structure ===\n");
+        
 
         // Get table structure
         const [columns] = await pool.execute(`
@@ -24,18 +24,18 @@ async function debugStatusColumn() {
       ORDER BY ORDINAL_POSITION
     `);
 
-        console.log("Table Structure:");
+        
         columns.forEach(col => {
-            console.log(`  ${col.COLUMN_NAME}: ${col.COLUMN_TYPE} ${col.IS_NULLABLE === 'YES' ? 'NULL' : 'NOT NULL'} DEFAULT ${col.COLUMN_DEFAULT}`);
+            
         });
 
         // Focus on status column
         const statusCol = columns.find(c => c.COLUMN_NAME === 'status');
         if (statusCol) {
-            console.log("\n=== STATUS COLUMN DETAILS ===");
-            console.log(`Type: ${statusCol.COLUMN_TYPE}`);
-            console.log(`Nullable: ${statusCol.IS_NULLABLE}`);
-            console.log(`Default: ${statusCol.COLUMN_DEFAULT}`);
+            
+            
+            
+            
         }
 
         // Check current status values
@@ -45,13 +45,13 @@ async function debugStatusColumn() {
       LIMIT 20
     `);
 
-        console.log("\n=== CURRENT STATUS VALUES IN DATABASE ===");
+        
         values.forEach(row => {
-            console.log(`  Status: "${row.status}" (length: ${row.status_length})`);
+            `);
         });
 
         // Try to alter column if it's too small or is ENUM
-        console.log("\n⚠️  Modifying status column to VARCHAR(20)...");
+        ...");
 
         try {
             await pool.execute(`
@@ -61,9 +61,9 @@ async function debugStatusColumn() {
         NOT NULL
       `);
 
-            console.log("✅ Successfully modified status column to VARCHAR(20)");
+            ");
         } catch (alterErr) {
-            console.log("⚠️  Could not alter column (might already be correct):", alterErr.message);
+            :", alterErr.message);
         }
 
         pool.end();

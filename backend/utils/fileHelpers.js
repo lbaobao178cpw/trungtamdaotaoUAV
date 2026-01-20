@@ -17,7 +17,7 @@ try {
   sharp = require("sharp");
   // Chỉ log khi ở môi trường dev để đỡ rác log trên server
   if (process.env.NODE_ENV !== 'production') {
-      console.log("✅ Sharp: OK");
+      
   }
 } catch (e) {
   console.warn("⚠️ Sharp: Missing - Thumbnail feature disabled");

@@ -18,7 +18,7 @@ async function addDisplayNameColumn() {
             database: process.env.DB_NAME || 'uav_training'
         });
 
-        console.log('✅ Đã kết nối database');
+        
 
         // Kiểm tra bảng study_materials có tồn tại không
         const [tables] = await connection.query(
@@ -27,7 +27,7 @@ async function addDisplayNameColumn() {
 
         if (tables.length === 0) {
             // Tạo bảng mới
-            console.log('📝 Bảng study_materials chưa tồn tại, đang tạo...');
+            
 
             await connection.query(`
                 CREATE TABLE study_materials (
@@ -47,7 +47,7 @@ async function addDisplayNameColumn() {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             `);
 
-            console.log('✅ Đã tạo bảng study_materials');
+            
         } else {
             // Kiểm tra cột display_name có tồn tại không
             const [columns] = await connection.query(
@@ -56,20 +56,20 @@ async function addDisplayNameColumn() {
 
             if (columns.length === 0) {
                 // Thêm cột display_name
-                console.log('📝 Đang thêm cột display_name...');
+                
 
                 await connection.query(`
                     ALTER TABLE study_materials
                     ADD COLUMN display_name VARCHAR(500) AFTER file_type
                 `);
 
-                console.log('✅ Đã thêm cột display_name');
+                
             } else {
-                console.log('ℹ️ Cột display_name đã tồn tại');
+                
             }
         }
 
-        console.log('🎉 Migration hoàn thành!');
+        
 
     } catch (error) {
         console.error('❌ Lỗi:', error.message);
@@ -77,7 +77,7 @@ async function addDisplayNameColumn() {
     } finally {
         if (connection) {
             await connection.end();
-            console.log('🔌 Đã đóng kết nối database');
+            
         }
     }
 }

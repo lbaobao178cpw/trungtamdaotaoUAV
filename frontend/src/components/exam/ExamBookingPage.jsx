@@ -9,7 +9,7 @@ import "../Registration/RegisterPage.css"; // Đảm bảo đường dẫn CSS �
 const ExamBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  console.log("Dữ liệu nhận được từ ExamPage:", location.state);
+  
 
   const { examId, examInfo, preSelectedTier, examLocation } = location.state || {};
   const [user, setUser] = useState(null);

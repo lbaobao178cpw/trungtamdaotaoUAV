@@ -987,14 +987,14 @@ router.put("/authorities/:id", async (req, res) => {
 
     // ❌ CHECK parent_id tồn tại
     if (parent_id !== null) {
-      console.log("Checking if parent_id exists:", parent_id, "Type:", typeof parent_id);
+      
       const [parent] = await pool.execute(
         "SELECT id FROM authorities WHERE id = ?",
         [parent_id]
       );
 
       if (parent.length === 0) {
-        console.log("Parent not found with id:", parent_id);
+        
         return res.status(400).json({
           success: false,
           message: "Cấp cha không tồn tại"
@@ -1639,7 +1639,7 @@ router.get("/check-db", async (req, res) => {
     const [tables] = await pool.execute("SHOW TABLES");
 
     const tableNames = tables.map(t => Object.values(t)[0]);
-    console.log("Tables in database:", tableNames);
+    
 
     // Kiểm tra từng bảng có dữ liệu không
     const tableCounts = {};
@@ -1759,10 +1759,10 @@ router.get("/forms/:id/download", async (req, res) => {
       // If display_name looks corrupted, fix it
       if (displayName.match(/[Ã¡-ÿ]/g)) {
         displayName = Buffer.from(displayName, 'latin1').toString('utf8');
-        console.log("🔧 Fixed display_name encoding:", displayName);
+        
       }
     } catch (e) {
-      console.log("⚠️ Display name encoding fix failed");
+      
     }
 
     // Get file from Cloudinary using native https module

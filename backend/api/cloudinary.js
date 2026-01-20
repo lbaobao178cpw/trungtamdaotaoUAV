@@ -30,12 +30,12 @@ const upload = multer({
  */
 router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
   try {
-    console.log("🚀 Upload request received");
-    console.log("File object:", req.file);
-    console.log("File size:", req.file?.size);
-    console.log("File buffer length:", req.file?.buffer?.length);
-    console.log("File original name:", req.file?.originalname);
-    console.log("Folder:", req.body.folder);
+
+
+
+
+
+
 
     if (!req.file) {
       return res.status(400).json({
@@ -57,8 +57,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
     // Get filename from request body first (if sent by frontend), otherwise from multer
     let displayName = req.body.displayName || req.body.originalFilename || req.file.originalname;
 
-    console.log("📄 Raw displayName:", displayName);
-    console.log("📄 Raw bytes:", Buffer.from(displayName).toString('hex'));
+
 
     // Fix UTF-8 encoding issue if filename is corrupted
     // When UTF-8 bytes are misinterpreted as Latin1, Vietnamese chars become garbled
@@ -70,15 +69,15 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
         const corrected = Buffer.from(displayName, 'latin1').toString('utf8');
         // Verify the fix worked (should have Vietnamese chars now)
         if (corrected !== displayName && !corrected.includes('�')) {
-          console.log("🔧 Fixed corrupted filename:", displayName, "→", corrected);
+
           displayName = corrected;
         }
       }
     } catch (e) {
-      console.log("⚠️ Encoding fix failed:", e.message);
+
     }
 
-    console.log("📄 Final displayName:", displayName);
+
 
     // Sanitize for Cloudinary public_id (alphanumeric + dash/underscore only)
     const fileNameWithoutExt = displayName.substring(0, displayName.lastIndexOf('.')) || displayName;
@@ -91,14 +90,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
       .replace(/-+/g, '-') // Collapse multiple dashes
       .toLowerCase();
 
-    console.log("📤 Uploading to Cloudinary...", {
-      folder,
-      resourceType,
-      displayName,
-      sanitizedName: sanitized,
-      bufferLength: req.file.buffer?.length || 0,
-      bufferExists: !!req.file.buffer
-    });
+
 
     if (!req.file.buffer || req.file.buffer.length === 0) {
       console.error("❌ Buffer is empty!");
@@ -130,13 +122,13 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
               reject(error);
             }
             else {
-              console.log("✅ Upload success:", result.public_id);
+
               resolve(result);
             }
           }
         );
 
-        console.log("📝 Writing buffer to upload stream, size:", req.file.buffer.length);
+
         uploadStream.end(req.file.buffer);
       });
     } catch (err) {
@@ -159,7 +151,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
         const port = req.socket.localPort || process.env.PORT || 5000;
         const relPath = `${uploadFolder}/${filename}`;
 
-        console.log("💾 Saved to local storage:", relPath);
+
 
         uploadResult = {
           secure_url: `http://localhost:${port}/uploads/${relPath}`,

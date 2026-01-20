@@ -47,7 +47,7 @@ function LookupPage() {
         });
         
         if (code) {
-            console.log('QR Code detected:', code.data);
+            
             setQrResult({
                 success: true,
                 data: code.data
@@ -117,7 +117,7 @@ function LookupPage() {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        console.log('Searching with:', formData);
+        
         // Xử lý tìm kiếm ở đây
         alert('Tính năng tra cứu đang được phát triển');
     };

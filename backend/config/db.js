@@ -14,9 +14,8 @@ try {
             ca: fs.readFileSync(caCertPath),
             rejectUnauthorized: true // Có chứng chỉ -> Bảo mật cao
         };
-        console.log("🔒 Đã tìm thấy chứng chỉ SSL (ca.pem).");
     } else {
-        console.log("⚠️ Không tìm thấy file ca.pem, đang chạy chế độ không an toàn.");
+
     }
 } catch (err) {
     console.error("Lỗi đọc file cert:", err.message);

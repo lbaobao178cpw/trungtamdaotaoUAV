@@ -67,8 +67,6 @@ const refreshAccessToken = async () => {
         if (newRefreshToken) {
             localStorage.setItem('refresh_token', newRefreshToken);
         }
-
-        console.log('[Token Refresh] Token refreshed, new exp:', decodeToken(newAccessToken)?.exp);
         return newAccessToken;
     } catch (error) {
         console.error('[Token Refresh] Failed:', error.response?.data || error.message);
@@ -83,14 +81,11 @@ apiClient.interceptors.request.use(
     async (config) => {
         const token = localStorage.getItem('user_token');
 
-        console.log('[API Request] Token exists:', !!token, 'Token expired:', token && isTokenExpired(token));
-
         // Nếu token hết hạn, refresh ngay trước khi gửi request
         if (token && isTokenExpired(token)) {
-            console.log('[API Request] Token sắp hết hạn, refresh ngay...');
+
             try {
                 const newToken = await refreshAccessToken();
-                console.log('[API Request] Token refreshed successfully');
                 config.headers.Authorization = `Bearer ${newToken}`;
                 return config;
             } catch (err) {
@@ -108,7 +103,6 @@ apiClient.interceptors.request.use(
         // Token còn hợp lệ, thêm vào header
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log('[API Request] Using existing token');
         }
         return config;
     },

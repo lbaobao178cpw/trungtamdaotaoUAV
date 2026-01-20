@@ -5,7 +5,7 @@ const path = require("path");
 const { UPLOAD_ROOT, THUMB_ROOT, getFileType, generateThumbnail } = require("../utils/fileHelpers");
 
 router.get("/regenerate-thumbs", async (req, res) => {
-  console.log("⏳ Bắt đầu tạo lại thumbnail...");
+  
   let count = 0;
   const errors = [];
   async function scanDir(currentDir, relativeDir = "") {

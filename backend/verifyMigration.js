@@ -12,16 +12,16 @@ async function verify() {
 
     const [rows] = await conn.query('SHOW TABLES LIKE "study_materials"');
     if (rows.length) {
-        console.log('✅ Table study_materials exists!');
+        
 
         // Also check structure
         const [columns] = await conn.query('DESCRIBE study_materials');
-        console.log('\n📋 Table structure:');
+        
         columns.forEach(col => {
-            console.log(`  - ${col.Field}: ${col.Type}`);
+            
         });
     } else {
-        console.log('❌ Table study_materials not found');
+        
     }
 
     await conn.end();

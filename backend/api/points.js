@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
 // CREATE (POST) - ĐÃ SỬA LỖI SYNTAX (THÊM BACKTICK)
 router.post("/", async (req, res) => {
   try {
-    console.log("👉 [API] Nhận request POST tạo point:", req.body);
+    
 
     const { id, title, lead, description, website, logoSrc, imageSrc, panoramaUrl, posX, posY, posZ, schedule, contact, enableSchedule } = req.body;
 
@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
 
     await pool.execute(sql, values);
     
-    console.log("✅ [API] Đã tạo point thành công:", id);
+    
     res.status(201).json({ success: true, message: "Tạo mới thành công" });
 
   } catch (err) {
@@ -98,7 +98,7 @@ router.put("/:id", async (req, res) => {
     const [result] = await pool.execute(sql, values);
     if (result.affectedRows === 0) return res.status(404).json({ message: "Không tìm thấy Point ID" });
     
-    console.log("✅ [API] Cập nhật point thành công:", id);
+    
     res.json({ success: true });
   } catch (err) {
     console.error("❌ [API] Lỗi UPDATE:", err);

@@ -9,7 +9,7 @@ export const uploadToCloudinary = async (file, folder = "uav-training") => {
     formData.append("file", file);
     formData.append("folder", folder);
 
-    console.log("Uploading to:", `${API_BASE}/cloudinary/upload`);
+    
 
     // Dùng apiClient để có request interceptor tự động refresh token
     const response = await apiClient.post('/cloudinary/upload', formData, {
@@ -18,7 +18,7 @@ export const uploadToCloudinary = async (file, folder = "uav-training") => {
       }
     });
 
-    console.log("Response data:", response.data);
+    
 
     if (!response.data.success) {
       throw new Error(response.data.error || "Upload failed");

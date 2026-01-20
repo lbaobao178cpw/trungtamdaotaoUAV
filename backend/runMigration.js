@@ -20,14 +20,14 @@ async function runMigration() {
 
         // Execute migration
         await connection.query(sql);
-        console.log('✅ Migration completed successfully!');
-        console.log('Table study_materials created.');
+        
+        
 
         await connection.end();
     } catch (error) {
         console.error('❌ Migration failed:', error.message);
         if (error.code === 'ER_TABLE_EXISTS_ERROR') {
-            console.log('Table already exists.');
+            
         } else if (error.sqlMessage) {
             console.error('SQL Error:', error.sqlMessage);
         }

@@ -265,7 +265,7 @@ export default function MediaSelector({ onSelect, onClose }) {
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length === 0) return;
         setUploading(true);
-        console.log("⬆️  Starting upload for", acceptedFiles.length, "files");
+        
 
         try {
             await Promise.all(acceptedFiles.map(async (file) => {
@@ -279,14 +279,14 @@ export default function MediaSelector({ onSelect, onClose }) {
                         body: formData
                     });
                     const result = await response.json();
-                    console.log("✅ Upload response:", result);
+                    
                 } catch (e) {
                     console.error("❌ Upload error:", e);
                 }
             }));
         } finally {
             setUploading(false);
-            console.log("🔄 Refreshing file list...");
+            
             fetchFiles(currentPath);
         }
     }, [currentPath, fetchFiles]);
@@ -294,7 +294,7 @@ export default function MediaSelector({ onSelect, onClose }) {
     // Handler riêng cho input file upload (hỗ trợ await)
     const handleFileInputUpload = useCallback(async (e) => {
         const files = Array.from(e.target.files);
-        console.log("📁 File selected:", files);
+        
         await onDrop(files);
         // Reset input để có thể upload file cùng tên lần khác
         e.target.value = '';

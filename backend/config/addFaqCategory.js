@@ -2,7 +2,7 @@ const db = require('./db');
 
 const addFaqCategory = async () => {
     try {
-        console.log('🔧 Thêm cột category vào bảng faqs...');
+        
 
         // Kiểm tra xem cột đã tồn tại chưa
         const [columns] = await db.execute(
@@ -14,9 +14,9 @@ const addFaqCategory = async () => {
         ALTER TABLE faqs 
         ADD COLUMN category VARCHAR(50) DEFAULT 'general' COMMENT 'Danh mục: general, exam, course, certificate, etc'
       `);
-            console.log('✅ Đã thêm cột category!');
+            
         } else {
-            console.log('ℹ️ Cột category đã tồn tại!');
+            
         }
 
         await db.end();

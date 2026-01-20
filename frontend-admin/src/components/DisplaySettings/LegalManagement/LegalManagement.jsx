@@ -46,7 +46,6 @@ export default function LegalDocumentsManager() {
 
     const getStatusDisplay = (dbStatus) => {
         const result = statusDisplayMap[dbStatus] || dbStatus;
-        console.log(`getStatusDisplay("${dbStatus}") => "${result}"`);
         return result;
     };
 
@@ -73,7 +72,7 @@ export default function LegalDocumentsManager() {
                     ...doc,
                     is_featured: Boolean(doc.is_featured)
                 }));
-                console.log('Loaded documents:', normalizedData);
+
                 setDocuments(normalizedData);
                 setPagination(prev => ({ ...prev, ...data.pagination }));
             }

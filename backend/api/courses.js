@@ -177,7 +177,7 @@ router.get("/", async (req, res) => {
 router.get("/my-accessible", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log("[my-accessible] userId:", userId);
+    
 
     // Lấy target_tier của user
     const [userProfile] = await db.query(
@@ -185,9 +185,9 @@ router.get("/my-accessible", verifyToken, async (req, res) => {
       [userId]
     );
 
-    console.log("[my-accessible] userProfile:", userProfile);
+    
     const userTier = userProfile[0]?.target_tier?.toUpperCase() || null;
-    console.log("[my-accessible] userTier:", userTier);
+    
 
     // Logic phân quyền:
     // - Khóa học level B hoặc "Nâng cao": chỉ user hạng B mới xem được
@@ -269,7 +269,7 @@ router.get("/:id", verifyToken, async (req, res) => {
     const courseId = req.params.id;
     const userId = req.user.id;
     
-    console.log("[course/:id] courseId:", courseId, "userId:", userId, "role:", req.user.role);
+    
 
     // 1. Lấy thông tin khóa học
     const [courseRows] = await db.query("SELECT * FROM courses WHERE id = ?", [courseId]);
@@ -277,7 +277,7 @@ router.get("/:id", verifyToken, async (req, res) => {
 
     const course = courseRows[0];
     const courseLevel = course.level?.toUpperCase(); // A hoặc B
-    console.log("[course/:id] course.level:", course.level, "courseLevel:", courseLevel);
+    
 
     // 2. Lấy target_tier của user từ user_profiles
     const [userProfile] = await db.query(
@@ -286,7 +286,7 @@ router.get("/:id", verifyToken, async (req, res) => {
     );
 
     const userTier = userProfile[0]?.target_tier?.toUpperCase() || null;
-    console.log("[course/:id] userProfile:", userProfile, "userTier:", userTier);
+    
 
     // 3. Kiểm tra quyền xem khóa học
     // - Hạng A: chỉ xem được khóa học level A (hoặc Cơ bản)
