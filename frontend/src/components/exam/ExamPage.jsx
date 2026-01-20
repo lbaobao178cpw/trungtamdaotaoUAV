@@ -85,6 +85,23 @@ const ExamPage = () => {
 
     fetchData();
   }, []);
+
+  // Load Bitrix24 script và function mở form
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.setAttribute('data-b24-form', 'inline/212/snz64s');
+    script.setAttribute('data-skip-moving', 'true');
+    script.async = true;
+    script.textContent = `(function(w,d,u){var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);})(window,document,'https://cdn.bitrix24.com/b20658409/crm/form/loader_212.js');`;
+    document.body.appendChild(script);
+  }, []);
+
+  const openBitrix24Form = () => {
+    if (window.B24 && window.B24.openFormModal) {
+      window.B24.openFormModal('snz64s');
+    }
+  };
+
   const scrollToExams = () => {
     const section = document.getElementById("exam-list-section");
     if (section) section.scrollIntoView({ behavior: "smooth" });
@@ -634,28 +651,42 @@ const ExamPage = () => {
               </div>
 
               {/* Support */}
-              <div className="card p-6">
-                <h3 className="font-bold mb-4 text-lg">Liên hệ hỗ trợ</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Phone className="w-4 h-4 text-primary" />
+              <div className="card p-6" style={{ border: '1px solid #e0e0e0', backgroundColor: '#fafafa' }}>
+                <h3 className="font-bold mb-6 text-lg" style={{ color: '#000' }}>Liên hệ hỗ trợ</h3>
+                <div className="space-y-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#d4e4f7' }}>
+                      <Phone className="w-5 h-5" style={{ color: '#0050b8' }} />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Tổng đài hỗ trợ</p>
-                      <p className="font-semibold text-sm text-white">1900 xxxx (8h-17h, T2-T6)</p>
+                      <p className="text-xs font-medium" style={{ color: '#666' }}>Tổng đài hỗ trợ</p>
+                      <p className="font-semibold text-sm" style={{ color: '#000', marginTop: '4px' }}>1900 xxxx (8h-17h, T2-T6)</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-primary" />
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#d4e4f7' }}>
+                      <Mail className="w-5 h-5" style={{ color: '#0050b8' }} />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Email hỗ trợ</p>
-                      <p className="font-semibold text-sm text-white">support@uav.vn</p>
+                      <p className="text-xs font-medium" style={{ color: '#666' }}>Email hỗ trợ</p>
+                      <p className="font-semibold text-sm" style={{ color: '#0050b8', marginTop: '4px' }}>support@UAVcert.gov.vn</p>
                     </div>
                   </div>
                 </div>
+                <button
+                  onClick={openBitrix24Form}
+                  className="w-full mt-6 py-3 rounded-lg font-semibold transition-all"
+                  style={{
+                    backgroundColor: '#0050b8',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#003a82'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#0050b8'}
+                >
+                  Gửi yêu cầu hỗ trợ
+                </button>
               </div>
             </div>
           </div>
