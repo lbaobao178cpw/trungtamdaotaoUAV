@@ -4,6 +4,7 @@ dist
 build
 .DS_Store
 .vscode
+.history
 
 # Chặn các file Media nặng
 *.mp4
