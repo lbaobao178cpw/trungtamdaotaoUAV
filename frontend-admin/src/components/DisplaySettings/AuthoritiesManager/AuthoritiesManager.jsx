@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './LegalManagement.css';
+import '../LegalManagement/LegalManagement.css';
 
 const API_URL = "http://localhost:5000/api/display";
 

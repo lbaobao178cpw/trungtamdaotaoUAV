@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Plus, Save, X, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import "../admin/AdminStyles.css";
+import "../../admin/Admin/Admin.css";
 
 const API_BASE_URL = "http://localhost:5000";
 const API_FAQ_URL = `${API_BASE_URL}/api/faqs`;

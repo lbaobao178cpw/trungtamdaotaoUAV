@@ -1,42 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '../../lib/apiInterceptor';
-import './LegalManagement.css';
+import { apiClient } from "../../../lib/apiInterceptor";
+import "../LegalManagement/LegalManagement.css";
 
-const API_URL = "http://localhost:5000/api/display";
+const API_URL = "http://localhost:5000/api/study-materials";
 
-// Helper function to sanitize Vietnamese filenames
-const sanitizeFileName = (filename) => {
-    if (!filename) return '';
-
-    // Remove extension to sanitize name only
-    const lastDotIndex = filename.lastIndexOf('.');
-    const nameWithoutExt = lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
-    const ext = lastDotIndex > 0 ? filename.substring(lastDotIndex) : '';
-
-    // Sanitize: remove diacritics and convert to ASCII
-    const sanitized = nameWithoutExt
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-        .replace(/[^a-zA-Z0-9-_\s]/g, '-') // Replace special chars with dash
-        .replace(/\s+/g, '-') // Replace spaces with dash
-        .replace(/-+/g, '-') // Collapse multiple dashes
-        .replace(/^-+|-+$/g, '') // Remove leading/trailing dashes
-        .toLowerCase();
-
-    return sanitized + ext;
-};
-
-export default function FormsManager() {
-    const [forms, setForms] = useState([]);
+export default function StudyMaterialsManager() {
+    const [materials, setMaterials] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [message, setMessage] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedIds, setSelectedIds] = useState(new Set());
-    const [documents, setDocuments] = useState([]);
-    const [authorities, setAuthorities] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [uploadedFileName, setUploadedFileName] = useState('');
     const [pagination, setPagination] = useState({
@@ -53,34 +28,28 @@ export default function FormsManager() {
         display_name: ''
     });
 
-    const categories = [
-        'Đăng ký', 'Thông báo', 'Đề nghị', 'Khởi kiện', 'Khiếu nại',
-        'Báo cáo', 'Thẩm tra', 'Thẩm định', 'Phê duyệt', 'Khác'
-    ];
-
     useEffect(() => {
-        fetchForms();
+        fetchMaterials();
     }, [pagination.page]);
 
-    const fetchForms = async () => {
+    const fetchMaterials = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
                 page: pagination.page,
                 limit: pagination.limit,
-                ...(selectedCategory && { category: selectedCategory }),
                 ...(searchTerm && { search: searchTerm })
             });
 
-            const res = await fetch(`${API_URL}/forms?${params}`);
+            const res = await fetch(`${API_URL}?${params}`);
             const data = await res.json();
 
             if (data.success) {
-                setForms(data.data);
+                setMaterials(data.data);
                 setPagination(prev => ({ ...prev, ...data.pagination }));
             }
         } catch (error) {
-            console.error('Lỗi tải biểu mẫu:', error);
+            console.error('Lỗi tải tài liệu:', error);
             setMessage({ type: 'error', text: 'Lỗi tải dữ liệu' });
         } finally {
             setLoading(false);
@@ -89,7 +58,7 @@ export default function FormsManager() {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        fetchForms();
+        fetchMaterials();
     };
 
     const handleChange = (e) => {
@@ -109,7 +78,6 @@ export default function FormsManager() {
             const token = localStorage.getItem('admin_token');
             console.log('📝 Token retrieved:', token ? `${token.substring(0, 20)}...` : 'NULL');
             console.log('📄 File name:', file.name);
-            console.log('📄 Sanitized name:', sanitizeFileName(file.name));
 
             if (!token) {
                 setMessage({ type: 'error', text: 'Lỗi: Token không tìm thấy. Vui lòng đăng nhập lại!' });
@@ -119,18 +87,15 @@ export default function FormsManager() {
 
             const formDataCloud = new FormData();
             formDataCloud.append('file', file);
-            formDataCloud.append('folder', 'uav-forms');
+            formDataCloud.append('folder', 'uav-study-materials');
 
-            // Encode filename as UTF-8 explicitly to prevent corruption
-            // Use TextEncoder to ensure proper UTF-8 bytes
+            // Encode filename as UTF-8 explicitly
             const encoder = new TextEncoder();
             const utf8Bytes = encoder.encode(file.name);
             const utf8FileName = new TextDecoder('utf-8').decode(utf8Bytes);
 
             formDataCloud.append('originalFilename', utf8FileName);
             formDataCloud.append('displayName', utf8FileName);
-
-            console.log('📄 UTF-8 encoded filename:', utf8FileName);
 
             console.log('🚀 Gửi upload request với apiClient');
             // Dùng apiClient có request interceptor để tự động refresh token
@@ -176,11 +141,15 @@ export default function FormsManager() {
 
         setLoading(true);
         try {
+            const token = localStorage.getItem('admin_token');
             const submitData = { ...formData, file_url: '', display_name: '' };
 
-            const res = await fetch(`${API_URL}/forms/${editingId}`, {
+            const res = await fetch(`${API_URL}/${editingId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(submitData)
             });
 
@@ -190,7 +159,7 @@ export default function FormsManager() {
                 setMessage({ type: 'success', text: 'Xóa file thành công' });
                 setShowModal(false);
                 resetForm();
-                fetchForms();
+                fetchMaterials();
             } else {
                 setMessage({ type: 'error', text: data.message });
             }
@@ -206,28 +175,30 @@ export default function FormsManager() {
         setLoading(true);
 
         try {
+            const token = localStorage.getItem('admin_token');
             const url = editingId
-                ? `${API_URL}/forms/${editingId}`
-                : `${API_URL}/forms`;
+                ? `${API_URL}/${editingId}`
+                : API_URL;
 
             const method = editingId ? 'PUT' : 'POST';
 
-            // Chuẩn bị dữ liệu - chỉ gửi file_url nếu có giá trị
+            // Chuẩn bị dữ liệu
             const submitData = { ...formData };
             if (!submitData.file_url) {
-                // Nếu đang sửa và file_url rỗng, lấy file_url cũ
                 if (editingId) {
-                    const existingForm = forms.find(f => f.id === editingId);
-                    submitData.file_url = existingForm?.file_url || '';
+                    const existingMaterial = materials.find(m => m.id === editingId);
+                    submitData.file_url = existingMaterial?.file_url || '';
                 } else {
-                    // Nếu tạo mới, file_url là bắt buộc (kiểm tra ở form)
                     submitData.file_url = submitData.file_url || '';
                 }
             }
 
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(submitData)
             });
 
@@ -237,7 +208,7 @@ export default function FormsManager() {
                 setMessage({ type: 'success', text: editingId ? 'Cập nhật thành công' : 'Thêm mới thành công' });
                 setShowModal(false);
                 resetForm();
-                fetchForms();
+                fetchMaterials();
             } else {
                 setMessage({ type: 'error', text: data.message });
             }
@@ -248,30 +219,34 @@ export default function FormsManager() {
         }
     };
 
-    const handleEdit = (form) => {
+    const handleEdit = (material) => {
         setFormData({
-            title: form.title || '',
-            file_url: form.file_url || '',
-            display_name: form.display_name || ''
+            title: material.title || '',
+            file_url: material.file_url || '',
+            display_name: material.display_name || ''
         });
-        setUploadedFileName(form.display_name || (form.file_url ? form.file_url.split('/').pop() : ''));
-        setEditingId(form.id);
+        setUploadedFileName(material.display_name || (material.file_url ? material.file_url.split('/').pop() : ''));
+        setEditingId(material.id);
         setShowModal(true);
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Bạn có chắc chắn muốn xóa biểu mẫu này?')) return;
+        if (!window.confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) return;
 
         try {
-            const res = await fetch(`${API_URL}/forms/${id}`, {
-                method: 'DELETE'
+            const token = localStorage.getItem('admin_token');
+            const res = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             const data = await res.json();
 
             if (data.success) {
                 setMessage({ type: 'success', text: 'Xóa thành công' });
-                fetchForms();
+                fetchMaterials();
             } else {
                 setMessage({ type: 'error', text: data.message });
             }
@@ -292,7 +267,7 @@ export default function FormsManager() {
 
     const handleSelectAll = (checked) => {
         if (checked) {
-            setSelectedIds(new Set(forms.map(form => form.id)));
+            setSelectedIds(new Set(materials.map(m => m.id)));
         } else {
             setSelectedIds(new Set());
         }
@@ -300,21 +275,25 @@ export default function FormsManager() {
 
     const handleBulkDelete = async () => {
         if (selectedIds.size === 0) {
-            setMessage({ type: 'warning', text: 'Vui lòng chọn ít nhất một biểu mẫu' });
+            setMessage({ type: 'warning', text: 'Vui lòng chọn ít nhất một tài liệu' });
             return;
         }
 
-        if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.size} biểu mẫu được chọn?`)) return;
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.size} tài liệu được chọn?`)) return;
 
         setLoading(true);
         try {
+            const token = localStorage.getItem('admin_token');
             let deletedCount = 0;
             let errorCount = 0;
 
             for (const id of selectedIds) {
                 try {
-                    const res = await fetch(`${API_URL}/forms/${id}`, {
-                        method: 'DELETE'
+                    const res = await fetch(`${API_URL}/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
                     });
                     const data = await res.json();
                     if (data.success) {
@@ -329,11 +308,11 @@ export default function FormsManager() {
 
             setSelectedIds(new Set());
             if (errorCount === 0) {
-                setMessage({ type: 'success', text: `Xóa thành công ${deletedCount} biểu mẫu` });
+                setMessage({ type: 'success', text: `Xóa thành công ${deletedCount} tài liệu` });
             } else {
                 setMessage({ type: 'warning', text: `Xóa ${deletedCount} thành công, ${errorCount} lỗi` });
             }
-            fetchForms();
+            fetchMaterials();
         } catch (error) {
             setMessage({ type: 'error', text: 'Lỗi xóa hàng loạt' });
         } finally {
@@ -355,18 +334,11 @@ export default function FormsManager() {
         setPagination(prev => ({ ...prev, page: newPage }));
     };
 
-    const formatFileSize = (bytes) => {
-        if (!bytes) return '';
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / 1048576).toFixed(1) + ' MB';
-    };
-
     return (
         <div className="legal-management-container">
             {/* Header */}
             <div className="legal-header">
-                <h2 className="legal-title">Quản lý Biểu mẫu</h2>
+                <h2 className="legal-title">Quản lý Tài liệu ôn thi</h2>
                 <div className="legal-actions">
                     {selectedIds.size > 0 && (
                         <button
@@ -384,7 +356,7 @@ export default function FormsManager() {
                             setShowModal(true);
                         }}
                     >
-                        + Thêm biểu mẫu
+                        + Thêm tài liệu
                     </button>
                 </div>
             </div>
@@ -396,12 +368,12 @@ export default function FormsManager() {
                 </div>
             )}
 
-            {/* Search và Filter */}
+            {/* Search */}
             <form onSubmit={handleSearch} className="legal-search-bar">
                 <input
                     type="text"
                     className="legal-search-input"
-                    placeholder="Tìm kiếm biểu mẫu..."
+                    placeholder="Tìm kiếm tài liệu..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -416,9 +388,9 @@ export default function FormsManager() {
                     <div style={{ textAlign: 'center', padding: '40px' }}>
                         Đang tải dữ liệu...
                     </div>
-                ) : forms.length === 0 ? (
+                ) : materials.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
-                        Không có biểu mẫu nào
+                        Không có tài liệu nào
                     </div>
                 ) : (
                     <>
@@ -428,45 +400,45 @@ export default function FormsManager() {
                                     <th style={{ width: '50px' }}>
                                         <input
                                             type="checkbox"
-                                            checked={selectedIds.size === forms.length && forms.length > 0}
+                                            checked={selectedIds.size === materials.length && materials.length > 0}
                                             onChange={(e) => handleSelectAll(e.target.checked)}
                                         />
                                     </th>
-                                    <th>Tên biểu mẫu</th>
+                                    <th>Tên tài liệu</th>
                                     <th>File đã upload</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {forms.map(form => (
-                                    <tr key={form.id}>
+                                {materials.map(material => (
+                                    <tr key={material.id}>
                                         <td style={{ width: '50px' }}>
                                             <input
                                                 type="checkbox"
-                                                checked={selectedIds.has(form.id)}
-                                                onChange={() => handleSelectRow(form.id)}
+                                                checked={selectedIds.has(material.id)}
+                                                onChange={() => handleSelectRow(material.id)}
                                             />
                                         </td>
                                         <td style={{ maxWidth: '300px' }}>
                                             <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                                                {form.title}
+                                                {material.title}
                                             </div>
                                         </td>
                                         <td style={{ fontSize: '12px', color: '#6c757d' }}>
-                                            {form.display_name || (form.file_url ? form.file_url.split('/').pop() : '---')}
+                                            {material.display_name || (material.file_url ? material.file_url.split('/').pop() : '---')}
                                         </td>
                                         <td>
                                             <div className="legal-table-actions">
                                                 <button
                                                     className="legal-btn legal-btn-secondary"
-                                                    onClick={() => handleEdit(form)}
+                                                    onClick={() => handleEdit(material)}
                                                     style={{ padding: '6px 12px', fontSize: '12px' }}
                                                 >
                                                     Sửa
                                                 </button>
                                                 <button
                                                     className="legal-btn legal-btn-danger"
-                                                    onClick={() => handleDelete(form.id)}
+                                                    onClick={() => handleDelete(material.id)}
                                                     style={{ padding: '6px 12px', fontSize: '12px' }}
                                                 >
                                                     Xóa
@@ -525,13 +497,13 @@ export default function FormsManager() {
                 )}
             </div>
 
-            {/* Modal thêm/sửa biểu mẫu */}
+            {/* Modal thêm/sửa tài liệu */}
             {showModal && (
                 <div className="legal-modal-overlay">
                     <div className="legal-modal-content">
                         <div className="legal-modal-header">
                             <h3 style={{ margin: 0, color: '#0066cc' }}>
-                                {editingId ? 'Chỉnh sửa Biểu mẫu' : 'Thêm Biểu mẫu mới'}
+                                {editingId ? 'Chỉnh sửa Tài liệu' : 'Thêm Tài liệu mới'}
                             </h3>
                             <button
                                 onClick={() => setShowModal(false)}
@@ -544,7 +516,7 @@ export default function FormsManager() {
                         <form onSubmit={handleSubmit}>
                             <div className="legal-modal-body">
                                 <div className="legal-form-group">
-                                    <label className="legal-form-label">Tên biểu mẫu *</label>
+                                    <label className="legal-form-label">Tên tài liệu *</label>
                                     <input
                                         type="text"
                                         className="legal-form-control"

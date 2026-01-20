@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { 
-    DndContext, useDraggable, useDroppable, useSensor, useSensors, 
-    PointerSensor, MouseSensor, TouchSensor 
+import {
+    DndContext, useDraggable, useDroppable, useSensor, useSensors,
+    PointerSensor, MouseSensor, TouchSensor
 } from '@dnd-kit/core';
-import "../admin/AdminStyles.css"; 
+import "../admin/Admin/Admin.css";
 
 const MEDIA_API_URL = 'http://localhost:5000/api';
 
@@ -60,7 +60,7 @@ const ParentDropZone = memo(({ onBack }) => {
             backgroundColor: isOver ? '#dcfce7' : 'transparent',
             borderRadius: '4px', padding: '4px', transition: 'all 0.2s', display: 'inline-block'
         }}>
-            <button onClick={onBack} className="btn-secondary btn-sm" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}> 
+            <button onClick={onBack} className="btn-secondary btn-sm" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icons.Back />
                 {isOver ? "Thả để ra ngoài" : "Quay lại"}
             </button>
@@ -76,7 +76,7 @@ const MediaItem = memo(({ item, isSelected, onItemClick, onNavigate, onOpenMenu,
     const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
         id: item.path,
         data: { type: item.type, name: item.filename, path: item.path },
-        disabled: isMenuOpen 
+        disabled: isMenuOpen
     });
 
     const { setNodeRef: setDropRef, isOver } = useDroppable({
@@ -102,10 +102,10 @@ const MediaItem = memo(({ item, isSelected, onItemClick, onNavigate, onOpenMenu,
     const [imgError, setImgError] = useState(false);
 
     return (
-        <div 
-            ref={setRefs} 
-            style={{...style, ...folderActiveStyle}}
-            {...listeners} 
+        <div
+            ref={setRefs}
+            style={{ ...style, ...folderActiveStyle }}
+            {...listeners}
             {...attributes}
             className={`media-item ${isSelected ? 'selected' : ''} ${isFolder ? 'media-folder' : ''} ${isMenuOpen ? 'menu-open' : ''}`}
             title={item.filename}
@@ -116,34 +116,34 @@ const MediaItem = memo(({ item, isSelected, onItemClick, onNavigate, onOpenMenu,
                 {isFolder ? <Icons.Folder /> : (
                     <>
                         {item.type === 'video' ? (
-                            <div style={{textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center'}}>
+                            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <Icons.Video />
-                                <span style={{fontSize: 10, color:'#64748b', marginTop: 4}}>VIDEO</span>
+                                <span style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>VIDEO</span>
                             </div>
                         ) : (
                             (!imgError && item.thumbUrl) ? (
                                 <img src={item.thumbUrl} alt={item.filename} loading="lazy" onError={() => setImgError(true)} />
                             ) : (
-                                <div style={{textAlign:'center', color: '#94a3b8', display:'flex', flexDirection:'column', alignItems:'center'}}>
+                                <div style={{ textAlign: 'center', color: '#94a3b8', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <Icons.Image />
-                                    <span style={{fontSize: 10, marginTop: 4}}>{item.filename.split('.').pop()}</span>
+                                    <span style={{ fontSize: 10, marginTop: 4 }}>{item.filename.split('.').pop()}</span>
                                 </div>
                             )
                         )}
-                        {isPano && <div style={{position:'absolute', bottom:0, right:0, background:'rgba(0,0,0,0.6)', color:'#fff', padding:'2px 4px', fontSize:10}}>360°</div>}
+                        {isPano && <div style={{ position: 'absolute', bottom: 0, right: 0, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '2px 4px', fontSize: 10 }}>360°</div>}
                     </>
                 )}
             </div>
-            
+
             <div className="media-name">{item.filename}</div>
-            
+
             {/* Nút 3 chấm */}
-            <button 
+            <button
                 className="btn-more"
-                onPointerDown={(e) => e.stopPropagation()} 
-                onClick={(e) => { 
-                    e.stopPropagation(); 
-                    onOpenMenu(item, e); 
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenMenu(item, e);
                 }}
                 title="Tùy chọn"
             >
@@ -152,10 +152,10 @@ const MediaItem = memo(({ item, isSelected, onItemClick, onNavigate, onOpenMenu,
         </div>
     );
 }, (prev, next) => {
-    return prev.item.path === next.item.path && 
-           prev.isSelected === next.isSelected &&
-           prev.isOver === next.isOver &&
-           prev.isMenuOpen === next.isMenuOpen;
+    return prev.item.path === next.item.path &&
+        prev.isSelected === next.isSelected &&
+        prev.isOver === next.isOver &&
+        prev.isMenuOpen === next.isMenuOpen;
 });
 
 // --- MAIN COMPONENT ---
@@ -163,12 +163,12 @@ export default function MediaSelector({ onSelect, onClose }) {
     const [files, setFiles] = useState([]);
     const [selectedPaths, setSelectedPaths] = useState(new Set());
     const [uploading, setUploading] = useState(false);
-    const [currentPath, setCurrentPath] = useState(""); 
-    
+    const [currentPath, setCurrentPath] = useState("");
+
     // --- STATE MENU & CLIPBOARD ---
-    const [activeMenuId, setActiveMenuId] = useState(null); 
+    const [activeMenuId, setActiveMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-    const [clipboard, setClipboard] = useState({ items: [], action: null }); 
+    const [clipboard, setClipboard] = useState({ items: [], action: null });
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
@@ -179,7 +179,7 @@ export default function MediaSelector({ onSelect, onClose }) {
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
         window.addEventListener('click', handleClickOutside);
-        window.addEventListener('scroll', handleClickOutside, true); 
+        window.addEventListener('scroll', handleClickOutside, true);
         return () => {
             window.removeEventListener('click', handleClickOutside);
             window.removeEventListener('scroll', handleClickOutside, true);
@@ -203,7 +203,7 @@ export default function MediaSelector({ onSelect, onClose }) {
     // --- LOGIC XỬ LÝ VỊ TRÍ MENU ---
     const handleOpenMenu = useCallback((item, event) => {
         const rect = event.currentTarget.getBoundingClientRect();
-        let left = rect.right - 180; 
+        let left = rect.right - 180;
         let top = rect.bottom + 5;
         if (left < 10) left = rect.left;
         if (top + 150 > window.innerHeight) top = rect.top - 150;
@@ -250,7 +250,7 @@ export default function MediaSelector({ onSelect, onClose }) {
         const paths = pathToDelete ? [pathToDelete] : Array.from(selectedPaths);
         await Promise.all(paths.map(p => fetch(`${MEDIA_API_URL}/files?path=${encodeURIComponent(p)}`, { method: 'DELETE' })));
         fetchFiles(currentPath);
-        setSelectedPaths(new Set()); 
+        setSelectedPaths(new Set());
     }, [currentPath, fetchFiles, selectedPaths]);
 
     const handleItemClick = useCallback((item, event) => {
@@ -265,32 +265,57 @@ export default function MediaSelector({ onSelect, onClose }) {
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length === 0) return;
         setUploading(true);
-        await Promise.all(acceptedFiles.map(async (file) => {
-            const formData = new FormData();
-            formData.append('folderPath', currentPath || ""); 
-            formData.append('mediaFile', file);
-            try { await fetch(`${MEDIA_API_URL}/upload`, { method: 'POST', body: formData }); } catch (e) {}
-        }));
-        setUploading(false);
-        fetchFiles(currentPath);
+        console.log("⬆️  Starting upload for", acceptedFiles.length, "files");
+
+        try {
+            await Promise.all(acceptedFiles.map(async (file) => {
+                const formData = new FormData();
+                formData.append('folderPath', currentPath || "");
+                formData.append('mediaFile', file);
+
+                try {
+                    const response = await fetch(`${MEDIA_API_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    console.log("✅ Upload response:", result);
+                } catch (e) {
+                    console.error("❌ Upload error:", e);
+                }
+            }));
+        } finally {
+            setUploading(false);
+            console.log("🔄 Refreshing file list...");
+            fetchFiles(currentPath);
+        }
     }, [currentPath, fetchFiles]);
 
+    // Handler riêng cho input file upload (hỗ trợ await)
+    const handleFileInputUpload = useCallback(async (e) => {
+        const files = Array.from(e.target.files);
+        console.log("📁 File selected:", files);
+        await onDrop(files);
+        // Reset input để có thể upload file cùng tên lần khác
+        e.target.value = '';
+    }, [onDrop]);
+
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true, noKeyboard: true, noDrag: true });
-    
+
     const handleDragEnd = async (event) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
         let targetPath = null;
         if (over.data.current?.type === 'folder') targetPath = over.data.current.path;
         else if (over.id === 'PARENT_DROP_ZONE') {
-            if (!currentPath) return; 
+            if (!currentPath) return;
             const parts = currentPath.split('/'); parts.pop(); targetPath = parts.join('/');
         }
         if (targetPath === null && targetPath !== "") return;
         try {
             await fetch(`${MEDIA_API_URL}/move`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemName: active.data.current.name, oldPath: active.id, newFolderPath: targetPath }) });
             fetchFiles(currentPath);
-        } catch(e) {}
+        } catch (e) { }
     };
 
     // Keyboard Shortcuts
@@ -306,7 +331,7 @@ export default function MediaSelector({ onSelect, onClose }) {
             if (isCtrl && e.key === 'v') { e.preventDefault(); handlePaste(); return; }
             if ((e.key === 'Delete' || e.key === 'Backspace') && selectedPaths.size > 0) { handleDelete(null); return; }
             if (e.key === 'F2' && selectedPaths.size === 1) { const item = files.find(f => f.path === Array.from(selectedPaths)[0]); if (item) handleRename(item); return; }
-            if (e.key === 'Escape') { if(activeMenuId) setActiveMenuId(null); else if (selectedPaths.size > 0) setSelectedPaths(new Set()); else onClose(); }
+            if (e.key === 'Escape') { if (activeMenuId) setActiveMenuId(null); else if (selectedPaths.size > 0) setSelectedPaths(new Set()); else onClose(); }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
@@ -318,29 +343,29 @@ export default function MediaSelector({ onSelect, onClose }) {
                 <div className="media-modal-content">
                     {/* --- HEADER --- */}
                     <div className="media-header">
-                        <div style={{display:'flex', alignItems:'center', gap: 10}}>
-                            <h3 style={{fontSize: 18, margin: 0, fontWeight: 700}}> {currentPath ? `/${currentPath}` : "/ Thư mục gốc"} </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <h3 style={{ fontSize: 18, margin: 0, fontWeight: 700 }}> {currentPath ? `/${currentPath}` : "/ Thư mục gốc"} </h3>
                             {currentPath && <ParentDropZone onBack={() => { const parts = currentPath.split('/'); parts.pop(); setCurrentPath(parts.join('/')); }} />}
                         </div>
-                        <button onClick={onClose} style={{border:'none', background:'transparent', fontSize:24, cursor:'pointer', lineHeight: 1}}>×</button>
+                        <button onClick={onClose} style={{ border: 'none', background: 'transparent', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
                     </div>
 
                     {/* --- TOOLBAR --- */}
-                    <div style={{padding: '16px 24px', borderBottom: '1px solid var(--border-light)', display:'flex', gap: 10, alignItems:'center', background: 'white'}}>
-                        <button onClick={() => { const name = prompt("Tên thư mục:"); if(name) fetch(`${MEDIA_API_URL}/create-folder`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folderName:name, currentPath})}).then(()=>fetchFiles(currentPath)); }} className="btn btn-warning btn-sm"> + Thư mục </button>
-                        <label className="btn btn-primary btn-sm" style={{cursor:'pointer', margin:0}}> {uploading ? "Đang tải..." : "Tải lên"} <input type="file" hidden multiple onChange={(e) => onDrop(Array.from(e.target.files))} /> </label>
-                        {clipboard.items.length > 0 && ( <button onClick={handlePaste} className="btn btn-secondary btn-sm" style={{display:'flex', gap:5, alignItems:'center', border: '1px solid var(--primary)', color: 'var(--primary)'}}> Dán ({clipboard.items.length}) </button> )}
-                        <div style={{marginLeft:'auto', fontSize: 13, color:'#666'}}> {selectedPaths.size > 0 ? <span style={{color: 'var(--primary)', fontWeight:'bold'}}>{selectedPaths.size} mục đã chọn</span> : ""} </div>
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-light)', display: 'flex', gap: 10, alignItems: 'center', background: 'white' }}>
+                        <button onClick={() => { const name = prompt("Tên thư mục:"); if (name) fetch(`${MEDIA_API_URL}/create-folder`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderName: name, currentPath }) }).then(() => fetchFiles(currentPath)); }} className="btn btn-warning btn-sm"> + Thư mục </button>
+                        <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', margin: 0 }}> {uploading ? "Đang tải..." : "Tải lên"} <input type="file" hidden multiple onChange={handleFileInputUpload} /> </label>
+                        {clipboard.items.length > 0 && (<button onClick={handlePaste} className="btn btn-secondary btn-sm" style={{ display: 'flex', gap: 5, alignItems: 'center', border: '1px solid var(--primary)', color: 'var(--primary)' }}> Dán ({clipboard.items.length}) </button>)}
+                        <div style={{ marginLeft: 'auto', fontSize: 13, color: '#666' }}> {selectedPaths.size > 0 ? <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedPaths.size} mục đã chọn</span> : ""} </div>
                     </div>
 
                     {/* --- MEDIA GRID --- */}
-                    <div {...getRootProps()} style={{flex: 1, overflowY: 'auto', position:'relative', minHeight: 300, outline: 'none', background: '#f8f9fa'}}>
+                    <div {...getRootProps()} style={{ flex: 1, overflowY: 'auto', position: 'relative', minHeight: 300, outline: 'none', background: '#f8f9fa' }}>
                         <input {...getInputProps()} />
                         <div className="media-grid">
                             {files.map(item => (
                                 <div key={item.path} onClick={(e) => e.stopPropagation()}>
-                                    <MediaItem 
-                                        item={item} 
+                                    <MediaItem
+                                        item={item}
                                         isSelected={selectedPaths.has(item.path)}
                                         onItemClick={handleItemClick}
                                         onNavigate={(n) => setCurrentPath(p => p ? `${p}/${n}` : n)}
@@ -359,10 +384,10 @@ export default function MediaSelector({ onSelect, onClose }) {
 
                     {/* --- GLOBAL DROPDOWN MENU (NO EMOJI) --- */}
                     {activeMenuId && (
-                        <div 
-                            className="dropdown-menu" 
-                            style={{ top: menuPos.top, left: menuPos.left }} 
-                            onPointerDown={(e) => e.stopPropagation()} 
+                        <div
+                            className="dropdown-menu"
+                            style={{ top: menuPos.top, left: menuPos.left }}
+                            onPointerDown={(e) => e.stopPropagation()}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button className="dropdown-item" onClick={() => handleMenuAction('copy')}>Sao chép</button>

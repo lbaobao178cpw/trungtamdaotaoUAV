@@ -1,25 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 // Import icon từ lucide-react
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Users, 
-  Edit, 
-  Trash2, 
-  RefreshCw, 
-  Plus, 
-  Save, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Edit,
+  Trash2,
+  RefreshCw,
+  Plus,
+  Save,
   X,
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
 
-import "../admin/AdminStyles.css"; 
-
-// === CẤU HÌNH SERVER ===
-const API_BASE_URL = "http://localhost:5000";
-const API_EXAM_URL = `${API_BASE_URL}/api/exams`;
+import { useApi, useApiMutation } from "../../hooks/useApi";
+import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import "../admin/Admin/Admin.css";
 
 const initialExamState = {
   id: "",
@@ -33,28 +31,14 @@ const initialExamState = {
 };
 
 export default function ExamManager() {
-  const [exams, setExams] = useState([]);
   const [form, setForm] = useState(initialExamState);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // === FETCH DATA ===
-  const fetchExams = async () => {
-    try {
-      const response = await fetch(API_EXAM_URL);
-      if (!response.ok) throw new Error("Không thể kết nối Server");
-      const data = await response.json();
-      setExams(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Lỗi fetch:", error);
-      setMessage({ type: "error", text: "Lỗi kết nối Server: " + error.message });
-    }
-  };
-
-  useEffect(() => {
-    fetchExams();
-  }, []);
+  // === FETCH DATA WITH CUSTOM HOOK ===
+  const { data: examsData, loading, refetch: refreshExams } = useApi(API_ENDPOINTS.EXAMS);
+  const exams = useMemo(() => Array.isArray(examsData) ? examsData : [], [examsData]);
+  const { mutate: saveExam } = useApiMutation();
 
   // === HANDLERS ===
   const handleAddNew = () => {
@@ -66,7 +50,7 @@ export default function ExamManager() {
   const handleEditClick = (exam) => {
     let formattedDate = "";
     if (exam.exam_date) {
-        formattedDate = new Date(exam.exam_date).toISOString().split('T')[0];
+      formattedDate = new Date(exam.exam_date).toISOString().split('T')[0];
     }
 
     setForm({
@@ -80,49 +64,47 @@ export default function ExamManager() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
       const method = isEditing ? "PUT" : "POST";
-      const url = isEditing ? `${API_EXAM_URL}/${form.id}` : API_EXAM_URL;
+      const url = isEditing ? `${API_ENDPOINTS.EXAMS}/${form.id}` : API_ENDPOINTS.EXAMS;
 
       const payload = {
-          type: form.type,
-          location: form.location,
-          address: form.address,
-          exam_date: form.exam_date,
-          exam_time: form.exam_time,
-          spots_left: parseInt(form.spots_left) || 0,
-          is_active: form.is_active 
+        type: form.type,
+        location: form.location,
+        address: form.address,
+        exam_date: form.exam_date,
+        exam_time: form.exam_time,
+        spots_left: parseInt(form.spots_left) || 0,
+        is_active: form.is_active
       };
 
-      const response = await fetch(url, {
+      await saveExam({
+        url: url,
         method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        data: payload,
       });
 
-      if (!response.ok) throw new Error("Lỗi khi lưu dữ liệu");
-      
       setMessage({
         type: "success",
         text: `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`,
       });
 
       if (!isEditing) handleAddNew();
-      fetchExams();
+      refreshExams();
     } catch (error) {
       setMessage({ type: "error", text: error.message });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa lịch thi này?")) return;
     try {
-      await fetch(`${API_EXAM_URL}/${id}`, { method: "DELETE" });
+      await saveExam({
+        url: `${API_ENDPOINTS.EXAMS}/${id}`,
+        method: "DELETE",
+      });
       setMessage({ type: "success", text: "Đã xóa thành công!" });
-      fetchExams();
+      refreshExams();
       if (form.id === id) handleAddNew();
     } catch (error) {
       setMessage({ type: "error", text: "Lỗi khi xóa" });
@@ -131,9 +113,9 @@ export default function ExamManager() {
 
   const getTypeBadgeColor = (typeString) => {
     if (!typeString) return "#666";
-    if (typeString.includes("Hạng A")) return "#0066cc"; 
-    if (typeString.includes("Hạng B")) return "#d97706"; 
-    return "#22c55e"; 
+    if (typeString.includes("Hạng A")) return "#0066cc";
+    if (typeString.includes("Hạng B")) return "#d97706";
+    return "#22c55e";
   };
 
   return (
@@ -143,7 +125,7 @@ export default function ExamManager() {
         display: "flex",
         gap: "24px",
         marginTop: "20px",
-        flexDirection: "row-reverse", 
+        flexDirection: "row-reverse",
       }}
     >
       {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
@@ -258,9 +240,9 @@ export default function ExamManager() {
             </div>
 
             <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: 20 }}>
-              <button 
-                type="submit" 
-                className="btn btn-primary btn-block" 
+              <button
+                type="submit"
+                className="btn btn-primary btn-block"
                 disabled={loading}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
@@ -278,9 +260,9 @@ export default function ExamManager() {
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Calendar size={18} /> Danh sách Lịch Thi
           </span>
-          <button 
-            className="btn btn-success btn-sm" 
-            onClick={fetchExams}
+          <button
+            className="btn btn-success btn-sm"
+            onClick={refreshExams}
             style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <RefreshCw size={14} /> Làm mới
@@ -314,74 +296,74 @@ export default function ExamManager() {
                 }}
               >
                 <span style={{ fontSize: "18px", fontWeight: "bold" }}>
-                    {exam.exam_date ? new Date(exam.exam_date).getDate() : "--"}
+                  {exam.exam_date ? new Date(exam.exam_date).getDate() : "--"}
                 </span>
                 <span style={{ fontSize: "11px", textTransform: "uppercase" }}>
-                    {exam.exam_date ? new Date(exam.exam_date).toLocaleString('vi-VN', { month: 'short' }) : ""}
+                  {exam.exam_date ? new Date(exam.exam_date).toLocaleString('vi-VN', { month: 'short' }) : ""}
                 </span>
               </div>
 
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <div className="item-title" style={{ fontSize: "15px", fontWeight: "bold" }}>
-                        {exam.location}
-                    </div>
-                    <span 
-                        style={{ 
-                            fontSize: "10px", 
-                            padding: "2px 8px", 
-                            borderRadius: "10px", 
-                            color: "#fff",
-                            backgroundColor: getTypeBadgeColor(exam.type),
-                            height: "fit-content",
-                            whiteSpace: "nowrap",
-                            fontWeight: "600"
-                        }}
-                    >
-                        {exam.type}
-                    </span>
+                  <div className="item-title" style={{ fontSize: "15px", fontWeight: "bold" }}>
+                    {exam.location}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      padding: "2px 8px",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      backgroundColor: getTypeBadgeColor(exam.type),
+                      height: "fit-content",
+                      whiteSpace: "nowrap",
+                      fontWeight: "600"
+                    }}
+                  >
+                    {exam.type}
+                  </span>
                 </div>
-                
-                <div style={{ fontSize: "13px", color: "#555", marginBottom: "6px", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                   <MapPin size={14} style={{ marginTop: '2px', flexShrink: 0 }} /> 
-                   <span>{exam.address}</span>
-                </div>
-                
-                <div style={{ fontSize: "12px", color: "#888", display: "flex", gap: "15px", alignItems: "center", flexWrap: "wrap" }}>
-                   <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <Clock size={14} />
-                      {exam.exam_time}
-                   </div>
-                   
-                   <div style={{ display: "flex", alignItems: "center", gap: "4px", color: exam.spots_left > 0 ? "green" : "red", fontWeight: "500" }}>
-                      <Users size={14} />
-                      {exam.spots_left > 0 ? `Còn ${exam.spots_left} chỗ` : "Hết chỗ"}
-                   </div>
 
-                   {!exam.is_active && (
-                       <span style={{
-                         fontSize: "10px", 
-                         background: "#f3f4f6", 
-                         padding: "2px 6px", 
-                         borderRadius: "4px", 
-                         border: "1px solid #ddd",
-                         color: "#666"
-                       }}>
-                         Đã ẩn
-                       </span>
-                   )}
+                <div style={{ fontSize: "13px", color: "#555", marginBottom: "6px", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                  <MapPin size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <span>{exam.address}</span>
+                </div>
+
+                <div style={{ fontSize: "12px", color: "#888", display: "flex", gap: "15px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <Clock size={14} />
+                    {exam.exam_time}
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", color: exam.spots_left > 0 ? "green" : "red", fontWeight: "500" }}>
+                    <Users size={14} />
+                    {exam.spots_left > 0 ? `Còn ${exam.spots_left} chỗ` : "Hết chỗ"}
+                  </div>
+
+                  {!exam.is_active && (
+                    <span style={{
+                      fontSize: "10px",
+                      background: "#f3f4f6",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ddd",
+                      color: "#666"
+                    }}>
+                      Đã ẩn
+                    </span>
+                  )}
                 </div>
 
                 <div className="item-actions" style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-                  <button 
-                    onClick={() => handleEditClick(exam)} 
+                  <button
+                    onClick={() => handleEditClick(exam)}
                     className="btn btn-primary btn-sm"
                     style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Edit size={14} /> Sửa
                   </button>
-                  <button 
-                    onClick={() => handleDelete(exam.id)} 
+                  <button
+                    onClick={() => handleDelete(exam.id)}
                     className="btn btn-danger btn-sm"
                     style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                   >

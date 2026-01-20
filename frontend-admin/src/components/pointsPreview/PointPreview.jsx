@@ -1,5 +1,5 @@
 import React from 'react';
-import '../admin/AdminStyles.css';
+import '../admin/Admin/Admin.css';
 import './Pointpreview.css';
 
 /**
@@ -11,7 +11,7 @@ export default function PointPreview({ formData }) {
 
   return (
     <div className="point-preview-container">
-      
+
       {/* Header */}
       <div className="preview-header-wrapper">
         <h2 className="preview-title">
@@ -22,9 +22,9 @@ export default function PointPreview({ formData }) {
           Kiểm tra thông tin trước khi lưu
         </p>
       </div>
-      
+
       <div className="preview-card">
-        
+
         {/* Header với Logo và Tiêu đề */}
         <div className="preview-header">
           {formData.logoSrc && (
@@ -46,10 +46,10 @@ export default function PointPreview({ formData }) {
         {/* Ảnh chính */}
         {formData.imageSrc && (
           <div className="preview-image-wrapper">
-            <img 
-              src={formData.imageSrc} 
-              alt="Main" 
-              className="preview-main-image" 
+            <img
+              src={formData.imageSrc}
+              alt="Main"
+              className="preview-main-image"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -74,7 +74,7 @@ export default function PointPreview({ formData }) {
               <span className="preview-title-icon"></span>
               Mô tả chi tiết
             </h4>
-            <div 
+            <div
               className="preview-html-content"
               dangerouslySetInnerHTML={{ __html: formData.description }}
             />
@@ -89,10 +89,10 @@ export default function PointPreview({ formData }) {
                 <span className="preview-label-icon"></span>
                 Website:
               </span>
-              <a 
-                href={formData.website} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={formData.website}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="preview-link"
               >
                 {formData.website}
@@ -149,23 +149,23 @@ export default function PointPreview({ formData }) {
               <span className="preview-title-icon"></span>
               Lịch làm việc
             </h4>
-            
+
             {/* Nếu enableSchedule là false (đã tắt) -> Hiện thông báo ẩn */}
             {formData.enableSchedule === false ? (
-               <div className="preview-hidden-notice">
-                  <span style={{fontSize: '18px'}}>🚫</span> 
-                  <span>Thông tin này đang <strong>BỊ ẨN</strong> với người dùng</span>
-               </div>
+              <div className="preview-hidden-notice">
+                <span style={{ fontSize: '18px' }}>🚫</span>
+                <span>Thông tin này đang <strong>BỊ ẨN</strong> với người dùng</span>
+              </div>
             ) : (
-               /* Nếu enableSchedule là true (hoặc undefined) -> Hiện bảng giờ */
-               <div className="preview-schedule-grid">
-                  {Object.entries(formData.schedule).map(([day, time]) => (
-                    <div key={day} className="preview-schedule-item">
-                      <span className="preview-day">{day}</span>
-                      <span className="preview-time">{time}</span>
-                    </div>
-                  ))}
-               </div>
+              /* Nếu enableSchedule là true (hoặc undefined) -> Hiện bảng giờ */
+              <div className="preview-schedule-grid">
+                {Object.entries(formData.schedule).map(([day, time]) => (
+                  <div key={day} className="preview-schedule-item">
+                    <span className="preview-day">{day}</span>
+                    <span className="preview-time">{time}</span>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}

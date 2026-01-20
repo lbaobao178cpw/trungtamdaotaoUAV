@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Edit2,
@@ -18,20 +18,15 @@ import {
   Loader,
 } from "lucide-react";
 import MediaSelector from "../mediaSelector/MediaSelector";
-import MediaUploader from "../MediaUploader";
 import { uploadImage, uploadVideo } from "../../lib/cloudinaryService";
+import { useApi, useApiMutation } from "../../hooks/useApi";
+import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
 import "./CourseManager.css";
-
-// CẤU HÌNH API
-const API_URL = "http://localhost:5000/api/courses";
-const MEDIA_BASE_URL = "http://localhost:5000";
 
 export default function CourseManager() {
   // --- 1. STATES ---
   const [viewMode, setViewMode] = useState("list");
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courses, setCourses] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Modal States
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
@@ -40,6 +35,8 @@ export default function CourseManager() {
   const [isVideoUploadingOpen, setIsVideoUploadingOpen] = useState(false);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
+  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
 
   // Form States
   const [courseFormData, setCourseFormData] = useState({
@@ -56,8 +53,13 @@ export default function CourseManager() {
   // Editor States
   const [expandedChapters, setExpandedChapters] = useState({});
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
-  const [activeChapterIdForLesson, setActiveChapterIdForLesson] =
-    useState(null);
+  const [activeChapterIdForLesson, setActiveChapterIdForLesson] = useState(null);
+
+  // === FETCH COURSES WITH CUSTOM HOOK ===
+  const { data: coursesData, loading: coursesLoading, refetch: refreshCourses } = useApi(API_ENDPOINTS.COURSES);
+  const courses = useMemo(() => Array.isArray(coursesData) ? coursesData : [], [coursesData]);
+  const { mutate: saveCourse } = useApiMutation();
+  const isLoading = coursesLoading; // Alias for compatibility
 
   const [lessonFormData, setLessonFormData] = useState({
     id: null,
@@ -76,41 +78,9 @@ export default function CourseManager() {
   });
 
   // --- 2. API FUNCTIONS (CORE) ---
+  // Fetch courses using custom hook (defined at top of component)
+  // Data automatically loaded and refetched via useApi hook
 
-  // Load danh sách khóa học
-  const fetchCourses = async () => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem("admin_token"); // Dùng admin_token
-      const res = await fetch(API_URL, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-
-      if (!res.ok)
-        throw new Error("Không thể kết nối server hoặc lỗi xác thực");
-      const data = await res.json();
-
-      const mappedCourses = data.map((c) => ({
-        ...c,
-        thumbnail: c.image,
-        type: c.level === "Cơ bản" ? "A" : c.level === "Nâng cao" ? "B" : "A",
-        chapters: [],
-      }));
-
-      setCourses(mappedCourses);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
 
   // Helper: Lấy URL đầy đủ
   const getFullUrl = (path) => {
@@ -140,6 +110,63 @@ export default function CourseManager() {
     setIsCourseFormOpen(true);
   };
 
+  // Helper: Upload ảnh lên Cloudinary với progress tracking
+  const uploadImageWithProgress = async (file) => {
+    try {
+      setIsThumbnailUploading(true);
+      setThumbnailUploadProgress(0);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "uav-training/images");
+      formData.append("displayName", file.name);
+
+      const token = localStorage.getItem("admin_token");
+
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            setThumbnailUploadProgress(Math.round(percentComplete));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              setThumbnailUploadProgress(100);
+              setTimeout(() => {
+                setIsThumbnailUploading(false);
+                setThumbnailUploadProgress(0);
+              }, 500);
+              resolve(response.url);
+            } else {
+              reject(new Error(response.error || "Upload failed"));
+            }
+          } else {
+            reject(new Error(`HTTP ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload error"));
+        });
+
+        xhr.open("POST", "http://localhost:5000/api/cloudinary/upload");
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.send(formData);
+      });
+    } catch (err) {
+      console.error("Upload error:", err);
+      setIsThumbnailUploading(false);
+      throw err;
+    }
+  };
+
   const handleSaveCourseInfo = async (e) => {
     e.preventDefault();
 
@@ -157,8 +184,7 @@ export default function CourseManager() {
           const file = new File([blob], "course-thumbnail.jpg", {
             type: blob.type,
           });
-          const result = await uploadImage(file);
-          if (result.success) thumbnailUrl = result.url;
+          thumbnailUrl = await uploadImageWithProgress(file);
         } catch (err) {
           console.error("Error uploading thumbnail:", err);
         }
@@ -167,22 +193,16 @@ export default function CourseManager() {
       // Nếu đang sửa, cần lấy chapters cũ để không bị mất
       let currentChapters = [];
       if (courseFormData.id) {
-        const detailRes = await fetch(`${API_URL}/${courseFormData.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const detailData = await detailRes.json();
-        if (detailData.chapters) {
-          // Map lại cấu trúc cũ để gửi lên
-          currentChapters = detailData.chapters.map((c) => ({
+        const courseDetail = courses.find(c => c.id === courseFormData.id);
+        if (courseDetail?.chapters) {
+          currentChapters = courseDetail.chapters.map((c) => ({
             title: c.title,
             lessons: (c.lessons || []).map((l) => ({
               title: l.title,
               type: l.type,
               video_url: l.video_url,
               duration: l.duration,
-              quiz_data:
-                l.quiz_data ||
-                (l.content_data ? JSON.parse(l.content_data) : []),
+              quiz_data: l.quiz_data || (l.content_data ? JSON.parse(l.content_data) : []),
             })),
           }));
         }
@@ -197,26 +217,16 @@ export default function CourseManager() {
         chapters: currentChapters,
       };
 
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
+      const method = courseFormData.id ? "PUT" : "POST";
+      const url = courseFormData.id ? `${API_ENDPOINTS.COURSES}/${courseFormData.id}` : API_ENDPOINTS.COURSES;
 
-      if (courseFormData.id) {
-        await fetch(`${API_URL}/${courseFormData.id}`, {
-          method: "PUT",
-          headers,
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await fetch(API_URL, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-        });
-      }
+      await saveCourse({
+        url: url,
+        method: method,
+        data: payload,
+      });
 
-      await fetchCourses();
+      await refreshCourses();
       setIsCourseFormOpen(false);
       alert("Lưu thông tin thành công!");
     } catch (error) {
@@ -228,12 +238,11 @@ export default function CourseManager() {
   const handleDeleteCourse = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa khóa học này?")) return;
     try {
-      const token = localStorage.getItem("admin_token");
-      await fetch(`${API_URL}/${id}`, {
+      await saveCourse({
+        url: `${API_ENDPOINTS.COURSES}/${id}`,
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
-      await fetchCourses();
+      await refreshCourses();
     } catch (error) {
       alert("Lỗi xóa: " + error.message);
     }
@@ -244,25 +253,8 @@ export default function CourseManager() {
   // Hàm lấy chi tiết khóa học để soạn giáo trình
   const handleOpenCurriculum = async (course) => {
     try {
-      const token = localStorage.getItem("admin_token"); // FIX: Dùng admin_token
-      if (!token) {
-        alert("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn!");
-        return;
-      }
-
-      const res = await fetch(`${API_URL}/${course.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401) throw new Error("Phiên đăng nhập hết hạn.");
-      if (!res.ok) throw new Error("Lỗi tải dữ liệu: " + res.statusText);
-
-      const data = await res.json();
-      const chaptersFromApi = data.chapters || [];
+      // Use the course data from the hook (already loaded)
+      const chaptersFromApi = course.chapters || [];
 
       const formattedChapters = chaptersFromApi.map((chap) => ({
         id: chap.id,
@@ -313,7 +305,7 @@ export default function CourseManager() {
       lessons: chap.lessons.map((l) => ({
         title: l.title,
         type: l.type,
-        video_url: l.content, // Map content -> video_url
+        video_url: l.content,
         duration: l.duration,
         quiz_data: l.questions || [],
       })),
@@ -329,21 +321,13 @@ export default function CourseManager() {
     };
 
     try {
-      const token = localStorage.getItem("admin_token"); // FIX: Dùng admin_token
-      if (!token) return alert("Phiên đăng nhập hết hạn");
-
-      const res = await fetch(`${API_URL}/${selectedCourse.id}`, {
+      await saveCourse({
+        url: `${API_ENDPOINTS.COURSES}/${selectedCourse.id}`,
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+        data: payload,
       });
-
-      if (!res.ok) throw new Error("Lỗi khi lưu giáo trình");
       alert("Đã lưu nội dung giáo trình thành công!");
-      await fetchCourses();
+      await refreshCourses();
     } catch (error) {
       alert("Lỗi lưu giáo trình: " + error.message);
     }
@@ -572,17 +556,16 @@ export default function CourseManager() {
               <div key={course.id} className="cm-course-card">
                 <div className="cm-course-thumbnail">
                   <img
-                    src={getFullUrl(course.thumbnail)}
+                    src={getFullUrl(course.image || course.thumbnail)}
                     alt={course.title}
                     onError={(e) =>
-                      (e.target.src =
-                        "https://placehold.co/600x400?text=No+Image")
+                    (e.target.src =
+                      "https://placehold.co/600x400?text=No+Image")
                     }
                   />
                   <div
-                    className={`cm-course-badge ${
-                      course.type === "A" ? "cm-badge-a" : "cm-badge-b"
-                    }`}
+                    className={`cm-course-badge ${course.type === "A" ? "cm-badge-a" : "cm-badge-b"
+                      }`}
                   >
                     {course.type === "A" ? (
                       <BookOpen size={14} />
@@ -788,9 +771,8 @@ export default function CourseManager() {
                 <div className="cm-type-selector">
                   <button
                     type="button"
-                    className={`cm-type-btn ${
-                      courseFormData.type === "A" ? "active" : ""
-                    }`}
+                    className={`cm-type-btn ${courseFormData.type === "A" ? "active" : ""
+                      }`}
                     onClick={() =>
                       setCourseFormData({ ...courseFormData, type: "A" })
                     }
@@ -802,9 +784,8 @@ export default function CourseManager() {
                   </button>
                   <button
                     type="button"
-                    className={`cm-type-btn ${
-                      courseFormData.type === "B" ? "active" : ""
-                    }`}
+                    className={`cm-type-btn ${courseFormData.type === "B" ? "active" : ""
+                      }`}
                     onClick={() =>
                       setCourseFormData({ ...courseFormData, type: "B" })
                     }
@@ -823,11 +804,40 @@ export default function CourseManager() {
                     type="button"
                     onClick={() => openMediaSelector("thumbnail")}
                     className="cm-btn cm-btn-secondary"
+                    disabled={isThumbnailUploading}
                   >
                     📁 Chọn ảnh
                   </button>
                 </div>
-                {courseFormData.thumbnail && (
+                {isThumbnailUploading && (
+                  <div style={{ marginTop: "15px" }}>
+                    <div style={{
+                      fontSize: "12px",
+                      marginBottom: "8px",
+                      textAlign: "center",
+                      color: "#0066cc",
+                      fontWeight: "600"
+                    }}>
+                      Đang upload... {thumbnailUploadProgress}%
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "6px",
+                      background: "#e2e8f0",
+                      borderRadius: "3px",
+                      overflow: "hidden"
+                    }}>
+                      <div style={{
+                        width: `${thumbnailUploadProgress}%`,
+                        height: "100%",
+                        background: "linear-gradient(90deg, #0066cc, #0052a3)",
+                        transition: "width 0.3s ease",
+                        borderRadius: "3px"
+                      }} />
+                    </div>
+                  </div>
+                )}
+                {courseFormData.thumbnail && !isThumbnailUploading && (
                   <div style={{ marginTop: "15px", textAlign: "center" }}>
                     <img
                       src={courseFormData.thumbnail}
@@ -855,9 +865,8 @@ export default function CourseManager() {
       {isLessonModalOpen && (
         <div className="cm-modal-overlay">
           <div
-            className={`cm-modal ${
-              lessonFormData.type === "quiz" ? "cm-modal-large" : ""
-            }`}
+            className={`cm-modal ${lessonFormData.type === "quiz" ? "cm-modal-large" : ""
+              }`}
           >
             <div className="cm-modal-header">
               <h2>{lessonFormData.id ? "Sửa bài học" : "Thêm bài học"}</h2>

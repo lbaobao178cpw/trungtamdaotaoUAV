@@ -4,13 +4,18 @@ const cloudinary = require('cloudinary').v2;
 const { verifyToken } = require('../middleware/verifyToken');
 const multer = require('multer');
 const fs = require('fs');
+const fsExtra = require('fs-extra');
 const path = require('path');
+
+// Import local upload helpers
+const { resolvePath, getFileType, generateThumbnail } = require('../utils/fileHelpers');
 
 // Config Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  timeout: 60000, // 60 seconds timeout
 });
 
 // Setup multer for temporary file storage
@@ -100,37 +105,81 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
       throw new Error('File buffer is empty - cannot upload');
     }
 
-    // Upload to Cloudinary from buffer
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: resourceType,
-          folder: folder,
-          public_id: `${Date.now()}-${sanitized}`,
-        },
-        (error, result) => {
-          if (error) {
-            console.error("❌ Cloudinary error:", error);
-            reject(error);
-          }
-          else {
-            console.log("✅ Upload success:", result.public_id);
-            resolve(result);
-          }
-        }
-      );
+    // Upload to Cloudinary from buffer with timeout
+    let uploadResult = null;
+    let uploadError = null;
 
-      console.log("📝 Writing buffer to upload stream, size:", req.file.buffer.length);
-      uploadStream.end(req.file.buffer);
-    });
+    try {
+      uploadResult = await new Promise((resolve, reject) => {
+        // Set timeout để tránh hang kết nối
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Upload timeout - server took too long to upload to Cloudinary'));
+        }, 60000); // 60 giây timeout
+
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: resourceType,
+            folder: folder,
+            public_id: `${Date.now()}-${sanitized}`,
+            timeout: 60000, // Add timeout to upload stream
+          },
+          (error, result) => {
+            clearTimeout(timeoutId);
+            if (error) {
+              console.error("❌ Cloudinary error:", error);
+              reject(error);
+            }
+            else {
+              console.log("✅ Upload success:", result.public_id);
+              resolve(result);
+            }
+          }
+        );
+
+        console.log("📝 Writing buffer to upload stream, size:", req.file.buffer.length);
+        uploadStream.end(req.file.buffer);
+      });
+    } catch (err) {
+      console.warn("⚠️ Cloudinary failed, falling back to local storage:", err.message);
+      uploadError = err;
+
+      // Fallback: Save to local storage
+      try {
+        const uploadFolder = 'course-uploads'; // Local folder
+        const { fullPath } = resolvePath(uploadFolder);
+        const filename = `${Date.now()}-${sanitized}${fileExt}`;
+        const filePath = path.join(fullPath, filename);
+
+        // Ensure directory exists
+        await fsExtra.ensureDir(fullPath);
+
+        // Write file
+        await fsExtra.writeFile(filePath, req.file.buffer);
+
+        const port = req.socket.localPort || process.env.PORT || 5000;
+        const relPath = `${uploadFolder}/${filename}`;
+
+        console.log("💾 Saved to local storage:", relPath);
+
+        uploadResult = {
+          secure_url: `http://localhost:${port}/uploads/${relPath}`,
+          public_id: `local-${sanitized}`,
+          resource_type: resourceType,
+          display_name: displayName
+        };
+      } catch (localErr) {
+        console.error("❌ Local fallback also failed:", localErr);
+        throw new Error(`Both Cloudinary and local upload failed: ${uploadError.message}`);
+      }
+    }
 
     res.json({
       success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      resourceType: result.resource_type,
-      originalFilename: displayName, // Return corrected display name
-      displayName: displayName // Use corrected display name
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      resourceType: uploadResult.resource_type,
+      originalFilename: displayName,
+      displayName: displayName
     });
   } catch (err) {
     console.error('Upload error:', err);
