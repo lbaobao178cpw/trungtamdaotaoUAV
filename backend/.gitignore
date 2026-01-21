@@ -10,6 +10,7 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 package-lock.json
+pacekage.json
 yarn.lock
 pnpm-lock.yaml
 

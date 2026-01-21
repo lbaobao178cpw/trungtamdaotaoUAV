@@ -9,6 +9,7 @@ import CourseManager from "../../course/CourseManager";
 import ExamManager from "../../exam/ExamManager";
 import UserManager from "../../UserManager/UserManager";
 import DisplaySettingsManager from "../../DisplaySettings/DisplaySettingsManager/DisplaySettingsManager";
+import LookupManager from "../../lookup/LookupManager";
 
 import "./Admin.css";
 
@@ -129,6 +130,13 @@ export default function Admin() {
           >
             Giao diện & Thông báo
           </button>
+
+          <button
+            className={`nav-item ${activeTab === "lookup" ? "active" : ""}`}
+            onClick={() => setActiveTab("lookup")}
+          >
+            Quản lý Giấy phép
+          </button>
         </nav>
       </header>
 
@@ -153,6 +161,8 @@ export default function Admin() {
             <DisplaySettingsManager />
           </div>
         )}
+
+        {activeTab === "lookup" && <LookupManager />}
       </div>
     </div>
   );
