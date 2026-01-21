@@ -1,4 +1,5 @@
 # .gitignore - Updated
+.env.cloudinary
 node_modules
 .env
 dist
