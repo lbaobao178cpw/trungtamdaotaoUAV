@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Users, Edit, Trash2, RefreshCw, Plus, Save, X, CheckCircle2, AlertCircle,
-  Mail, Phone, Shield, UserCircle, MapPin, Calendar, CreditCard, Award
+  Mail, Phone, Shield, UserCircle, MapPin, Calendar, CreditCard, Award, Search
 } from "lucide-react";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
@@ -17,13 +17,27 @@ export default function UserManager() {
   const [form, setForm] = useState(initialUserState);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // State để mở rộng xem chi tiết
   const [expandedUserId, setExpandedUserId] = useState(null);
 
   // === FETCH USERS WITH CUSTOM HOOK ===
   const { data: usersData, loading, refetch: refreshUsers } = useApi(API_ENDPOINTS.USERS);
-  const users = useMemo(() => Array.isArray(usersData) ? usersData : [], [usersData]);
+  const allUsers = useMemo(() => Array.isArray(usersData) ? usersData : [], [usersData]);
+
+  const users = useMemo(() => {
+    return allUsers.filter(user => {
+      const search = searchTerm.toLowerCase();
+      return (
+        user.full_name?.toLowerCase().includes(search) ||
+        user.email?.toLowerCase().includes(search) ||
+        user.phone?.toLowerCase().includes(search) ||
+        String(user.id).includes(search)
+      );
+    });
+  }, [allUsers, searchTerm]);
+
   const { mutate: saveUser } = useApiMutation();
 
   const handleAddNew = useCallback(() => {
@@ -137,68 +151,94 @@ export default function UserManager() {
           <button className="btn btn-success btn-sm" onClick={refreshUsers}><RefreshCw size={14} /> Làm mới</button>
         </div>
 
+        <div style={{ padding: "12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", gap: "12px", alignItems: "center" }}>
+          <Search size={18} color="#999" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên, email, SĐT, ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              flex: 1,
+              border: "1px solid #ddd",
+              borderRadius: "6px",
+              padding: "8px 12px",
+              fontSize: "14px",
+              outline: "none"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#0066cc"}
+            onBlur={(e) => e.target.style.borderColor = "#ddd"}
+          />
+        </div>
+
         <div className="list-group">
-          {users.map((user) => (
-            <div key={user.id} className="list-item" style={{ flexDirection: 'column', alignItems: 'stretch', padding: "15px" }}>
+          {users.map((user) => {
+            const initials = user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+            return (
+              <div key={user.id} className="list-item" style={{ flexDirection: 'column', alignItems: 'stretch', padding: "15px" }}>
 
-              {/* Header của User Card */}
-              <div style={{ display: "flex", alignItems: "flex-start" }}>
-                <div style={{ width: "45px", height: "45px", borderRadius: "50%", background: "#f0f7ff", border: "1px solid #cce3ff", color: "#0066cc", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "15px", flexShrink: 0 }}>
-                  <UserCircle size={28} />
-                </div>
+                {/* Header của User Card */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                  <div style={{ minWidth: "50px", display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                    <div style={{ width: "50px", height: "50px", borderRadius: "50%", background: "#0066cc", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "18px", flexShrink: 0, border: "2px solid #cce3ff" }}>
+                      {initials}
+                    </div>
+                    <span style={{ fontSize: "10px", color: "#999", fontWeight: "600", background: "#f0f0f0", padding: "2px 6px", borderRadius: "4px", whiteSpace: "nowrap" }}>ID: {user.id}</span>
+                  </div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <div className="item-title" style={{ fontSize: "15px", fontWeight: "bold" }}>{user.full_name}</div>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                      <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: getRoleBadgeColor(user.role), fontWeight: "600", textTransform: "capitalize" }}>
-                        {user.role}
-                      </span>
-                      {user.target_tier && (
-                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: "#f59e0b", fontWeight: "600" }}>
-                          Hạng {user.target_tier}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <div className="item-title" style={{ fontSize: "15px", fontWeight: "bold" }}>{user.full_name}</div>
+                      <div style={{ display: 'flex', gap: '5px' }}>
+                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: getRoleBadgeColor(user.role), fontWeight: "600", textTransform: "capitalize" }}>
+                          {user.role}
                         </span>
-                      )}
+                        {user.target_tier && (
+                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: "#f59e0b", fontWeight: "600" }}>
+                            Hạng {user.target_tier}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "15px", fontSize: "13px", color: "#555", flexWrap: "wrap" }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {user.email || "--"}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> {user.phone}</div>
                     </div>
                   </div>
+                </div>
 
-                  <div style={{ display: "flex", gap: "15px", fontSize: "13px", color: "#555", flexWrap: "wrap" }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {user.email || "--"}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> {user.phone}</div>
+                {/* Nút mở rộng chi tiết */}
+                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button onClick={() => toggleExpand(user.id)} style={{ background: 'none', border: 'none', color: '#0066cc', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
+                    {expandedUserId === user.id ? "Thu gọn ▲" : "Xem chi tiết ▼"}
+                  </button>
+
+                  <div className="item-actions" style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => handleEditClick(user)} className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: '12px' }}><Edit size={12} /> Sửa</button>
+                    <button onClick={() => handleDelete(user.id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', fontSize: '12px' }}><Trash2 size={12} /> Xóa</button>
                   </div>
                 </div>
+
+                {/* Phần chi tiết (chỉ hiện khi expand) */}
+                {expandedUserId === user.id && (
+                  <div style={{ marginTop: '10px', background: '#f9fafb', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><CreditCard size={14} color="#666" /> <strong>CCCD:</strong> {user.identity_number || "Chưa cập nhật"}</div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Calendar size={14} color="#666" /> <strong>Ngày sinh:</strong> {user.birth_date ? new Date(user.birth_date).toLocaleDateString('vi-VN') : "--"}</div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><UserCircle size={14} color="#666" /> <strong>Giới tính:</strong> {user.gender || '--'}</div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Award size={14} color="#666" /> <strong>Hạng thi:</strong> {user.target_tier || "Chưa đăng ký"}</div>
+                    </div>
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                      <MapPin size={14} color="#666" style={{ marginTop: '2px' }} />
+                      <span><strong>Địa chỉ:</strong> {user.address || "Chưa cập nhật"}</span>
+                    </div>
+                  </div>
+                )}
+
               </div>
-
-              {/* Nút mở rộng chi tiết */}
-              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button onClick={() => toggleExpand(user.id)} style={{ background: 'none', border: 'none', color: '#0066cc', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
-                  {expandedUserId === user.id ? "Thu gọn ▲" : "Xem chi tiết ▼"}
-                </button>
-
-                <div className="item-actions" style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => handleEditClick(user)} className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: '12px' }}><Edit size={12} /> Sửa</button>
-                  <button onClick={() => handleDelete(user.id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', fontSize: '12px' }}><Trash2 size={12} /> Xóa</button>
-                </div>
-              </div>
-
-              {/* Phần chi tiết (chỉ hiện khi expand) */}
-              {expandedUserId === user.id && (
-                <div style={{ marginTop: '10px', background: '#f9fafb', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><CreditCard size={14} color="#666" /> <strong>CCCD:</strong> {user.identity_number || "Chưa cập nhật"}</div>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Calendar size={14} color="#666" /> <strong>Ngày sinh:</strong> {user.birth_date ? new Date(user.birth_date).toLocaleDateString('vi-VN') : "--"}</div>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><UserCircle size={14} color="#666" /> <strong>Giới tính:</strong> {user.gender || '--'}</div>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Award size={14} color="#666" /> <strong>Hạng thi:</strong> {user.target_tier || "Chưa đăng ký"}</div>
-                  </div>
-                  <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
-                    <MapPin size={14} color="#666" style={{ marginTop: '2px' }} />
-                    <span><strong>Địa chỉ:</strong> {user.address || "Chưa cập nhật"}</span>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
