@@ -13,8 +13,8 @@ const Scene = memo(({ onPointClick, points }) => {
         <Canvas
             shadows
             // [THEME] Đổi màu nền Canvas sang xám đen
-            style={{ background: '#222222' }} 
-            camera={{ 
+            style={{ background: '#222222' }}
+            camera={{
                 position: [1, 1, 1],
                 fov: 30
             }}
@@ -52,9 +52,9 @@ export default function MapPage() {
     // --- LOGIC MỚI: XỬ LÝ DATA CHO UI ---
     const pointsDataForUI = useMemo(() => {
         return pointsData.map(point => {
-            const isScheduleDisabled = 
-                point.enableSchedule === false || 
-                point.enableSchedule === 0 || 
+            const isScheduleDisabled =
+                point.enableSchedule === false ||
+                point.enableSchedule === 0 ||
                 point.enableSchedule === "false";
 
             if (isScheduleDisabled) {
@@ -96,7 +96,7 @@ export default function MapPage() {
                 {/* Lớp 2D */}
                 <div style={styles.layer2D}>
                     <UI
-                        points={pointsDataForUI} 
+                        points={pointsDataForUI}
                         selectedId={selectedPointId}
                         onClose={handleClosePanel}
                         onPointClick={handlePointClick}
@@ -117,7 +117,7 @@ const styles = {
         alignItems: 'center',
         padding: '10px 20px',
         // [THEME] Đổi sang style Neon: Nền tối, Viền vàng, Chữ vàng
-        backgroundColor: '#e1e1e1', 
+        backgroundColor: '#e1e1e1',
         color: '#0050b8',
         border: '1px solid #0050b8',
         borderRadius: '30px', // Bo tròn nhiều hơn cho hiện đại

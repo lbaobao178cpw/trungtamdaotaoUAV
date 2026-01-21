@@ -8,7 +8,7 @@
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition:  0.25s ease;
+    transition: 0.25s ease;
 }
 
 .user-icon:hover {
@@ -60,39 +60,40 @@
     background: #fbeaea;
     color: #dc3545;
 }
+
 .nav-menu {
-  display: flex;
-  gap: 24px;
+    display: flex;
+    gap: 24px;
 }
 
 .nav-link {
-  position: relative;
-  text-decoration: none;
-  font-weight: 500;
-  color: #333;
-  padding: 6px 0;
-  transition: color 0.2s ease;
+    position: relative;
+    text-decoration: none;
+    font-weight: 500;
+    color: #333;
+    padding: 6px 0;
+    transition: color 0.2s ease;
 }
 
 /* Hover */
 .nav-link:hover {
-  color: #0050b8;
+    color: #0050b8;
 }
 
 /* ACTIVE */
 .nav-link.active {
-  color: #0050b8;
-  font-weight: 600;
+    color: #0050b8;
+    font-weight: 600;
 }
 
 /* Gạch dưới active (xịn hơn hover) */
 .nav-link.active::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #0050b8;
-  border-radius: 2px;
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #0050b8;
+    border-radius: 2px;
 }
