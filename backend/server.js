@@ -63,6 +63,8 @@ const cloudinaryRoute = require("./api/cloudinary");
 const locationRoutes = require("./api/location");
 const studyMaterialsRoute = require("./api/studyMaterials");
 const faqsRoute = require("./api/faqs");
+const licensesRoute = require("./api/licenses");
+const otpRoute = require("./api/otp");
 
 app.use("/api/users", usersRouter);
 app.use("/api", filesRoute);
@@ -79,6 +81,8 @@ app.use("/api/cloudinary", cloudinaryRoute);
 app.use("/api/location", locationRoutes);
 app.use("/api/study-materials", studyMaterialsRoute);
 app.use("/api/faqs", faqsRoute);
+app.use("/api/licenses", licensesRoute);
+app.use("/api/otp", otpRoute);
 
 // --- KHỞI ĐỘNG SERVER & KIỂM TRA DB ---
 const startServer = async () => {

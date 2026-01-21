@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './LookupPage.css';
-import { Search, FileText, CreditCard, Smartphone, Camera, CheckCircle, XCircle, Lock } from 'lucide-react';
+import { Search, FileText, CreditCard, Smartphone, Camera, CheckCircle, XCircle, Lock, RefreshCw } from 'lucide-react';
 import jsQR from 'jsqr';
+
+// API Base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function LookupPage() {
     const [activeTab, setActiveTab] = useState('so-giay-phep');
@@ -18,6 +21,18 @@ function LookupPage() {
     const [otp, setOtp] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showResults, setShowResults] = useState(false);
+    
+    // States cho API
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [resultData, setResultData] = useState(null);
+    
+    // States cho OTP
+    const [maskedEmail, setMaskedEmail] = useState('');
+    const [otpSending, setOtpSending] = useState(false);
+    const [otpVerifying, setOtpVerifying] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+    const [otpError, setOtpError] = useState('');
 
     useEffect(() => {
         window.scrollTo({
@@ -25,6 +40,15 @@ function LookupPage() {
             behavior: 'smooth'
         });
     }, []);
+
+    // Countdown timer cho OTP
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [countdown]);
+
     const [cameraActive, setCameraActive] = useState(false);
     const [mediaStream, setMediaStream] = useState(null);
     const [qrResult, setQrResult] = useState(null);
@@ -136,9 +160,98 @@ function LookupPage() {
             return;
         }
 
+        // Kiểm tra ngày sinh cho CCCD
+        if (activeTab === 'cccd' && !formData.birthDate) {
+            alert('Vui lòng nhập ngày sinh');
+            return;
+        }
+
         setSearchQuery(searchValue);
-        setShowOtpScreen(true);
         setOtp('');
+        setOtpError('');
+        
+        // Gửi OTP
+        sendOtp(searchValue);
+    };
+
+    // Hàm gửi OTP
+    const sendOtp = async (searchValue) => {
+        setOtpSending(true);
+        setOtpError('');
+
+        try {
+            const searchType = activeTab === 'so-giay-phep' ? 'license' 
+                : activeTab === 'cccd' ? 'cccd' 
+                : 'device';
+
+            const response = await fetch(`${API_BASE_URL}/otp/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    searchType,
+                    searchValue,
+                    birthDate: formData.birthDate || null
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Không thể gửi OTP');
+            }
+
+            setMaskedEmail(data.maskedEmail);
+            setShowOtpScreen(true);
+            setCountdown(60); // 60 giây trước khi cho phép gửi lại
+
+        } catch (err) {
+            console.error('Send OTP error:', err);
+            setOtpError(err.message);
+            alert(err.message || 'Không thể gửi OTP. Vui lòng thử lại.');
+        } finally {
+            setOtpSending(false);
+        }
+    };
+
+    // Hàm gửi lại OTP
+    const resendOtp = async () => {
+        if (countdown > 0) return;
+        
+        setOtpSending(true);
+        setOtpError('');
+
+        try {
+            const searchType = activeTab === 'so-giay-phep' ? 'license' 
+                : activeTab === 'cccd' ? 'cccd' 
+                : 'device';
+
+            const response = await fetch(`${API_BASE_URL}/otp/resend`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    searchType,
+                    searchValue: searchQuery,
+                    birthDate: formData.birthDate || null
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Không thể gửi lại OTP');
+            }
+
+            setMaskedEmail(data.maskedEmail);
+            setCountdown(60);
+            setOtp('');
+            setOtpError('');
+
+        } catch (err) {
+            console.error('Resend OTP error:', err);
+            setOtpError(err.message);
+        } finally {
+            setOtpSending(false);
+        }
     };
 
     const activateCamera = async () => {
@@ -189,20 +302,88 @@ function LookupPage() {
     };
 
     // Xử lý xác thực OTP
-    const handleOtpSubmit = () => {
+    const handleOtpSubmit = async () => {
         if (otp.length !== 6) {
-            alert('Vui lòng nhập đủ 6 chữ số OTP');
+            setOtpError('Vui lòng nhập đủ 6 chữ số OTP');
             return;
         }
 
-        // Kiểm tra nếu nhập "top" (hoặc 000000 + top) thì show kết quả
-        if (searchQuery.toLowerCase().includes('top') || otp === '000000') {
+        setOtpVerifying(true);
+        setOtpError('');
+
+        try {
+            // Xác thực OTP trước
+            const searchType = activeTab === 'so-giay-phep' ? 'license' 
+                : activeTab === 'cccd' ? 'cccd' 
+                : 'device';
+
+            const verifyResponse = await fetch(`${API_BASE_URL}/otp/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    searchType,
+                    searchValue: searchQuery,
+                    otp
+                })
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok) {
+                throw new Error(verifyData.error || 'Mã OTP không đúng');
+            }
+
+            // OTP đúng - tiến hành tra cứu
+            setLoading(true);
+            
+            let response;
+            
+            if (activeTab === 'so-giay-phep') {
+                // Tra cứu theo số giấy phép
+                response = await fetch(`${API_BASE_URL}/licenses/lookup/license/${searchQuery}`);
+            } else if (activeTab === 'cccd') {
+                // Tra cứu theo CCCD
+                response = await fetch(`${API_BASE_URL}/licenses/lookup/cccd/${searchQuery}?birthDate=${formData.birthDate}`);
+            } else if (activeTab === 'ma-thiet-bi') {
+                // Tra cứu theo serial drone
+                response = await fetch(`${API_BASE_URL}/licenses/lookup/device/${searchQuery}`);
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Không tìm thấy thông tin');
+            }
+
+            // Format dữ liệu từ API
+            const formattedResult = {
+                licenseNumber: data.license?.license_number || 'N/A',
+                category: data.license?.license_tier || 'N/A',
+                name: data.license?.full_name || 'N/A',
+                idNumber: data.license?.identity_number || 'N/A',
+                issueDate: data.license?.issue_date ? new Date(data.license.issue_date).toLocaleDateString('vi-VN') : 'N/A',
+                expireDate: data.license?.expiry_date ? new Date(data.license.expiry_date).toLocaleDateString('vi-VN') : 'N/A',
+                status: data.license?.license_status || 'N/A',
+                avatar: data.license?.portrait_image || '/images/icons/avatar.jpg',
+                drones: data.devices?.map(device => ({
+                    model: device.model_name || 'N/A',
+                    serial: device.serial_number || 'N/A',
+                    weight: device.weight || 'N/A',
+                    status: device.device_status || 'N/A'
+                })) || []
+            };
+
+            setResultData(formattedResult);
             setShowResults(true);
-        } else {
-            // Nếu nhập khác thì cũng show kết quả (giả lập)
-            setShowResults(true);
+            setShowOtpScreen(false);
+
+        } catch (err) {
+            console.error('Lookup error:', err);
+            setOtpError(err.message || 'Có lỗi xảy ra');
+        } finally {
+            setLoading(false);
+            setOtpVerifying(false);
         }
-        setShowOtpScreen(false);
     };
 
     const handleBackToSearch = () => {
@@ -210,6 +391,9 @@ function LookupPage() {
         setShowResults(false);
         setOtp('');
         setSearchQuery('');
+        setOtpError('');
+        setMaskedEmail('');
+        setCountdown(0);
         setFormData({
             licenseNumber: '',
             cccdNumber: '',
@@ -223,6 +407,8 @@ function LookupPage() {
         setShowResults(false);
         setOtp('');
         setSearchQuery('');
+        setResultData(null);
+        setError('');
         setFormData({
             licenseNumber: '',
             cccdNumber: '',
@@ -232,30 +418,12 @@ function LookupPage() {
         });
     };
 
-    // Dữ liệu tĩnh cho kết quả tra cứu
-    const resultData = {
-        licenseNumber: 'DC-2023-0012548',
-        category: 'Hạng B',
-        name: 'Nguyễn Văn A',
-        idNumber: '012345678901',
-        issueDate: '15/06/2023',
-        expireDate: '15/06/2028',
-        status: 'Dang hoạt động',
-        avatar: '/images/icons/avatar.jpg',
-        drones: [
-            {
-                model: 'DJI Mavic 3',
-                serial: 'MAV39428472',
-                weight: '895g',
-                status: 'Đã đăng ký'
-            },
-            {
-                model: 'DJI Mini 2',
-                serial: 'MIN87654321',
-                weight: '249g',
-                status: 'Đã đăng ký'
-            }
-        ]
+    // Xử lý kết quả QR
+    const handleQrResult = async () => {
+        if (qrResult && qrResult.success) {
+            setSearchQuery(qrResult.data);
+            setShowOtpScreen(true);
+        }
     };
 
 
@@ -496,9 +664,22 @@ function LookupPage() {
 
                                 {/* Submit Button */}
                                 {activeTab !== 'qr' && (
-                                    <button type="submit" className="btn btn-primary btn-search">
-                                        <Search size={20} />
-                                        Tra cứu
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary btn-search"
+                                        disabled={otpSending}
+                                    >
+                                        {otpSending ? (
+                                            <>
+                                                <RefreshCw size={20} className="spin" />
+                                                Đang gửi OTP...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Search size={20} />
+                                                Tra cứu
+                                            </>
+                                        )}
                                     </button>
                                 )}
                             </form>
@@ -507,11 +688,15 @@ function LookupPage() {
                         // OTP Screen
                         <div className="search-card">
                             <h2 className="search-title">Xác thực OTP</h2>
-                            <p className="search-subtitle">Nhập thông tin để tra cứu giấy phép/bằng lái drone</p>
+                            <p className="search-subtitle">Nhập mã OTP để tra cứu giấy phép/bằng lái drone</p>
 
                             <div className="otp-info-box">
                                 <Lock size={20} />
-                                <p>Để bảo về thông tin cá nhân, vui lòng nhập mã OTP được gửi đến số điện thoại liên kết với giấy phép/CCCD</p>
+                                <p>
+                                    Mã OTP đã được gửi đến email: <strong>{maskedEmail}</strong>
+                                    <br />
+                                    Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam)
+                                </p>
                             </div>
 
                             <div className="otp-form">
@@ -521,34 +706,59 @@ function LookupPage() {
                                     maxLength="6"
                                     placeholder="Nhập mã OTP 6 chữ số"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                    className="otp-input"
+                                    onChange={(e) => {
+                                        setOtp(e.target.value.replace(/\D/g, ''));
+                                        setOtpError('');
+                                    }}
+                                    className={`otp-input ${otpError ? 'error' : ''}`}
+                                    disabled={otpVerifying || loading}
                                 />
-                                <p className="otp-timer">Mã xác thực sẽ hết hạn sau 5 phút</p>
+                                {otpError && <p className="otp-error">{otpError}</p>}
+                                <div className="otp-timer-row">
+                                    <p className="otp-timer">Mã xác thực sẽ hết hạn sau 5 phút</p>
+                                    <button 
+                                        type="button"
+                                        className={`otp-resend-btn ${countdown > 0 ? 'disabled' : ''}`}
+                                        onClick={resendOtp}
+                                        disabled={countdown > 0 || otpSending}
+                                    >
+                                        {otpSending ? (
+                                            <><RefreshCw size={14} className="spin" /> Đang gửi...</>
+                                        ) : countdown > 0 ? (
+                                            `Gửi lại sau ${countdown}s`
+                                        ) : (
+                                            <><RefreshCw size={14} /> Gửi lại OTP</>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="form-buttons">
                                 <button
                                     className="btn btn-secondary"
                                     onClick={handleBackToSearch}
+                                    disabled={otpVerifying || loading}
                                 >
                                     Quay lại
                                 </button>
                                 <button
                                     className="btn btn-primary"
                                     onClick={handleOtpSubmit}
+                                    disabled={otpVerifying || loading || otp.length !== 6}
                                 >
-                                    Xác thực
+                                    {otpVerifying || loading ? 'Đang xử lý...' : 'Xác thực'}
                                 </button>
                             </div>
                         </div>
-                    ) : (
+                    ) : resultData ? (
                         <div className="search-card">
 
                             <div className="results-card-inline">
                                 <div className="results-header">
                                     <h3>Kết quả tra cứu</h3>
-                                    <span className="status-badge status-active">Dang hoạt động</span>
+                                    <span className={`status-badge ${resultData.status === 'Đang hoạt động' ? 'status-active' : 'status-inactive'}`}>
+                                        {resultData.status}
+                                    </span>
                                 </div>
 
                                 <div className="results-content">
@@ -636,6 +846,15 @@ function LookupPage() {
                                         Xuất kết quả tra cứu →
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="search-card">
+                            <div className="no-results">
+                                <p>Không có dữ liệu để hiển thị</p>
+                                <button className="btn btn-primary" onClick={handleNewSearch}>
+                                    Tra cứu mới
+                                </button>
                             </div>
                         </div>
                     )}
