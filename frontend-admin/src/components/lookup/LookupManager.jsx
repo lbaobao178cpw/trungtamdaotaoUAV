@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
     Plus,
     Edit,
@@ -11,6 +11,8 @@ import {
     FileCheck,
     FileText,
     Calendar,
+    Search,
+    ChevronDown,
 } from "lucide-react";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
@@ -33,7 +35,9 @@ export default function LookupManager() {
     const [form, setForm] = useState(initialLicenseState);
     const [isEditing, setIsEditing] = useState(false);
     const [message, setMessage] = useState(null);
-    const [manualUserEntry, setManualUserEntry] = useState(false);
+    const [userSearchInput, setUserSearchInput] = useState("");
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
+    const userSearchRef = useRef(null);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
     const { data: licensesData, loading, refetch: refreshLicenses } = useApi(
@@ -47,19 +51,68 @@ export default function LookupManager() {
     );
     const { mutate: saveLicense } = useApiMutation();
 
+    // === FILTER USERS BY SEARCH ===
+    const filteredUsers = useMemo(() => {
+        if (!userSearchInput.trim()) return users;
+        const search = userSearchInput.toLowerCase();
+        return users.filter(u =>
+            String(u.id).includes(search) ||
+            (u.full_name || '').toLowerCase().includes(search) ||
+            (u.identity_number || '').toLowerCase().includes(search) ||
+            (u.email || '').toLowerCase().includes(search) ||
+            (u.phone || '').toLowerCase().includes(search)
+        );
+    }, [users, userSearchInput]);
+
+    // === FIND EXISTING LICENSE FOR USER ===
+    const getUserLicense = (userId) => {
+        if (!userId) return null;
+        return licenses.find(l => l.userId === userId);
+    };
+
+    // === CLOSE DROPDOWN ON OUTSIDE CLICK ===
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (userSearchRef.current && !userSearchRef.current.contains(e.target)) {
+                setShowUserDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // === SELECT USER HANDLER ===
+    const handleSelectUser = (user) => {
+        const existingLicense = getUserLicense(user.id);
+        setForm({
+            ...form,
+            userId: Number(user.id),
+            name: user.full_name || '',
+            idNumber: user.identity_number || '',
+            category: user.target_tier ? (user.target_tier.length === 1 ? `Hạng ${user.target_tier}` : user.target_tier) : 'Hạng A',
+            licenseNumber: existingLicense?.licenseNumber || form.licenseNumber,
+        });
+        setUserSearchInput(user.full_name || String(user.id));
+        setShowUserDropdown(false);
+    };
 
     // === HANDLERS ===
     const handleAddNew = () => {
         setForm(initialLicenseState);
+        setUserSearchInput("");
+        setShowUserDropdown(false);
         setIsEditing(false);
         setMessage(null);
     };
 
     const handleEditClick = (license) => {
+        const selectedUser = users.find(u => u.id === license.userId);
         setForm({
             ...license,
             status: license.status || "active",
         });
+        setUserSearchInput(selectedUser?.full_name || String(license.userId) || "");
+        setShowUserDropdown(false);
         setIsEditing(true);
         setMessage(null);
     };
@@ -155,12 +208,12 @@ export default function LookupManager() {
         return "#f59e0b";
     };
 
-        const getCategoryColor = (category) => {
-            const c = String(category || '').replace(/Hạng\s*/i, '').trim();
-            if (c === 'A') return "#0066cc";
-            if (c === 'B') return "#d97706";
-            return "#0066cc";
-        };
+    const getCategoryColor = (category) => {
+        const c = String(category || '').replace(/Hạng\s*/i, '').trim();
+        if (c === 'A') return "#0066cc";
+        if (c === 'B') return "#d97706";
+        return "#0066cc";
+    };
 
     // Normalize tier value to single letter 'A'|'B'|'C' for display/storage
     const mapTier = (tier) => {
@@ -242,64 +295,135 @@ export default function LookupManager() {
                     )}
 
                     <form onSubmit={handleSave}>
-                                <div className="form-group">
-                                    <label className="form-label">Người dùng (ID)</label>
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                        {manualUserEntry ? (
-                                            <>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    placeholder="Nhập ID người dùng (hoặc để trống)"
-                                                    value={form.userId || ''}
-                                                    onChange={(e) => setForm({ ...form, userId: e.target.value ? Number(e.target.value) : null })}
-                                                    onBlur={(e) => {
-                                                        const uid = e.target.value;
-                                                        if (!uid) return;
-                                                        const selected = users.find(u => String(u.id) === String(uid));
-                                                        if (selected) {
-                                                            setForm(f => ({
-                                                                ...f,
-                                                                userId: Number(selected.id),
-                                                                name: selected.full_name || f.name,
-                                                                idNumber: selected.identity_number || f.idNumber,
-                                                                category: mapTier(selected.target_tier) || f.category,
-                                                            }));
-                                                        }
-                                                    }}
-                                                />
-                                                <button type="button" className="btn btn-sm btn-secondary" onClick={() => setManualUserEntry(false)}>Chọn từ danh sách</button>
-                                            </>
+                        <div className="form-group" ref={userSearchRef} style={{ position: 'relative' }}>
+                            <label className="form-label">Tìm Kiếm Người Dùng</label>
+                            <div style={{ position: 'relative' }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '4px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#fff',
+                                }}>
+                                    <Search size={18} color="#999" />
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        style={{
+                                            border: 'none',
+                                            outline: 'none',
+                                            flex: 1,
+                                            padding: 0,
+                                            fontSize: '14px',
+                                        }}
+                                        placeholder="Nhập ID, tên, CCCD, email hoặc SĐT..."
+                                        value={userSearchInput}
+                                        onChange={(e) => {
+                                            setUserSearchInput(e.target.value);
+                                            setShowUserDropdown(true);
+                                        }}
+                                        onFocus={() => setShowUserDropdown(true)}
+                                    />
+                                </div>
+
+                                {/* Dropdown */}
+                                {showUserDropdown && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        right: 0,
+                                        backgroundColor: '#fff',
+                                        border: '1px solid #ddd',
+                                        borderTop: 'none',
+                                        borderRadius: '0 0 4px 4px',
+                                        maxHeight: '300px',
+                                        overflowY: 'auto',
+                                        zIndex: 1000,
+                                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                                    }}>
+                                        {filteredUsers.length === 0 ? (
+                                            <div style={{
+                                                padding: '16px',
+                                                textAlign: 'center',
+                                                color: '#999',
+                                                fontSize: '14px',
+                                            }}>
+                                                Không tìm thấy người dùng
+                                            </div>
                                         ) : (
-                                            <>
-                                                <select
-                                                    className="form-control"
-                                                    value={form.userId || ""}
-                                                    onChange={(e) => {
-                                                        const uid = e.target.value || null;
-                                                        const selected = users.find(u => String(u.id) === String(uid));
-                                                        const mapped = selected ? mapTier(selected.target_tier) : form.category;
-                                                        setForm({
-                                                            ...form,
-                                                            userId: uid ? Number(uid) : null,
-                                                            name: selected ? (selected.full_name || form.name) : form.name,
-                                                            idNumber: selected ? (selected.identity_number || form.idNumber) : form.idNumber,
-                                                            category: mapped || form.category,
-                                                        });
-                                                    }}
-                                                >
-                                                    <option value="">-- Chọn người dùng --</option>
-                                                    {users.map(u => (
-                                                        <option key={u.id} value={u.id}>
-                                                            {`${u.id} - ${u.full_name || '-'} | ${u.identity_number || '-'} | ${mapTier(u.target_tier) || 'A'}`}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setManualUserEntry(true)}>Nhập thủ công</button>
-                                            </>
+                                            filteredUsers.map(user => {
+                                                const existingLicense = getUserLicense(user.id);
+                                                return (
+                                                    <div
+                                                        key={user.id}
+                                                        onClick={() => handleSelectUser(user)}
+                                                        style={{
+                                                            padding: '12px 16px',
+                                                            borderBottom: '1px solid #f0f0f0',
+                                                            cursor: 'pointer',
+                                                            transition: 'background-color 0.2s',
+                                                            backgroundColor: form.userId === user.id ? '#e3f2fd' : '#fff',
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.backgroundColor = form.userId === user.id ? '#e3f2fd' : '#f9f9f9'}
+                                                        onMouseLeave={(e) => e.target.style.backgroundColor = form.userId === user.id ? '#e3f2fd' : '#fff'}
+                                                    >
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px' }}>
+                                                            <div>
+                                                                <div style={{ fontWeight: 500, color: '#333' }}>
+                                                                    {user.full_name || 'N/A'} (ID: {user.id})
+                                                                </div>
+                                                                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                                                    CCCD: {user.identity_number || 'N/A'} | SĐT: {user.phone || 'N/A'}
+                                                                </div>
+                                                                <div style={{ fontSize: '12px', color: '#0050b8', marginTop: '2px', fontWeight: 500 }}>
+                                                                    Loại chứng chỉ: Hạng {user.target_tier || 'A'}
+                                                                </div>
+                                                            </div>
+                                                            {existingLicense && (
+                                                                <div style={{
+                                                                    backgroundColor: '#dcf1e0',
+                                                                    color: '#00a86b',
+                                                                    padding: '4px 8px',
+                                                                    borderRadius: '3px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: 500,
+                                                                    whiteSpace: 'nowrap',
+                                                                }}>
+                                                                    {existingLicense.licenseNumber}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
                                         )}
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Selected User Info */}
+                                {form.userId && (
+                                    <div style={{
+                                        marginTop: '12px',
+                                        padding: '12px',
+                                        backgroundColor: '#f0f7ff',
+                                        border: '1px solid #d0e8ff',
+                                        borderRadius: '4px',
+                                        fontSize: '13px',
+                                    }}>
+                                        <div style={{ color: '#0050b8', fontWeight: 500, marginBottom: '8px' }}>
+                                            ✓ Đã chọn: {users.find(u => u.id === form.userId)?.full_name || 'N/A'}
+                                        </div>
+                                        <div style={{ color: '#0050b8', marginBottom: '8px' }}>
+                                            Loại chứng chỉ: <span style={{ fontWeight: 600 }}>Hạng {form.category.replace('Hạng ', '')}</span>
+                                        </div>
+
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <div className="form-group">
                             <label className="form-label">Số giấy phép</label>
                             <input
@@ -314,20 +438,6 @@ export default function LookupManager() {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Loại chứng chỉ</label>
-                            <select
-                                className="form-control"
-                                value={form.category}
-                                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                required
-                            >
-                                <option value="">-- Chọn loại --</option>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                            </select>
-                        </div>
 
                         <div className="form-group">
                             <label className="form-label">Họ tên</label>
