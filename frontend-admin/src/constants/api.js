@@ -42,6 +42,9 @@ export const API_ENDPOINTS = {
 
     // Notifications
     NOTIFICATIONS: `${API_BASE_URL}/display/notifications`,
+
+    // Licenses
+    LICENSES: `${API_BASE_URL}/licenses`,
 };
 
 // Message templates

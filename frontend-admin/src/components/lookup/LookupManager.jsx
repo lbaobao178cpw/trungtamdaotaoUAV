@@ -19,6 +19,7 @@ import "../admin/Admin/Admin.css";
 const initialLicenseState = {
     id: "",
     licenseNumber: "",
+    userId: null,
     category: "",
     name: "",
     idNumber: "",
@@ -32,11 +33,14 @@ export default function LookupManager() {
     const [form, setForm] = useState(initialLicenseState);
     const [isEditing, setIsEditing] = useState(false);
     const [message, setMessage] = useState(null);
+    const [manualUserEntry, setManualUserEntry] = useState(false);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
     const { data: licensesData, loading, refetch: refreshLicenses } = useApi(
         API_ENDPOINTS.LICENSES || "/api/licenses"
     );
+    const { data: usersData } = useApi(API_ENDPOINTS.USERS);
+    const users = useMemo(() => Array.isArray(usersData) ? usersData : [], [usersData]);
     const licenses = useMemo(
         () => Array.isArray(licensesData) ? licensesData : [],
         [licensesData]
@@ -65,11 +69,12 @@ export default function LookupManager() {
         try {
             const method = isEditing ? "PUT" : "POST";
             const url = isEditing
-                ? `${API_ENDPOINTS.LICENSES || "/api/licenses"}/${form.id}`
-                : API_ENDPOINTS.LICENSES || "/api/licenses";
+                ? `${API_ENDPOINTS.LICENSES}/${form.licenseNumber}`
+                : API_ENDPOINTS.LICENSES;
 
             const payload = {
                 licenseNumber: form.licenseNumber,
+                userId: form.userId || null,
                 category: form.category,
                 name: form.name,
                 idNumber: form.idNumber,
@@ -93,20 +98,31 @@ export default function LookupManager() {
             if (!isEditing) handleAddNew();
             refreshLicenses();
         } catch (error) {
-            setMessage({ type: "error", text: error.message });
+            // Kiểm tra lỗi trùng số giấy phép
+            if (
+                error?.response?.data?.error?.includes("đã tồn tại") ||
+                (typeof error?.message === "string" && error.message.includes("đã tồn tại"))
+            ) {
+                setMessage({
+                    type: "error",
+                    text: "Số giấy phép đã tồn tại. Vui lòng nhập số khác!",
+                });
+            } else {
+                setMessage({ type: "error", text: error.message });
+            }
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (licenseNumber) => {
         if (!window.confirm("Bạn có chắc muốn xóa giấy phép này?")) return;
         try {
             await saveLicense({
-                url: `${API_ENDPOINTS.LICENSES || "/api/licenses"}/${id}`,
+                url: `${API_ENDPOINTS.LICENSES}/${licenseNumber}`,
                 method: "DELETE",
             });
             setMessage({ type: "success", text: "Đã xóa thành công!" });
             refreshLicenses();
-            if (form.id === id) handleAddNew();
+            if (form.licenseNumber === licenseNumber) handleAddNew();
         } catch (error) {
             setMessage({ type: "error", text: "Lỗi khi xóa" });
         }
@@ -139,12 +155,25 @@ export default function LookupManager() {
         return "#f59e0b";
     };
 
-    const getCategoryColor = (category) => {
-        if (category.includes("Hạng A")) return "#0066cc";
-        if (category.includes("Hạng B")) return "#d97706";
-        return "#0066cc";
-    };
+        const getCategoryColor = (category) => {
+            const c = String(category || '').replace(/Hạng\s*/i, '').trim();
+            if (c === 'A') return "#0066cc";
+            if (c === 'B') return "#d97706";
+            return "#0066cc";
+        };
 
+    // Normalize tier value to single letter 'A'|'B'|'C' for display/storage
+    const mapTier = (tier) => {
+        if (tier === undefined || tier === null) return '';
+        const s = String(tier).trim();
+        if (!s) return '';
+        const m = s.match(/[ABC]/i);
+        if (m) return m[0].toUpperCase();
+        // handle values like 'Hạng A'
+        const parts = s.split(' ');
+        if (parts.length >= 2 && /^[A-Ca-c]$/.test(parts[1])) return parts[1].toUpperCase();
+        return s.toUpperCase();
+    };
     const formatDate = (dateString) => {
         if (!dateString) return "--";
         try {
@@ -213,6 +242,64 @@ export default function LookupManager() {
                     )}
 
                     <form onSubmit={handleSave}>
+                                <div className="form-group">
+                                    <label className="form-label">Người dùng (ID)</label>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        {manualUserEntry ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    placeholder="Nhập ID người dùng (hoặc để trống)"
+                                                    value={form.userId || ''}
+                                                    onChange={(e) => setForm({ ...form, userId: e.target.value ? Number(e.target.value) : null })}
+                                                    onBlur={(e) => {
+                                                        const uid = e.target.value;
+                                                        if (!uid) return;
+                                                        const selected = users.find(u => String(u.id) === String(uid));
+                                                        if (selected) {
+                                                            setForm(f => ({
+                                                                ...f,
+                                                                userId: Number(selected.id),
+                                                                name: selected.full_name || f.name,
+                                                                idNumber: selected.identity_number || f.idNumber,
+                                                                category: mapTier(selected.target_tier) || f.category,
+                                                            }));
+                                                        }
+                                                    }}
+                                                />
+                                                <button type="button" className="btn btn-sm btn-secondary" onClick={() => setManualUserEntry(false)}>Chọn từ danh sách</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <select
+                                                    className="form-control"
+                                                    value={form.userId || ""}
+                                                    onChange={(e) => {
+                                                        const uid = e.target.value || null;
+                                                        const selected = users.find(u => String(u.id) === String(uid));
+                                                        const mapped = selected ? mapTier(selected.target_tier) : form.category;
+                                                        setForm({
+                                                            ...form,
+                                                            userId: uid ? Number(uid) : null,
+                                                            name: selected ? (selected.full_name || form.name) : form.name,
+                                                            idNumber: selected ? (selected.identity_number || form.idNumber) : form.idNumber,
+                                                            category: mapped || form.category,
+                                                        });
+                                                    }}
+                                                >
+                                                    <option value="">-- Chọn người dùng --</option>
+                                                    {users.map(u => (
+                                                        <option key={u.id} value={u.id}>
+                                                            {`${u.id} - ${u.full_name || '-'} | ${u.identity_number || '-'} | ${mapTier(u.target_tier) || 'A'}`}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setManualUserEntry(true)}>Nhập thủ công</button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                         <div className="form-group">
                             <label className="form-label">Số giấy phép</label>
                             <input
@@ -236,9 +323,9 @@ export default function LookupManager() {
                                 required
                             >
                                 <option value="">-- Chọn loại --</option>
-                                <option value="Hạng A">Hạng A</option>
-                                <option value="Hạng B">Hạng B</option>
-                                <option value="Hạng C">Hạng C</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
                             </select>
                         </div>
 
@@ -498,7 +585,7 @@ export default function LookupManager() {
                                     }}
                                 >
                                     <span style={{ fontSize: "14px" }}>
-                                        {license.category?.split(" ")[1] || "N/A"}
+                                        {license.category || "N/A"}
                                     </span>
                                     <span>Chứng chỉ</span>
                                 </div>
@@ -606,7 +693,7 @@ export default function LookupManager() {
                                             <Edit size={14} /> Sửa
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(license.id)}
+                                            onClick={() => handleDelete(license.licenseNumber)}
                                             className="btn btn-danger btn-sm"
                                             style={{
                                                 display: "flex",
