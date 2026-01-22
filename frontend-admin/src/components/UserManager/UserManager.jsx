@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import { notifySuccess, notifyError } from "../../lib/notifications";
 import "../admin/Admin/Admin.css";
 
 const initialUserState = {
@@ -16,7 +17,6 @@ const initialUserState = {
 export default function UserManager() {
   const [form, setForm] = useState(initialUserState);
   const [isEditing, setIsEditing] = useState(false);
-  const [message, setMessage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // State để mở rộng xem chi tiết
@@ -50,7 +50,6 @@ export default function UserManager() {
   const handleAddNew = useCallback(() => {
     setForm(initialUserState);
     setIsEditing(false);
-    setMessage(null);
     setShowDetails(false);
     setAddressMode('other');
     setSelectedProvince('');
@@ -70,8 +69,8 @@ export default function UserManager() {
         // Detect DD/MM/YYYY or DD-MM-YYYY
         const dmMatch = d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
         if (dmMatch) {
-          const dd = dmMatch[1].padStart(2,'0');
-          const mm = dmMatch[2].padStart(2,'0');
+          const dd = dmMatch[1].padStart(2, '0');
+          const mm = dmMatch[2].padStart(2, '0');
           const yyyy = dmMatch[3];
           return `${yyyy}-${mm}-${dd}`;
         }
@@ -143,7 +142,6 @@ export default function UserManager() {
       })();
     }
     setIsEditing(true);
-    setMessage(null);
     // Cuộn lên đầu form
     document.querySelector('.admin-content-wrapper')?.scrollTo(0, 0);
   };
@@ -152,8 +150,8 @@ export default function UserManager() {
   const normalizeGender = (g) => {
     if (!g) return '';
     const s = String(g).toLowerCase();
-    if ( s === 'nam') return 'nam';
-    if ( s === 'nữ' || s === 'nu') return 'nữ';
+    if (s === 'nam') return 'nam';
+    if (s === 'nữ' || s === 'nu') return 'nữ';
     return '';
   };
 
@@ -251,11 +249,12 @@ export default function UserManager() {
         data: payload,
       });
 
-      setMessage({ type: "success", text: `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!` });
+      const successMsg = `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`;
+      notifySuccess(successMsg);
       if (!isEditing) handleAddNew();
       refreshUsers();
     } catch (error) {
-      setMessage({ type: "error", text: error.message });
+      notifyError(error.message);
     }
   };
 
@@ -266,10 +265,10 @@ export default function UserManager() {
         url: `${API_ENDPOINTS.USERS}/${id}`,
         method: "DELETE",
       });
-      setMessage({ type: "success", text: "Đã xóa thành công!" });
+      notifySuccess("Đã xóa thành công!");
       refreshUsers();
     } catch (error) {
-      setMessage({ type: "error", text: "Lỗi khi xóa" });
+      notifyError("Lỗi khi xóa");
     }
   };
 
@@ -299,13 +298,6 @@ export default function UserManager() {
         </div>
 
         <div className="form-section">
-          {message && (
-            <div className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"}`} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {message.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-              {message.text}
-            </div>
-          )}
-
           <form onSubmit={handleSave}>
             <div className="form-group"><label className="form-label">Họ và tên</label><input className="form-control" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>
             <div className="form-group"><label className="form-label">Email</label><input type="email" className="form-control" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>

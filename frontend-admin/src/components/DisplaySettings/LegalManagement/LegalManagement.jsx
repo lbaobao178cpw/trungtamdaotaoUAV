@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { notifySuccess, notifyError, notifyWarning } from '../../../lib/notifications';
 import './LegalManagement.css';
 
 const API_URL = "http://localhost:5000/api/display";
@@ -8,7 +9,6 @@ export default function LegalDocumentsManager() {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [message, setMessage] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState('');
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -79,7 +79,7 @@ export default function LegalDocumentsManager() {
             }
         } catch (error) {
             console.error('Lỗi tải văn bản:', error);
-            setMessage({ type: 'error', text: 'Lỗi tải dữ liệu' });
+            notifyError('Lỗi tải dữ liệu');
         } finally {
             setLoading(false);
         }
@@ -118,15 +118,15 @@ export default function LegalDocumentsManager() {
             const data = await res.json();
 
             if (data.success) {
-                setMessage({ type: 'success', text: editingId ? 'Cập nhật thành công' : 'Thêm mới thành công' });
+                notifySuccess(editingId ? 'Cập nhật thành công' : 'Thêm mới thành công');
                 setShowModal(false);
                 resetForm();
                 fetchDocuments();
             } else {
-                setMessage({ type: 'error', text: data.message });
+                notifyError(data.message);
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Lỗi kết nối server' });
+            notifyError('Lỗi kết nối server');
         } finally {
             setLoading(false);
         }
@@ -154,13 +154,13 @@ export default function LegalDocumentsManager() {
             const data = await res.json();
 
             if (data.success) {
-                setMessage({ type: 'success', text: 'Xóa thành công' });
+                notifySuccess('Xóa thành công');
                 fetchDocuments();
             } else {
-                setMessage({ type: 'error', text: data.message });
+                notifyError(data.message);
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Lỗi kết nối server' });
+            notifyError('Lỗi kết nối server');
         }
     };
 
@@ -184,7 +184,7 @@ export default function LegalDocumentsManager() {
 
     const handleBulkDelete = async () => {
         if (selectedIds.size === 0) {
-            setMessage({ type: 'warning', text: 'Vui lòng chọn ít nhất một văn bản' });
+            notifyWarning('Vui lòng chọn ít nhất một văn bản');
             return;
         }
 
@@ -213,13 +213,13 @@ export default function LegalDocumentsManager() {
 
             setSelectedIds(new Set());
             if (errorCount === 0) {
-                setMessage({ type: 'success', text: `Xóa thành công ${deletedCount} văn bản` });
+                notifySuccess(`Xóa thành công ${deletedCount} văn bản`);
             } else {
-                setMessage({ type: 'warning', text: `Xóa ${deletedCount} thành công, ${errorCount} lỗi` });
+                notifyWarning(`Xóa ${deletedCount} thành công, ${errorCount} lỗi`);
             }
             fetchDocuments();
         } catch (error) {
-            setMessage({ type: 'error', text: 'Lỗi xóa hàng loạt' });
+            notifyError('Lỗi xóa hàng loạt');
         } finally {
             setLoading(false);
         }
@@ -271,13 +271,6 @@ export default function LegalDocumentsManager() {
                     </button>
                 </div>
             </div>
-
-            {/* Message */}
-            {message && (
-                <div className={`ds-message ${message.type}`} style={{ marginBottom: '20px' }}>
-                    {message.text}
-                </div>
-            )}
 
             {/* Search */}
             <form onSubmit={handleSearch} className="legal-search-bar">

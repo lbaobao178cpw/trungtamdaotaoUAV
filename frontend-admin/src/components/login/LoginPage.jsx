@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 import { Eye, EyeOff } from 'lucide-react';
+import { notifySuccess, notifyError } from '../../lib/notifications';
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -51,10 +52,12 @@ function LoginPage() {
             }
             localStorage.setItem("admin_user", JSON.stringify(data.user));
 
+            notifySuccess("Đăng nhập thành công!");
             // Redirect to admin panel
             navigate("/admin");
 
         } catch (err) {
+            notifyError(err.message);
             setError(err.message);
         } finally {
             setLoading(false);

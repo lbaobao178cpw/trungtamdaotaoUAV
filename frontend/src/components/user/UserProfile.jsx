@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation, Outlet } from 'react-router-dom';
 import { apiClient } from '../../lib/apiInterceptor';
+import { notifyWarning, notifyError } from '../../lib/notifications';
 
 import './UserProfile.css';
 
@@ -30,7 +31,6 @@ function UserProfile() {
         const userData = JSON.parse(storedUser);
         setCurrentUser(userData);
       } catch (error) {
-        console.error('Lỗi parse user:', error);
         navigate('/dang-nhap');
       }
     } else {
@@ -44,14 +44,14 @@ function UserProfile() {
       try {
         // Kiểm tra user đã login chưa
         if (!currentUser) {
-          alert('Vui lòng đăng nhập');
+          notifyWarning('Vui lòng đăng nhập');
           navigate('/dang-nhap');
           return;
         }
 
         // Kiểm tra ID trong URL có khớp với ID từ token không
         if (String(currentUser.id) !== String(id)) {
-          alert('Bạn không có quyền xem profile này');
+          notifyWarning('Bạn không có quyền xem profile này');
           navigate(`/profile/${currentUser.id}`);
           return;
         }
@@ -61,13 +61,12 @@ function UserProfile() {
         const data = res.data;
         setProfile(data);
       } catch (err) {
-        console.error('Lỗi fetch profile:', err);
         if (err.response?.status === 401) {
-          alert('Vui lòng đăng nhập');
+          notifyWarning('Vui lòng đăng nhập');
           navigate('/dang-nhap');
           return;
         }
-        alert('Không thể tải thông tin người dùng');
+        notifyError('Không thể tải thông tin người dùng');
       } finally {
         setLoading(false);
       }

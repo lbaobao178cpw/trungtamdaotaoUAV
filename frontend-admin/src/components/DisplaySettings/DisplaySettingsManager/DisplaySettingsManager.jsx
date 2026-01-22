@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './DisplaySettingsManager.css';
 import '../LegalManagement/LegalManagement.css'; // Thêm CSS cho legal management
+import { notifyWarning, notifyError } from '../../../lib/notifications';
 
 const API_URL = "http://localhost:5000/api/display";
 
@@ -45,7 +46,6 @@ export default function DisplaySettingsManager() {
   const [notiForm, setNotiForm] = useState(initialNotiFormState);
   const [isEditingNoti, setIsEditingNoti] = useState(false);
 
-  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -108,10 +108,10 @@ export default function DisplaySettingsManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(footerConfig)
       });
-      if (res.ok) setMessage({ type: 'success', text: "Đã cập nhật Footer thành công!" });
-      else setMessage({ type: 'error', text: "Lỗi khi lưu Footer." });
+      if (res.ok) notifySuccess("Đã cập nhật Footer thành công!");
+      else notifyError("Lỗi khi lưu Footer.");
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      notifyError(err.message);
     } finally {
       setLoading(false);
     }
@@ -126,12 +126,12 @@ export default function DisplaySettingsManager() {
         body: JSON.stringify({ content: privacyPolicy })
       });
       if (res.ok) {
-        setMessage({ type: 'success', text: "Đã lưu Chính sách bảo mật!" });
+        notifySuccess("Đã lưu Chính sách bảo mật!");
       } else {
-        setMessage({ type: 'error', text: "Lỗi khi lưu chính sách." });
+        notifyError("Lỗi khi lưu chính sách.");
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      notifyError(err.message);
     } finally {
       setSavingPrivacy(false);
     }
@@ -146,12 +146,12 @@ export default function DisplaySettingsManager() {
         body: JSON.stringify({ content: termsOfService })
       });
       if (res.ok) {
-        setMessage({ type: 'success', text: "Đã lưu Điều khoản sử dụng!" });
+        notifySuccess("Đã lưu Điều khoản sử dụng!");
       } else {
-        setMessage({ type: 'error', text: "Lỗi khi lưu điều khoản." });
+        notifyError("Lỗi khi lưu điều khoản.");
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      notifyError(err.message);
     } finally {
       setSavingTerms(false);
     }
@@ -173,9 +173,9 @@ export default function DisplaySettingsManager() {
           body: JSON.stringify({ content: termsOfService })
         })
       ]);
-      setMessage({ type: 'success', text: "Đã lưu tất cả chính sách!" });
+      notifySuccess("Đã lưu tất cả chính sách!");
     } catch (err) {
-      setMessage({ type: 'error', text: err.message });
+      notifyError(err.message);
     } finally {
       setSavingPrivacy(false);
       setSavingTerms(false);
@@ -185,7 +185,7 @@ export default function DisplaySettingsManager() {
   // --- LOGIC MỚI: QUẢN LÝ THÊM / SỬA DOC ---
   const handleSaveDoc = () => {
     if (!tempDoc.title.trim()) {
-      alert("Vui lòng nhập tiêu đề văn bản!");
+      notifyWarning("Vui lòng nhập tiêu đề văn bản!");
       return;
     }
 
@@ -224,7 +224,6 @@ export default function DisplaySettingsManager() {
   const handleEditNoti = (item) => {
     setNotiForm({ ...item, isNew: item.isNew });
     setIsEditingNoti(true);
-    setMessage(null);
     setActiveTab('notifications');
   };
 
@@ -234,7 +233,7 @@ export default function DisplaySettingsManager() {
       await fetch(`${API_URL}/notifications/${id}`, { method: "DELETE" });
       fetchNotis();
       if (notiForm.id === id) { setNotiForm(initialNotiFormState); setIsEditingNoti(false); }
-    } catch (err) { alert("Lỗi xóa: " + err.message); }
+    } catch (err) { notifyError("Lỗi xóa: " + err.message); }
   };
 
   const handleSubmitNoti = async (e) => {
@@ -247,12 +246,12 @@ export default function DisplaySettingsManager() {
         method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(notiForm)
       });
       if (res.ok) {
-        setMessage({ type: 'success', text: isEditingNoti ? "Cập nhật xong!" : "Đã thêm mới!" });
+        notifySuccess(isEditingNoti ? "Cập nhật xong!" : "Đã thêm mới!");
         setNotiForm(initialNotiFormState);
         setIsEditingNoti(false);
         fetchNotis();
-      } else { setMessage({ type: 'error', text: "Lỗi lưu thông báo." }); }
-    } catch (err) { setMessage({ type: 'error', text: err.message }); }
+      } else { notifyError("Lỗi lưu thông báo."); }
+    } catch (err) { notifyError(err.message); }
     finally { setLoading(false); }
   };
 
@@ -286,35 +285,35 @@ export default function DisplaySettingsManager() {
         <div className="panel-header">Menu Cấu Hình</div>
         <div style={{ padding: '15px', borderBottom: '1px solid #eee', background: '#fff' }}>
           {/* Tab menu */}
-          <button style={tabBtnStyle(activeTab === 'legal-documents')} onClick={() => { setActiveTab('legal-documents'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'legal-documents')} onClick={() => { setActiveTab('legal-documents'); }}>
             Văn bản Pháp luật
           </button>
-          <button style={tabBtnStyle(activeTab === 'authorities')} onClick={() => { setActiveTab('authorities'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'authorities')} onClick={() => { setActiveTab('authorities'); }}>
             Thẩm quyền
           </button>
-          <button style={tabBtnStyle(activeTab === 'forms')} onClick={() => { setActiveTab('forms'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'forms')} onClick={() => { setActiveTab('forms'); }}>
             Biểu mẫu
           </button>
 
           <div style={{ height: '1px', background: '#ddd', margin: '12px 0', opacity: 0.5 }} />
 
-          <button style={tabBtnStyle(activeTab === 'footer')} onClick={() => { setActiveTab('footer'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'footer')} onClick={() => { setActiveTab('footer'); }}>
             Cấu hình Footer
           </button>
-          <button style={tabBtnStyle(activeTab === 'notifications')} onClick={() => { setActiveTab('notifications'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'notifications')} onClick={() => { setActiveTab('notifications'); }}>
             Quản lý Thông báo
           </button>
-          <button style={tabBtnStyle(activeTab === 'policies')} onClick={() => { setActiveTab('policies'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'policies')} onClick={() => { setActiveTab('policies'); }}>
             Chính sách & Điều khoản
           </button>
 
           <div style={{ height: '1px', background: '#ddd', margin: '12px 0', opacity: 0.5 }} />
 
-          <button style={tabBtnStyle(activeTab === 'study-materials')} onClick={() => { setActiveTab('study-materials'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'study-materials')} onClick={() => { setActiveTab('study-materials'); }}>
             Tài liệu Ôn thi
           </button>
 
-          <button style={tabBtnStyle(activeTab === 'faqs')} onClick={() => { setActiveTab('faqs'); setMessage(null); }}>
+          <button style={tabBtnStyle(activeTab === 'faqs')} onClick={() => { setActiveTab('faqs'); }}>
             Câu hỏi Thường gặp
           </button>
         </div>
@@ -362,18 +361,6 @@ export default function DisplaySettingsManager() {
 
       {/* MAIN CONTENT */}
       <main className="panel">
-        {message && (
-          <div style={{
-            padding: '12px 15px',
-            margin: '15px',
-            borderRadius: '6px',
-            background: message.type === 'success' ? '#d4edda' : '#f8d7da',
-            color: message.type === 'success' ? '#155724' : '#721c24',
-            border: message.type === 'success' ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
-          }}>
-            {message.text}
-          </div>
-        )}
 
         {/* VĂN BẢN PHÁP LUẬT */}
         {activeTab === 'legal-documents' && <LegalDocumentsManager />}
