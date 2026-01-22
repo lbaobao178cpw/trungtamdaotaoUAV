@@ -415,10 +415,10 @@ function UAVLandingPage() {
 
             return (
               <div className="exam-banner" style={{ marginBottom: '20px' }}>
-                <h3 className="exam-banner-title" style={{ color: '#856404', margin: '0 0 12px 0' }}>Kỳ thi tháng {bannerMonth} năm {bannerYear}</h3>
+                <h3 className="exam-banner-title" style={{ color: '#0050B8', margin: '0 0 12px 0' }}>Kỳ Thi Tháng {bannerMonth} Năm {bannerYear}</h3>
 
                 <div style={{ overflow: 'hidden' }}>
-                  <marquee behavior="scroll" direction="left" scrollamount="8" style={{ display: 'block', padding: '6px 0' }}>
+                  <marquee behavior="scroll" direction="left" scrollamount="10" style={{ display: 'block', padding: '6px 0' }}>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                       {monthlyExams.map((ex) => {
                         const { day, month } = renderDayMonth(ex.exam_date || ex.date || null);
@@ -429,12 +429,13 @@ function UAVLandingPage() {
                               <div style={{ background: '#f0f8ff', borderRadius: '6px', padding: '6px' }}>
                                 <div style={{ fontSize: '20px', fontWeight: 800, color: '#0050b8' }}>{day || '-'}</div>
                                 <div style={{ fontSize: '11px', color: '#666' }}>THÁNG {month || '-'}</div>
+                                <div style={{ fontSize: '11px', color: '#0050b8', marginTop: '6px', fontWeight: 600 }}>{timeText}</div>
                               </div>
                             </div>
 
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '15px', fontWeight: 700, color: '#0b3d91' }}>{ex.title || ex.type || 'Kỳ thi'}</div>
-                              <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>{ex.location || ex.address || ''} • {timeText}</div>
+                              <div style={{ fontSize: '15px', fontWeight: 700, color: '#0b3d91' }}>{ex.title || ex.type || 'Kỳ Thi'}</div>
+                              <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>{ex.location || ex.address || ''}</div>
                               <div style={{ marginTop: '6px', fontSize: '13px', color: ex.spots_left > 0 ? '#28a745' : '#d9534f', fontWeight: 700 }}>{ex.spots_left > 0 ? `Còn ${ex.spots_left} chỗ` : 'Hết chỗ'}</div>
                             </div>
                           </div>
