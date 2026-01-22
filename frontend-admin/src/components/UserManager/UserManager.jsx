@@ -10,7 +10,7 @@ import "../admin/Admin/Admin.css";
 const initialUserState = {
   id: "", full_name: "", email: "", phone: "", role: "student", is_active: true, password: "",
   // Các trường profile (chỉ để hiển thị hoặc update sau này)
-  identity_number: "", address: "", birth_date: "", gender: "", target_tier: ""
+  identity_number: "", address: "", birth_date: "", gender: "", target_tier: "",
 };
 
 export default function UserManager() {
@@ -21,6 +21,13 @@ export default function UserManager() {
 
   // State để mở rộng xem chi tiết
   const [expandedUserId, setExpandedUserId] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [addressMode, setAddressMode] = useState('other'); // 'select' or 'other'
+  const [provinces, setProvinces] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
+  const [street, setStreet] = useState('');
 
   // === FETCH USERS WITH CUSTOM HOOK ===
   const { data: usersData, loading, refetch: refreshUsers } = useApi(API_ENDPOINTS.USERS);
@@ -44,19 +51,190 @@ export default function UserManager() {
     setForm(initialUserState);
     setIsEditing(false);
     setMessage(null);
+    setShowDetails(false);
+    setAddressMode('other');
+    setSelectedProvince('');
+    setSelectedWard('');
+    setStreet('');
   }, []);
 
   const handleEditClick = (user) => {
+    // Convert stored birth_date to input-friendly YYYY-MM-DD
+    const formatBirthForInput = (d) => {
+      if (!d) return '';
+      try {
+        // If already ISO-like, normalize
+        const isoMatch = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+        // Detect DD/MM/YYYY or DD-MM-YYYY
+        const dmMatch = d.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (dmMatch) {
+          const dd = dmMatch[1].padStart(2,'0');
+          const mm = dmMatch[2].padStart(2,'0');
+          const yyyy = dmMatch[3];
+          return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Fallback to Date parse
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+          const yyyy = parsed.getFullYear();
+          const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+          const dd = String(parsed.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+        }
+      } catch (e) {
+        // ignore
+      }
+      return '';
+    };
+
     setForm({
       ...user,
       is_active: user.is_active === 1 || user.is_active === true,
       password: "",
+      gender: normalizeGender(user.gender),
+      birth_date: formatBirthForInput(user.birth_date),
+      // keep original address in form so it's available if needed
+      address: user.address || ''
     });
+    // Immediately populate street and form.address so user sees existing address right away
+    setStreet(user.address || '');
+    setForm(prev => ({ ...prev, address: user.address || '' }));
+    setShowDetails(true);
+    const mode = user.address ? 'select' : 'other';
+    setAddressMode(mode);
+    if (mode === 'select') {
+      // load provinces and try to match existing address into selects
+      (async () => {
+        const provs = await fetchProvinces();
+        if (!provs || provs.length === 0) return;
+        const addr = String(user.address || '').toLowerCase();
+        const matched = provs.find(p => addr.includes(String(p.name).toLowerCase()));
+        if (matched) {
+          // Keep selected IDs as strings so they match <select> option values
+          setSelectedProvince(String(matched.id));
+          const wardsData = await fetchWards(matched.id);
+          if (wardsData && wardsData.length) {
+            const matchedWard = wardsData.find(w => addr.includes(String(w.name).toLowerCase()));
+            if (matchedWard) setSelectedWard(String(matchedWard.id));
+            // extract street (text before ward name or province)
+            let idx = -1;
+            if (matchedWard) idx = addr.indexOf(String(matchedWard.name).toLowerCase());
+            if ((idx === -1 || idx === 0) && matched) idx = addr.indexOf(String(matched.name).toLowerCase());
+            if (idx > 0) {
+              setStreet(user.address.substring(0, idx).replace(/,\s*$/, ''));
+            } else {
+              // fallback: put entire address into street so input shows something
+              setStreet(user.address);
+            }
+          } else {
+            // no wards but province matched: put entire address into street
+            setStreet(user.address);
+          }
+          // also ensure form.address holds the original address so textarea shows when switching
+          setForm(prev => ({ ...prev, address: user.address || '' }));
+        } else {
+          // if no province matched, place whole address into street input so user sees it
+          setStreet(user.address || '');
+          setForm(prev => ({ ...prev, address: user.address || '' }));
+        }
+      })();
+    }
     setIsEditing(true);
     setMessage(null);
     // Cuộn lên đầu form
     document.querySelector('.admin-content-wrapper')?.scrollTo(0, 0);
   };
+
+  // Normalize various stored gender values into select-friendly values
+  const normalizeGender = (g) => {
+    if (!g) return '';
+    const s = String(g).toLowerCase();
+    if ( s === 'nam') return 'nam';
+    if ( s === 'nữ' || s === 'nu') return 'nữ';
+    return '';
+  };
+
+  const displayGender = (g) => {
+    if (!g) return '--';
+    const s = String(g).toLowerCase();
+    if (s === 'nam') return 'Nam';
+    if (s === 'nữ' || s === 'nu') return 'Nữ';
+    return '--';
+  };
+
+  // location helpers
+  const fetchProvinces = async () => {
+    try {
+      const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
+        ? import.meta.env.VITE_API_BASE
+        : `${window.location.protocol}//${window.location.hostname}:5000`;
+      const url = `${base}/api/location/provinces`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error('fetchProvinces bad status', res.status, url);
+        return [];
+      }
+      const data = await res.json();
+      setProvinces(data || []);
+      return data || [];
+    } catch (e) {
+      console.error('fetchProvinces', e);
+      return [];
+    }
+  };
+
+  const fetchWards = async (provinceId) => {
+    try {
+      if (!provinceId) {
+        setWards([]);
+        return [];
+      }
+      const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
+        ? import.meta.env.VITE_API_BASE
+        : `${window.location.protocol}//${window.location.hostname}:5000`;
+      const url = `${base}/api/location/wards?province_id=${provinceId}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error('fetchWards bad status', res.status, url);
+        setWards([]);
+        return [];
+      }
+      const data = await res.json();
+      setWards(data || []);
+      return data || [];
+    } catch (e) {
+      console.error('fetchWards', e);
+      setWards([]);
+      return [];
+    }
+  };
+
+  const applySelectedAddress = (provId = selectedProvince, wardId = selectedWard, st = street) => {
+    const prov = provinces.find(p => String(p.id) === String(provId));
+    const ward = wards.find(w => String(w.id) === String(wardId));
+    let composed = '';
+    if (st) composed += st + ', ';
+    if (ward) composed += ward.name + ', ';
+    if (prov) composed += prov.name;
+    if (composed) setForm(prev => ({ ...prev, address: composed }));
+  };
+
+  // when addressMode changes to select, load provinces
+  useEffect(() => {
+    if (showDetails && addressMode === 'select') fetchProvinces();
+  }, [showDetails, addressMode]);
+
+  // load wards when province changes
+  useEffect(() => {
+    if (selectedProvince) fetchWards(selectedProvince);
+    else {
+      setWards([]);
+      setSelectedWard('');
+    }
+  }, [selectedProvince]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -64,6 +242,8 @@ export default function UserManager() {
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `${API_ENDPOINTS.USERS}/${form.id}` : API_ENDPOINTS.USERS;
       const payload = { ...form, is_active: form.is_active };
+      // ensure we don't send removed fields
+      if (payload.hasOwnProperty('uav_type')) delete payload.uav_type;
 
       await saveUser({
         url: url,
@@ -136,6 +316,75 @@ export default function UserManager() {
               <div className="form-group" style={{ flex: 1 }}><label className="form-label">Vai trò</label><select className="form-control" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="student">Học viên</option><option value="admin">Admin</option><option value="instructor">Giảng viên</option></select></div>
               <div className="form-group" style={{ flex: 1 }}><label className="form-label">Trạng thái</label><select className="form-control" value={form.is_active ? "true" : "false"} onChange={(e) => setForm({ ...form, is_active: e.target.value === "true" })}><option value="true">Hoạt động</option><option value="false">Khóa</option></select></div>
             </div>
+
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => setShowDetails(s => !s)} style={{ padding: '6px 10px' }}>
+                {showDetails ? 'Ẩn chi tiết' : 'Xem chi tiết hồ sơ'}
+              </button>
+              <small style={{ color: '#666' }}>Bạn đang {isEditing ? `chỉnh sửa #${form.id}` : 'tạo người dùng mới'}</small>
+            </div>
+
+            {showDetails && (
+              <div style={{ marginTop: 12, padding: 12, background: '#fbfbfc', border: '1px solid #eee', borderRadius: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group"><label className="form-label">CCCD</label><input className="form-control" value={form.identity_number || ''} onChange={(e) => setForm({ ...form, identity_number: e.target.value })} placeholder="Số định danh" /></div>
+                  <div className="form-group"><label className="form-label">Ngày sinh</label><input type="date" className="form-control" value={form.birth_date || ''} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
+
+                  <div className="form-group"><label className="form-label">Giới tính</label>
+                    <select className="form-control" value={form.gender || ''} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
+                      <option value="">Chọn</option>
+                      <option value="nam">Nam</option>
+                      <option value="nữ">Nữ</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group"><label className="form-label">Hạng</label>
+                    <select className="form-control" value={form.target_tier || ''} onChange={(e) => setForm({ ...form, target_tier: e.target.value })}>
+                      <option value="">Chưa chọn</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">Địa chỉ</label>
+                    {addressMode === 'select' ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
+                        <div>
+                          <label className="form-label">Tỉnh/TP</label>
+                          <select className="form-control" value={selectedProvince || ''} onChange={(e) => { setSelectedProvince(e.target.value); }}>
+                            <option value="">Chọn tỉnh</option>
+                            {provinces.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="form-label">Xã/Phường</label>
+                          <select className="form-control" value={selectedWard || ''} onChange={(e) => { setSelectedWard(e.target.value); applySelectedAddress(undefined, e.target.value); }} disabled={!selectedProvince}>
+                            <option value="">Chọn xã/phường</option>
+                            {wards.map(w => (<option key={w.id} value={w.id}>{w.name}</option>))}
+                          </select>
+                        </div>
+
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label className="form-label">Đường / Số nhà (tuỳ chọn)</label>
+                          <input className="form-control" value={street} onChange={(e) => { setStreet(e.target.value); }} placeholder="Ví dụ: 123 Đường ABC" />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, gridColumn: '1 / -1', justifyContent: 'flex-end' }}>
+                          <button type="button" className="btn btn-sm btn-primary" onClick={() => { applySelectedAddress(); setAddressMode('select'); }}>Áp dụng</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <textarea className="form-control" rows={2} value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Địa chỉ liên hệ" />
+                    )}
+                  </div>
+
+                  {/* Loại UAV field removed */}
+                </div>
+              </div>
+            )}
 
             <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
               {loading ? <RefreshCw className="spin" size={18} /> : <Save size={18} />} Lưu thông tin
@@ -226,7 +475,7 @@ export default function UserManager() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><CreditCard size={14} color="#666" /> <strong>CCCD:</strong> {user.identity_number || "Chưa cập nhật"}</div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Calendar size={14} color="#666" /> <strong>Ngày sinh:</strong> {user.birth_date ? new Date(user.birth_date).toLocaleDateString('vi-VN') : "--"}</div>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><UserCircle size={14} color="#666" /> <strong>Giới tính:</strong> {user.gender || '--'}</div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><UserCircle size={14} color="#666" /> <strong>Giới tính:</strong> {displayGender(user.gender)}</div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Award size={14} color="#666" /> <strong>Hạng thi:</strong> {user.target_tier || "Chưa đăng ký"}</div>
                     </div>
                     <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>

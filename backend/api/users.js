@@ -143,33 +143,48 @@ router.put("/change-password", verifyStudent, async (req, res) => {
   }
 });
 
-// --- PUT: Cập nhật thông tin người dùng (chỉ email, phone, address) ---
-router.put("/:id", verifyStudent, async (req, res) => {
+// --- PUT: Cập nhật thông tin người dùng (Admins có thể sửa nhiều trường) ---
+router.put("/:id", verifyAdmin, async (req, res) => {
   const { id } = req.params;
-  const { email, phone, address } = req.body;
+  const {
+    full_name, email, phone, role, is_active,
+    identity_number, gender, birth_date, address,
+    target_tier, uav_type
+  } = req.body;
 
   try {
-    // Kiểm tra quyền: chỉ chính chủ hoặc admin mới được cập nhật
-    if (req.user.role !== 'admin' && req.user.id !== Number(id)) {
-      return res.status(403).json({ error: "Bạn không có quyền cập nhật thông tin này" });
-    }
-
-    // Cập nhật email, phone trong bảng users
+    // Cập nhật các trường trong bảng users (cho phép admin chỉnh)
+    const isActiveParam = typeof is_active !== 'undefined' ? (is_active ? 1 : 0) : null;
     await db.query(
-      `UPDATE users 
-       SET email = COALESCE(?, email), 
-           phone = COALESCE(?, phone)
+      `UPDATE users
+       SET full_name = COALESCE(?, full_name),
+           email = COALESCE(?, email),
+           phone = COALESCE(?, phone),
+           role = COALESCE(?, role),
+           is_active = COALESCE(?, is_active)
        WHERE id = ?`,
-      [email, phone, id]
+      [full_name, email, phone, role, isActiveParam, id]
     );
 
-    // Cập nhật address trong bảng user_profiles
-    if (address !== undefined) {
+    // Cập nhật/tao profile trong bảng user_profiles
+    const [profileUpdateResult] = await db.query(
+      `UPDATE user_profiles
+       SET identity_number = COALESCE(?, identity_number),
+           gender = COALESCE(?, gender),
+           birth_date = COALESCE(?, birth_date),
+           address = COALESCE(?, address),
+           target_tier = COALESCE(?, target_tier),
+           uav_type = COALESCE(?, uav_type)
+       WHERE user_id = ?`,
+      [identity_number, gender, birth_date, address, target_tier, uav_type, id]
+    );
+
+    // Nếu chưa có profile (affectedRows === 0), tạo mới
+    if (profileUpdateResult && profileUpdateResult.affectedRows === 0) {
       await db.query(
-        `UPDATE user_profiles 
-         SET address = ?
-         WHERE user_id = ?`,
-        [address, id]
+        `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, identity_number || null, gender || null, birth_date || null, address || null, target_tier || null, uav_type || null]
       );
     }
 
