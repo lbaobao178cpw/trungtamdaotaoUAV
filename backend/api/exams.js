@@ -30,6 +30,27 @@ router.get("/", async (req, res) => {
   }
 });
 
+// --- GET: Lấy lịch thi theo tháng (year, month) ---
+// GET /api/exams/month?year=2026&month=1
+router.get("/month", async (req, res) => {
+  try {
+    let { year, month } = req.query;
+    const now = new Date();
+    year = parseInt(year) || now.getFullYear();
+    month = parseInt(month) || (now.getMonth() + 1);
+
+    const [rows] = await db.query(
+      `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1 ORDER BY exam_date ASC`,
+      [year, month]
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi lấy lịch thi theo tháng" });
+  }
+});
+
 // --- POST: Tạo lịch thi mới (ADMIN) ---
 router.post("/", verifyAdmin, async (req, res) => {
   const { type, location, address, exam_date, exam_time, spots_left, is_active } = req.body;

@@ -189,6 +189,7 @@ function UAVLandingPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeCertTab, setActiveCertTab] = useState("map");
   const [webglSupported, setWebglSupported] = useState(true); // WebGL support state
+  const [monthlyExams, setMonthlyExams] = useState([]);
 
   // Kiểm tra WebGL support khi component mount
   useEffect(() => {
@@ -245,6 +246,19 @@ function UAVLandingPage() {
     apiClient.get("/settings/default_camera_view")
       .then((res) => { if (res.data.value) try { setCameraSettings(JSON.parse(res.data.value)); } catch (e) { } })
       .catch(() => { });
+  }, []);
+
+  // Fetch monthly exams for running banner (current month)
+  useEffect(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 1-based
+    apiClient.get(`/exams/month?year=${year}&month=${month}`)
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        setMonthlyExams(data);
+      })
+      .catch((err) => console.error("Lỗi fetch monthly exams:", err));
   }, []);
 
   useEffect(() => {
@@ -345,6 +359,25 @@ function UAVLandingPage() {
     );
   };
 
+  // Format exam date to Vietnam timezone: DD-MM-YYYY HH:mm:ss
+  const formatExamDate = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }).replace(/,/g, "");
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <>
       {/* 1. Hero Section */}
@@ -365,6 +398,54 @@ function UAVLandingPage() {
       {/* 2. Intro */}
       <section className="intro-section">
         <div className="container">
+          {monthlyExams && monthlyExams.length > 0 && (() => {
+            const now = new Date();
+            const bannerMonth = now.getMonth() + 1;
+            const bannerYear = now.getFullYear();
+            const renderDayMonth = (dateStr) => {
+              try {
+                const d = new Date(dateStr);
+                const day = d.getDate();
+                const month = d.getMonth() + 1;
+                return { day, month };
+              } catch (e) {
+                return { day: '', month: '' };
+              }
+            };
+
+            return (
+              <div className="exam-banner" style={{ marginBottom: '20px' }}>
+                <h3 className="exam-banner-title" style={{ color: '#856404', margin: '0 0 12px 0' }}>Kỳ thi tháng {bannerMonth} năm {bannerYear}</h3>
+
+                <div style={{ overflow: 'hidden' }}>
+                  <marquee behavior="scroll" direction="left" scrollamount="8" style={{ display: 'block', padding: '6px 0' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      {monthlyExams.map((ex) => {
+                        const { day, month } = renderDayMonth(ex.exam_date || ex.date || null);
+                        const timeText = ex.exam_time || (ex.exam_date && new Date(ex.exam_date).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })) || '';
+                        return (
+                          <div key={ex.id} className="exam-card" style={{ display: 'flex', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', padding: '12px 14px', alignItems: 'center', minWidth: '380px' }}>
+                            <div className="exam-date-box" style={{ width: '62px', textAlign: 'center', marginRight: '12px' }}>
+                              <div style={{ background: '#f0f8ff', borderRadius: '6px', padding: '6px' }}>
+                                <div style={{ fontSize: '20px', fontWeight: 800, color: '#0050b8' }}>{day || '-'}</div>
+                                <div style={{ fontSize: '11px', color: '#666' }}>THÁNG {month || '-'}</div>
+                              </div>
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '15px', fontWeight: 700, color: '#0b3d91' }}>{ex.title || ex.type || 'Kỳ thi'}</div>
+                              <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>{ex.location || ex.address || ''} • {timeText}</div>
+                              <div style={{ marginTop: '6px', fontSize: '13px', color: ex.spots_left > 0 ? '#28a745' : '#d9534f', fontWeight: 700 }}>{ex.spots_left > 0 ? `Còn ${ex.spots_left} chỗ` : 'Hết chỗ'}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </marquee>
+                </div>
+              </div>
+            );
+          })()}
           <h2 className="intro-title">Giới thiệu</h2>
           <div className="intro-content">
             <p className="intro-description">Hệ thống đào tạo và Cấp Chứng Chỉ Điều Khiển UAV Theo Tiêu Chuẩn Quy Định Pháp Luật VN <strong>được xây dựng nhằm đảm bảo an toàn không phân, nâng cao ý thức người sử dụng và tuân thủ các quy định pháp luật về hoạt động bay không người lái tại Việt Nam.</strong></p>
