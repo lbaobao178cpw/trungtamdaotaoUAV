@@ -39,6 +39,7 @@ const Header = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('isLoggedIn');
     setUser(null);
+    window.dispatchEvent(new Event('userLoggedIn'));
     navigate('/dang-nhap');
   };
 

@@ -656,9 +656,8 @@ export default function CourseManager() {
                   <div className="cm-course-header">
                     <h3 className="cm-course-title">{course.title}</h3>
                     <div
-                      className={`cm-course-badge ${
-                        course.type === "A" || course.level === "Cơ bản" ? "cm-badge-a" : "cm-badge-b"
-                      }`}
+                      className={`cm-course-badge ${course.type === "A" || course.level === "Cơ bản" ? "cm-badge-a" : "cm-badge-b"
+                        }`}
                     >
                       {course.type === "A" || course.level === "Cơ bản" ? (
                         <BookOpen size={14} />

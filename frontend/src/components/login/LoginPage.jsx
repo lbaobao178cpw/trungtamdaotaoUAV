@@ -65,6 +65,9 @@ function LoginPage() {
             }
             localStorage.setItem('user', JSON.stringify(data.user));
 
+            // 2a. Trigger event để các component lắng nghe
+            window.dispatchEvent(new Event('userLoggedIn'));
+
             // 2b. Cập nhật AuthContext
             login(data.token, data.user, data.refreshToken);
 

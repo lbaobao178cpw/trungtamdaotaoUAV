@@ -24,7 +24,14 @@ const ExamPage = () => {
   const [studyMaterials, setStudyMaterials] = useState([]);
   const [faqList, setFaqList] = useState([]);
   const [footerConfig, setFooterConfig] = useState({ phone: "", email: "", workingHours: "" });
+  const [user, setUser] = useState(() => {
+    // Initialize user from localStorage on mount
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const formRef = useRef(null);
+  const isInitializedRef = useRef(false);
+
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -32,23 +39,53 @@ const ExamPage = () => {
     });
   }, []);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  useEffect(() => {
+    const handleUserChange = () => {
+      const updatedUser = JSON.parse(localStorage.getItem("user"));
+      console.log("📢 User changed:", updatedUser?.id || 'null');
+      setUser(updatedUser);
+    };
+
+    // Don't call handleUserChange here - user already initialized from localStorage
+
+    // Lắng nghe storage event từ tab khác
+    window.addEventListener("storage", handleUserChange);
+
+    // Lắng nghe custom event từ login/logout trong cùng tab
+    window.addEventListener("userLoggedIn", handleUserChange);
+
+    return () => {
+      window.removeEventListener("storage", handleUserChange);
+      window.removeEventListener("userLoggedIn", handleUserChange);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch exams (API công khai, không cần token)
+        // Fetch exams - gửi user_id nếu user đã login để filter theo level
         try {
-          const examResponse = await apiClient.get("/exams");
+          let examEndpoint = "/exams";
+          if (user) {
+            console.log("👤 User logged in:", { id: user.id, name: user.name });
+            console.log("🔑 Token in localStorage:", localStorage.getItem('user_token') ? '✅ EXISTS' : '❌ NOT FOUND');
+            examEndpoint = `/exams?user_id=${user.id}`;
+          } else {
+            console.log("👤 No user logged in - public view");
+          }
+          console.log("🔗 Fetching exam endpoint:", examEndpoint);
+          const examResponse = await apiClient.get(examEndpoint);
           const data = examResponse.data;
           const activeExams = Array.isArray(data)
             ? data.filter(exam => exam.is_active === 1 || exam.is_active === true)
             : [];
+          console.log("📋 Fetched exams:", activeExams.length, "exams total");
+          console.log("📋 Exam types:", activeExams.map(e => e.type).join(", "));
           setUpcomingExams(activeExams);
         } catch (err) {
-          console.error("Error fetching exams:", err);
+          console.error("❌ Error fetching exams:", err);
         }
 
         // Fetch study materials (API công khai)
@@ -98,7 +135,7 @@ const ExamPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const scrollToExams = () => {
     const section = document.getElementById("exam-list-section");

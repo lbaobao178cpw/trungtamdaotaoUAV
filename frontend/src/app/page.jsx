@@ -53,7 +53,7 @@ const PanoramaViewer = ({ panoramaUrl }) => {
   const viewerContainerRef = useRef(null);
   const viewerInstanceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   useEffect(() => {
     if (!viewerContainerRef.current) return;
 
@@ -190,6 +190,11 @@ function UAVLandingPage() {
   const [activeCertTab, setActiveCertTab] = useState("map");
   const [webglSupported, setWebglSupported] = useState(true); // WebGL support state
   const [monthlyExams, setMonthlyExams] = useState([]);
+  const [user, setUser] = useState(() => {
+    // Initialize user from localStorage on mount
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   // Kiểm tra WebGL support khi component mount
   useEffect(() => {
@@ -253,12 +258,33 @@ function UAVLandingPage() {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 1-based
+    console.log("📋 [LandingPage] Fetching exams for", `${month}/${year}`, "| User:", user?.id || 'null', "| Token:", localStorage.getItem('user_token') ? '✅' : '❌');
     apiClient.get(`/exams/month?year=${year}&month=${month}`)
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        console.log("✅ [LandingPage] Fetched", data.length, "exams");
         setMonthlyExams(data);
       })
-      .catch((err) => console.error("Lỗi fetch monthly exams:", err));
+      .catch((err) => console.error("❌ [LandingPage] Lỗi fetch monthly exams:", err));
+  }, [user]);
+
+  // Lắng nghe thay đổi user
+  useEffect(() => {
+    const handleUserChange = () => {
+      const updatedUser = JSON.parse(localStorage.getItem("user"));
+      console.log("📢 [LandingPage] User changed:", updatedUser?.id || 'null');
+      setUser(updatedUser);
+    };
+
+    // Don't call handleUserChange here - user already initialized from localStorage
+
+    window.addEventListener("storage", handleUserChange);
+    window.addEventListener("userLoggedIn", handleUserChange);
+
+    return () => {
+      window.removeEventListener("storage", handleUserChange);
+      window.removeEventListener("userLoggedIn", handleUserChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -429,13 +455,13 @@ function UAVLandingPage() {
                               <div style={{ background: '#f0f8ff', borderRadius: '6px', padding: '6px' }}>
                                 <div style={{ fontSize: '20px', fontWeight: 800, color: '#0050b8' }}>{day || '-'}</div>
                                 <div style={{ fontSize: '11px', color: '#666' }}>THÁNG {month || '-'}</div>
-                                <div style={{ fontSize: '11px', color: '#0050b8', marginTop: '6px', fontWeight: 600 }}>{timeText}</div>
                               </div>
                             </div>
 
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: '15px', fontWeight: 700, color: '#0b3d91' }}>{ex.title || ex.type || 'Kỳ Thi'}</div>
                               <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>{ex.location || ex.address || ''}</div>
+                              <div style={{ fontSize: '11px', color: '#0050b8', marginTop: '4px', fontWeight: 600 }}>Giờ: {timeText}</div>
                               <div style={{ marginTop: '6px', fontSize: '13px', color: ex.spots_left > 0 ? '#28a745' : '#d9534f', fontWeight: 700 }}>{ex.spots_left > 0 ? `Còn ${ex.spots_left} chỗ` : 'Hết chỗ'}</div>
                             </div>
                           </div>
