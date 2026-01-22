@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { apiClient } from '../../lib/apiInterceptor';
+import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
 
 function PersonalInfo() {
 
@@ -132,13 +133,13 @@ function PersonalInfo() {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Chỉ hỗ trợ file ảnh');
+      notifyWarning('Chỉ hỗ trợ file ảnh');
       return;
     }
 
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File ảnh tối đa 5MB');
+      notifyWarning('Kích thước file ảnh tối đa 5MB');
       return;
     }
 
@@ -160,8 +161,9 @@ function PersonalInfo() {
       if (setProfile) {
         setProfile(prev => ({ ...prev, avatar: data.avatar }));
       }
+      notifySuccess('Cập nhật ảnh đại diện thành công!');
     } catch (err) {
-      alert(err.message);
+      notifyError('Không thể tải ảnh lên. Vui lòng thử lại.');
     } finally {
       setIsUploadingAvatar(false);
       // Reset input để có thể upload lại cùng file
@@ -210,9 +212,10 @@ function PersonalInfo() {
         if (setProfile) setProfile(profileRes.data);
       }
 
+      notifySuccess('Cập nhật thông tin thành công!');
       setIsEditing(false);
     } catch (err) {
-      alert(err.message);
+      notifyError('Không thể cập nhật thông tin. Vui lòng thử lại.');
     }
   };
   return (
@@ -226,64 +229,64 @@ function PersonalInfo() {
               <h3 className="info-name">{profile.full_name}</h3>
 
               <div className="info-grid">
-                
-                  
-                    <div className="info-row">
-                      <span className="info-label">Họ tên</span>
-                      <span className="info-value">{profile.full_name}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Email</span>
-                      <span className="info-value">{profile.email || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Số điện thoại</span>
-                      <span className="info-value">{profile.phone || '--'}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Mã định danh</span>
-                      <span className="info-value">{profile.identity_number || '--'}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Giới tính</span>
-                      <span className="info-value">{profile.gender || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Ngày sinh</span>
-                      <span className="info-value">
-                        {profile.birth_date ? formatDate(profile.birth_date) : '--'}
-                      </span>
-                    </div>
 
 
+                <div className="info-row">
+                  <span className="info-label">Họ tên</span>
+                  <span className="info-value">{profile.full_name}</span>
+                </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Địa chỉ</span>
-                      <span className="info-value">{profile.address || '--'}</span>
-                    </div>
+                <div className="info-row">
+                  <span className="info-label">Email</span>
+                  <span className="info-value">{profile.email || '--'}</span>
+                </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Hạng</span>
-                      <span className="info-value">{profile.target_tier || '--'}</span>
-                    </div>
+                <div className="info-row">
+                  <span className="info-label">Số điện thoại</span>
+                  <span className="info-value">{profile.phone || '--'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Mã định danh</span>
+                  <span className="info-value">{profile.identity_number || '--'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Giới tính</span>
+                  <span className="info-value">{profile.gender || '--'}</span>
+                </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Loại UAV</span>
-                      <span className="info-value">{profile.uav_type || '--'}</span>
-                    </div>
+                <div className="info-row">
+                  <span className="info-label">Ngày sinh</span>
+                  <span className="info-value">
+                    {profile.birth_date ? formatDate(profile.birth_date) : '--'}
+                  </span>
+                </div>
 
-                    <div className="info-row">
-                      <span className="info-label">Ngày kích hoạt</span>
-                      <span className="info-value">
-                        {profile.created_at ? formatDate(profile.created_at) : '--'}
-                      </span>
-                    </div>
-                
-                 
-                  {/* <>
+
+
+                <div className="info-row">
+                  <span className="info-label">Địa chỉ</span>
+                  <span className="info-value">{profile.address || '--'}</span>
+                </div>
+
+                <div className="info-row">
+                  <span className="info-label">Hạng</span>
+                  <span className="info-value">{profile.target_tier || '--'}</span>
+                </div>
+
+                <div className="info-row">
+                  <span className="info-label">Loại UAV</span>
+                  <span className="info-value">{profile.uav_type || '--'}</span>
+                </div>
+
+                <div className="info-row">
+                  <span className="info-label">Ngày kích hoạt</span>
+                  <span className="info-value">
+                    {profile.created_at ? formatDate(profile.created_at) : '--'}
+                  </span>
+                </div>
+
+
+                {/* <>
                     <div className="info-row">
                       <span className="info-label">Họ tên</span>
                       <span className="info-value">{profile.full_name}</span>

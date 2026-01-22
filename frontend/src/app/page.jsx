@@ -253,19 +253,26 @@ function UAVLandingPage() {
       .catch(() => { });
   }, []);
 
-  // Fetch monthly exams for running banner (current month)
+  // Fetch all upcoming exams for banner
   useEffect(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 1-based
-    console.log("📋 [LandingPage] Fetching exams for", `${month}/${year}`, "| User:", user?.id || 'null', "| Token:", localStorage.getItem('user_token') ? '✅' : '❌');
-    apiClient.get(`/exams/month?year=${year}&month=${month}`)
+    console.log("📋 [LandingPage] Fetching all exams | User:", user?.id || 'null', "| Token:", localStorage.getItem('user_token') ? '✅' : '❌');
+
+    // Get all exams instead of just current month
+    let endpoint = "/exams";
+    if (user?.id) {
+      endpoint = `/exams?user_id=${user.id}`;
+    }
+
+    apiClient.get(endpoint)
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
         console.log("✅ [LandingPage] Fetched", data.length, "exams");
         setMonthlyExams(data);
       })
-      .catch((err) => console.error("❌ [LandingPage] Lỗi fetch monthly exams:", err));
+      .catch((err) => console.error("❌ [LandingPage] Lỗi fetch exams:", err));
   }, [user]);
 
   // Lắng nghe thay đổi user

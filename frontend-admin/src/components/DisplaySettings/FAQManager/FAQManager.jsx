@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash2, Plus, Save, X, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+
 import "../../admin/Admin/Admin.css";
 
 const API_BASE_URL = "http://localhost:5000";
@@ -18,7 +17,6 @@ export default function FAQManager() {
     });
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState(null);
     const [selectedIds, setSelectedIds] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("exam");
@@ -73,7 +71,6 @@ export default function FAQManager() {
             is_active: true
         });
         setIsEditing(false);
-        setMessage(null);
     };
 
     const handleEditClick = (faq) => {
@@ -83,7 +80,6 @@ export default function FAQManager() {
             is_active: faq.is_active === 1 || faq.is_active === true
         });
         setIsEditing(true);
-        setMessage(null);
     };
 
     const handleSave = async (e) => {

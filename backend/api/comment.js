@@ -5,7 +5,6 @@ const { verifyToken, verifyStudent, verifyAdmin } = require('../middleware/verif
 
 // --- CREATE: Thêm comment mới 
 router.post("/", verifyStudent, async (req, res) => {
-  const connection = await db.getConnection();
   try {
     const { course_id, content, rating } = req.body;
     const user_id = req.user.id;
@@ -23,8 +22,8 @@ router.post("/", verifyStudent, async (req, res) => {
       return res.status(400).json({ error: "Nội dung comment không được vượt quá 500 ký tự" });
     }
 
-    // Validate rating (1-5)
-    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : null;
+    // Validate rating (1-5) - default 5 if not provided
+    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : 5;
 
     // Kiểm tra khóa học có tồn tại không
     const [courseExists] = await db.query("SELECT id FROM courses WHERE id = ?", [course_id]);
@@ -34,7 +33,7 @@ router.post("/", verifyStudent, async (req, res) => {
 
     // Insert comment - Lưu theo múi giờ Việt Nam (UTC+7)
     const vietnamTime = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).replace(' ', 'T');
-    
+
     const [result] = await db.query(
       `INSERT INTO comments (user_id, course_id, content, rating, created_at) 
        VALUES (?, ?, ?, ?, ?)`,
@@ -56,13 +55,11 @@ router.post("/", verifyStudent, async (req, res) => {
   } catch (error) {
     console.error("Lỗi tạo comment:", error);
     res.status(500).json({ error: "Lỗi server khi tạo comment" });
-  } finally {
-    connection.release();
   }
 });
 
 // --- READ: Lấy danh sách comments của 1 khóa học ---
-router.get("/course/:course_id", verifyToken, async (req, res) => {
+router.get("/course/:course_id", async (req, res) => {
   try {
     const { course_id } = req.params;
     const { page = 1, limit } = req.query;
@@ -204,7 +201,6 @@ router.get("/:id", verifyAdmin, async (req, res) => {
 
 // --- UPDATE: Cập nhật comment (Chỉ chủ comment được cập nhật) ---
 router.put("/:id", verifyStudent, async (req, res) => {
-  const connection = await db.getConnection();
   try {
     const { id } = req.params;
     const { content, rating } = req.body;
@@ -222,8 +218,8 @@ router.put("/:id", verifyStudent, async (req, res) => {
       return res.status(400).json({ error: "Nội dung comment không được vượt quá 500 ký tự" });
     }
 
-    // Validate rating (1-5)
-    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : null;
+    // Validate rating (1-5) - default 5 if not provided
+    const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : 5;
 
     // Kiểm tra comment có tồn tại không
     const [comments] = await db.query(
@@ -240,7 +236,7 @@ router.put("/:id", verifyStudent, async (req, res) => {
       return res.status(403).json({ error: "Bạn không có quyền cập nhật comment này" });
     }
 
-    // Update comment
+    // Update comment with content and rating
     await db.query(
       "UPDATE comments SET content = ?, rating = ? WHERE id = ?",
       [content.trim(), validRating, id]
@@ -258,14 +254,11 @@ router.put("/:id", verifyStudent, async (req, res) => {
   } catch (error) {
     console.error("Lỗi cập nhật comment:", error);
     res.status(500).json({ error: "Lỗi server khi cập nhật comment" });
-  } finally {
-    connection.release();
   }
 });
 
 // --- DELETE: Xóa comment (Chỉ chủ comment hoặc admin được xóa) ---
 router.delete("/:id", verifyStudent, async (req, res) => {
-  const connection = await db.getConnection();
   try {
     const { id } = req.params;
     const user_id = req.user.id;
@@ -299,8 +292,6 @@ router.delete("/:id", verifyStudent, async (req, res) => {
   } catch (error) {
     console.error("Lỗi xóa comment:", error);
     res.status(500).json({ error: "Lỗi server khi xóa comment" });
-  } finally {
-    connection.release();
   }
 });
 

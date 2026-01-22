@@ -6,6 +6,7 @@ import MediaSelector from "../mediaSelector/MediaSelector";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { STYLES, ANIMATIONS } from "../../constants/styles";
+import { notifyWarning, notifyError, notifySuccess } from "../../lib/notifications";
 import "./Model3DManager.css";
 
 // === 0. WEBGL SUPPORT CHECK ===
@@ -151,7 +152,6 @@ export default function Model3DManager() {
   const [currentModel, setCurrentModel] = useState("");
   const [defaultView, setDefaultView] = useState(null);
   const [showMediaModal, setShowMediaModal] = useState(false);
-  const [message, setMessage] = useState(null);
   const controlsRef = useRef(null);
 
   // Fetch data using custom hook
@@ -179,25 +179,26 @@ export default function Model3DManager() {
   const { mutate: saveSettings, loading } = useApiMutation();
 
   const handleSelectModel = useCallback(async (url) => {
-    if (!VALIDATION.GLB_ONLY(url)) return alert("Chỉ chọn file .glb!");
+    if (!VALIDATION.GLB_ONLY(url)) return notifyWarning("Chỉ chọn file .glb!");
 
-    try {
-      await saveSettings({
-        url: API_ENDPOINTS.SETTINGS,
-        method: "POST",
-        data: { key: "current_model_url", value: url },
-      });
+    const result = await saveSettings({
+      url: API_ENDPOINTS.SETTINGS,
+      method: "POST",
+      data: { key: "current_model_url", value: url },
+    });
+
+    if (result.success) {
       setCurrentModel(url);
-      setMessage({ type: "success", text: "Đã đổi Model!" });
+      notifySuccess("Đã đổi Model!");
       setShowMediaModal(false);
-    } catch (err) {
-      setMessage({ type: "error", text: err.message });
+    } else {
+      notifyError(result.error || "Lỗi lưu cài đặt");
     }
   }, [saveSettings]);
 
   const handleSaveCameraView = useCallback(async () => {
     const controls = controlsRef.current?.current;
-    if (!controls) return alert("Chưa tải xong khung 3D...");
+    if (!controls) return notifyWarning("Chưa tải xong khung 3D...");
 
     const viewData = {
       position: [
@@ -208,19 +209,20 @@ export default function Model3DManager() {
       target: [controls.target.x, controls.target.y, controls.target.z],
     };
 
-    try {
-      await saveSettings({
-        url: API_ENDPOINTS.SETTINGS,
-        method: "POST",
-        data: {
-          key: "default_camera_view",
-          value: JSON.stringify(viewData),
-        },
-      });
-      setMessage({ type: "success", text: "Đã lưu góc nhìn!" });
+    const result = await saveSettings({
+      url: API_ENDPOINTS.SETTINGS,
+      method: "POST",
+      data: {
+        key: "default_camera_view",
+        value: JSON.stringify(viewData),
+      },
+    });
+
+    if (result.success) {
+      notifySuccess("Đã lưu góc nhìn!");
       setDefaultView(viewData);
-    } catch (err) {
-      setMessage({ type: "error", text: "Lỗi lưu góc nhìn" });
+    } else {
+      notifyError(result.error || "Lỗi lưu góc nhìn");
     }
   }, [saveSettings]);
 
@@ -230,15 +232,6 @@ export default function Model3DManager() {
       <div className="panel">
         <div className="panel-header">Quản Lý File Model</div>
         <div className="form-section">
-          {message && (
-            <div
-              className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"
-                }`}
-            >
-              {message.text}
-            </div>
-          )}
-
           <div className="current-model-info">
             <h3 className="current-model-title">Model Đang Dùng:</h3>
             <div className="model-url-display">

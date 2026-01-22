@@ -4,6 +4,7 @@ import "../admin/Admin/Admin.css";
 import MediaSelector from "../mediaSelector/MediaSelector";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import { notifySuccess, notifyError } from "../../lib/notifications";
 
 const initialSolutionState = {
   id: "",
@@ -44,7 +45,6 @@ const getImageUrl = (path) => {
 export default function SolutionManager() {
   const [form, setForm] = useState(initialSolutionState);
   const [isEditing, setIsEditing] = useState(false);
-  const [message, setMessage] = useState(null);
 
   const [sections, setSections] = useState([]);
   const [clients, setClients] = useState([]);
@@ -67,7 +67,6 @@ export default function SolutionManager() {
     setSections([]);
     setClients([]);
     setIsEditing(false);
-    setMessage(null);
   };
 
   const handleEditClick = (sol) => {
@@ -95,7 +94,6 @@ export default function SolutionManager() {
     }
 
     setIsEditing(true);
-    setMessage(null);
     // ĐÃ XÓA: window.scrollTo({ top: 0, behavior: "smooth" }); -> Giúp giữ nguyên vị trí chuột khi bấm Sửa
   };
 
@@ -186,17 +184,15 @@ export default function SolutionManager() {
       });
 
       if (!response.ok) throw new Error("Lỗi khi lưu");
-      setMessage({
-        type: "success",
-        text: `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`,
-      });
+      const successMsg = `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`;
+      notifySuccess(successMsg);
 
       if (!isEditing) {
         handleAddNew();
       }
       fetchSolutions();
     } catch (error) {
-      setMessage({ type: "error", text: error.message });
+      notifyError(error.message);
     } finally {
       setLoading(false);
     }
@@ -206,12 +202,12 @@ export default function SolutionManager() {
     if (!window.confirm(`Bạn có chắc muốn xóa giải pháp ID: ${id}?`)) return;
     try {
       await fetch(`${API_SOLUTION_URL}/${id}`, { method: "DELETE" });
-      setMessage({ type: "success", text: "Đã xóa thành công!" });
+      notifySuccess("Đã xóa thành công!");
       fetchSolutions();
       if (form.id === id) handleAddNew();
     } catch (error) {
       console.error(error);
-      setMessage({ type: "error", text: "Lỗi khi xóa" });
+      notifyError("Lỗi khi xóa");
     }
   };
 
@@ -246,15 +242,6 @@ export default function SolutionManager() {
         </div>
 
         <div className="form-section">
-          {message && (
-            <div
-              className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"
-                }`}
-            >
-              {message.text}
-            </div>
-          )}
-
           <form onSubmit={handleSave}>
             {/* HERO SECTION */}
             <h3 className="section-title">1. Phần đầu trang (Hero)</h3>

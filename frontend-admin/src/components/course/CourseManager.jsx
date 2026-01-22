@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Loader,
 } from "lucide-react";
+import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import MediaSelector from "../mediaSelector/MediaSelector";
 import { uploadImage, uploadVideo } from "../../lib/cloudinaryService";
 import { useApi, useApiMutation } from "../../hooks/useApi";
@@ -177,7 +178,7 @@ export default function CourseManager() {
 
     try {
       const token = localStorage.getItem("admin_token");
-      if (!token) return alert("Phiên đăng nhập hết hạn");
+      if (!token) return notifyError("Phiên đăng nhập hết hạn");
 
       let thumbnailUrl = courseFormData.thumbnail;
       let courseDetail = null;
@@ -237,31 +238,36 @@ export default function CourseManager() {
       const method = courseFormData.id ? "PUT" : "POST";
       const url = courseFormData.id ? `${API_ENDPOINTS.COURSES}/${courseFormData.id}` : API_ENDPOINTS.COURSES;
 
-      await saveCourse({
+      const result = await saveCourse({
         url: url,
         method: method,
         data: payload,
       });
 
-      await refreshCourses();
-      setIsCourseFormOpen(false);
-      alert("Lưu thông tin thành công!");
+      if (result.success) {
+        await refreshCourses();
+        setIsCourseFormOpen(false);
+        notifySuccess(courseFormData.id ? "Cập nhật khóa học thành công!" : "Thêm khóa học thành công!");
+      } else {
+        notifyError(result.error || "Lỗi lưu khóa học");
+      }
     } catch (error) {
-      console.error(error);
-      alert("Lỗi: " + error.message);
+      console.error("Error saving course:", error);
+      notifyError("Lỗi: " + error.message);
     }
   };
 
   const handleDeleteCourse = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa khóa học này?")) return;
-    try {
-      await saveCourse({
-        url: `${API_ENDPOINTS.COURSES}/${id}`,
-        method: "DELETE",
-      });
+    const result = await saveCourse({
+      url: `${API_ENDPOINTS.COURSES}/${id}`,
+      method: "DELETE",
+    });
+    if (result.success) {
       await refreshCourses();
-    } catch (error) {
-      alert("Lỗi xóa: " + error.message);
+      notifySuccess("Xóa khóa học thành công!");
+    } else {
+      notifyError(result.error || "Lỗi xóa khóa học");
     }
   };
 
@@ -331,7 +337,7 @@ export default function CourseManager() {
       setViewMode("editor");
     } catch (error) {
       console.error(error);
-      alert("Lỗi: " + error.message);
+      notifyError("Lỗi: " + error.message);
     }
   };
 
@@ -363,21 +369,23 @@ export default function CourseManager() {
     };
 
     try {
-      await saveCourse({
+      const result = await saveCourse({
         url: `${API_ENDPOINTS.COURSES}/${selectedCourse.id}`,
         method: "PUT",
         data: payload,
       });
-      alert("Đã lưu nội dung giáo trình thành công!");
 
-      // Chờ refreshCourses hoàn thành rồi mới quay lại danh sách
-      await refreshCourses();
-
-      // Quay về danh sách
-      setViewMode("list");
-      setSelectedCourse(null);
+      if (result.success) {
+        notifySuccess("Đã lưu nội dung giáo trình thành công!");
+        await refreshCourses();
+        setViewMode("list");
+        setSelectedCourse(null);
+      } else {
+        notifyError(result.error || "Lỗi lưu giáo trình");
+      }
     } catch (error) {
-      alert("Lỗi lưu giáo trình: " + error.message);
+      console.error("Error saving curriculum:", error);
+      notifyError("Lỗi: " + error.message);
     }
   };
 
@@ -395,11 +403,12 @@ export default function CourseManager() {
       chapters: [...prev.chapters, newChapter],
     }));
     setExpandedChapters((prev) => ({ ...prev, [newChapter.id]: true }));
+    notifySuccess("Chương mới được thêm!");
   };
 
   const updateChapterTitle = (chapterId, newTitle) => {
     if (!newTitle.trim()) {
-      alert("Tên chương không được để trống");
+      notifyWarning("Tên chương không được để trống");
       return;
     }
     setSelectedCourse((prev) => ({
@@ -419,6 +428,7 @@ export default function CourseManager() {
       ...prev,
       chapters: prev.chapters.filter((c) => c.id !== chapterId),
     }));
+    notifySuccess("Chương đã bị xóa!");
   };
 
   // Lesson
@@ -453,12 +463,12 @@ export default function CourseManager() {
 
     // Validate lesson data
     if (!lessonFormData.title.trim()) {
-      alert("Vui lòng nhập tên bài học");
+      notifyWarning("Vui lòng nhập tên bài học");
       return;
     }
 
     if (lessonFormData.type !== "quiz" && !lessonFormData.content.trim()) {
-      alert("Vui lòng nhập URL nội dung hoặc upload video");
+      notifyWarning("Vui lòng nhập URL nội dung hoặc upload video");
       return;
     }
 
@@ -484,6 +494,7 @@ export default function CourseManager() {
         return chap;
       }),
     }));
+    notifySuccess(lessonFormData.id ? "Cập nhật bài học thành công!" : "Thêm bài học thành công!");
     setIsLessonModalOpen(false);
   };
 
@@ -504,6 +515,7 @@ export default function CourseManager() {
           : c
       ),
     }));
+    notifySuccess("Bài học đã bị xóa!");
   };
 
   // Quiz
@@ -512,14 +524,14 @@ export default function CourseManager() {
 
   const handleAddQuestionToQuiz = () => {
     if (!tempQuestion.text.trim()) {
-      alert("Vui lòng nhập câu hỏi");
+      notifyWarning("Vui lòng nhập câu hỏi");
       return;
     }
 
     // Validate at least one option
     const validOptions = tempQuestion.options.filter(opt => opt.trim());
     if (validOptions.length < 2) {
-      alert("Vui lòng nhập ít nhất 2 đáp án");
+      notifyWarning("Vui lòng nhập ít nhất 2 đáp án");
       return;
     }
 
@@ -527,14 +539,17 @@ export default function CourseManager() {
       ...prev,
       questions: [...prev.questions, { ...tempQuestion, id: Date.now() }],
     }));
+    notifySuccess("Câu hỏi được thêm!");
     resetTempQuestion();
   };
 
   const handleDeleteQuizQuestion = (indexToRemove) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa câu hỏi này?")) return;
     const updatedQuestions = lessonFormData.questions.filter(
       (_, index) => index !== indexToRemove
     );
     setLessonFormData((prev) => ({ ...prev, questions: updatedQuestions }));
+    notifySuccess("Câu hỏi đã bị xóa!");
   };
 
   const handleEditQuizQuestion = (indexToEdit) => {
@@ -568,7 +583,7 @@ export default function CourseManager() {
 
     // Validate video file
     if (!file.type.startsWith("video/")) {
-      alert("Vui lòng chọn file video");
+      notifyWarning("Vui lòng chọn file video");
       return;
     }
 
@@ -600,7 +615,7 @@ export default function CourseManager() {
         throw new Error(result.error || "Upload thất bại");
       }
     } catch (error) {
-      alert("Lỗi upload video: " + error.message);
+      notifyError("Lỗi upload video: " + error.message);
       setVideoUploadProgress(0);
       setIsVideoUploading(false);
     }

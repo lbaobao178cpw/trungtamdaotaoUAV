@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Trash2, Send } from 'lucide-react';
 import './CourseRatings.css';
+import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
 
 const API_BASE = "http://localhost:5000/api/courses";
 
@@ -39,10 +40,10 @@ export default function CourseRatings({ courseId, token }) {
     try {
       setLoading(true);
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      
+
       const res = await fetch(`${API_BASE}/${courseId}/ratings`, { headers });
-      if (!res.ok) throw new Error("Lỗi tải đánh giá");
-      
+      if (!res.ok) throw new Error("Không thể tải đánh giá");
+
       const data = await res.json();
       setStats(data.stats);
       setRatings(data.ratings || []);
@@ -54,7 +55,7 @@ export default function CourseRatings({ courseId, token }) {
         setUserComment(myRating.comment || '');
       }
     } catch (error) {
-      console.error("Lỗi fetch ratings:", error);
+      // Không hiển thị error notification nếu chỉ là lỗi load
     } finally {
       setLoading(false);
     }
@@ -63,11 +64,11 @@ export default function CourseRatings({ courseId, token }) {
   const handleSubmitRating = async (e) => {
     e.preventDefault();
     if (!token) {
-      alert('Vui lòng đăng nhập để đánh giá');
+      notifyWarning('Vui lòng đăng nhập để đánh giá');
       return;
     }
     if (!userRating) {
-      alert('Vui lòng chọn số sao');
+      notifyWarning('Vui lòng chọn số sao');
       return;
     }
 
@@ -86,20 +87,19 @@ export default function CourseRatings({ courseId, token }) {
       });
 
       if (!res.ok) throw new Error("Lỗi gửi đánh giá");
-      
-      alert(userRating > 0 ? 'Đánh giá thành công!' : 'Cập nhật đánh giá thành công!');
+
+      notifySuccess(userRating > 0 ? 'Đánh giá thành công!' : 'Cập nhật đánh giá thành công!');
       setUserComment('');
       await fetchRatings();
     } catch (error) {
-      console.error(error);
-      alert('Lỗi: ' + error.message);
+      notifyError('Không thể gửi đánh giá. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteRating = async (ratingId) => {
-    if (!window.confirm('Xóa đánh giá này?')) return;
+    if (!window.confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
 
     try {
       const res = await fetch(`${API_BASE}/${courseId}/ratings/${ratingId}`, {
@@ -109,15 +109,14 @@ export default function CourseRatings({ courseId, token }) {
         }
       });
 
-      if (!res.ok) throw new Error("Lỗi xóa đánh giá");
-      
-      alert('Đã xóa đánh giá');
+      if (!res.ok) throw new Error("Không thể xóa đánh giá");
+
+      notifySuccess('Đánh giá đã được xóa');
       setUserRating(0);
       setUserComment('');
       await fetchRatings();
     } catch (error) {
-      console.error(error);
-      alert('Lỗi: ' + error.message);
+      notifyError('Không thể xóa đánh giá. Vui lòng thử lại.');
     }
   };
 
@@ -189,7 +188,7 @@ export default function CourseRatings({ courseId, token }) {
       {token ? (
         <form className="rating-form" onSubmit={handleSubmitRating}>
           <h3 className="form-title">{userRating ? 'Cập nhật đánh giá' : 'Thêm đánh giá của bạn'}</h3>
-          
+
           <div className="form-group">
             <label className="form-label">Chọn số sao:</label>
             <StarRating

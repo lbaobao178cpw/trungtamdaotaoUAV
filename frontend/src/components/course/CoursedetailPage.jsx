@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './CourseDetailPage.css'; // Đảm bảo import CSS mới
 import noVideoImage from "../assets/noVideoImage.png";
-
+import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
 
 import {
   Video, FileText, ChevronDown, ChevronUp,
@@ -57,6 +57,52 @@ function CourseDetailPage() {
     setEditingContent(comment.content);
   };
 
+  const handleUpdateComment = async (commentId) => {
+    if (!editingContent.trim()) {
+      notifyWarning('Nội dung bình luận không được để trống');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${COMMENTS_API}/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: editingContent.trim()
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notifyError(data.error || "Cập nhật bình luận thất bại");
+        return;
+      }
+
+      // Cập nhật UI ngay
+      setComments(prev => prev.map(c =>
+        c.id === commentId
+          ? { ...c, content: editingContent.trim() }
+          : c
+      ));
+
+      setEditingCommentId(null);
+      setEditingContent('');
+      notifySuccess('Bình luận đã được cập nhật');
+
+    } catch (err) {
+      notifyError("Không thể cập nhật bình luận. Vui lòng thử lại.");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingContent('');
+  };
+
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Bạn có chắc muốn xóa bình luận này?")) return;
 
@@ -71,16 +117,16 @@ function CourseDetailPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Xóa bình luận thất bại");
+        notifyError(data.error || "Xóa bình luận thất bại");
         return;
       }
 
       // Cập nhật UI ngay
       setComments(prev => prev.filter(c => c.id !== commentId));
+      notifySuccess('Bình luận đã được xóa');
 
     } catch (err) {
-      console.error("Lỗi xóa comment:", err);
-      alert("Lỗi server");
+      notifyError("Không thể xóa bình luận. Vui lòng thử lại.");
     }
   };
 
@@ -154,11 +200,11 @@ function CourseDetailPage() {
   // === POST COMMENT ===
   const handlePostComment = async () => {
     if (!commentContent.trim()) {
-      alert('Vui lòng nhập nội dung bình luận');
+      notifyWarning('Vui lòng nhập nội dung bình luận');
       return;
     }
     if (!token) {
-      alert('Vui lòng đăng nhập để bình luận');
+      notifyWarning('Vui lòng đăng nhập để bình luận');
       navigate('/dang-nhap');
       return;
     }
@@ -181,14 +227,13 @@ function CourseDetailPage() {
         setCommentContent('');
         setCommentRating(0);
         fetchComments();
-        alert('Bình luận thành công!');
+        notifySuccess('Bình luận đã được đăng!');
       } else {
         const error = await res.json();
-        alert(error.error || 'Lỗi khi bình luận');
+        notifyError(error.error || 'Không thể đăng bình luận');
       }
     } catch (err) {
-      console.error("Lỗi post comment:", err);
-      alert('Lỗi server');
+      notifyError('Không thể đăng bình luận. Vui lòng thử lại.');
     }
   };
 
@@ -196,7 +241,7 @@ function CourseDetailPage() {
   useEffect(() => {
     // Kiểm tra đăng nhập trước
     if (!token) {
-      alert('Vui lòng đăng nhập để xem chi tiết khóa học');
+      notifyWarning('Vui lòng đăng nhập để xem chi tiết khóa học');
       navigate('/dang-nhap');
       return;
     }
@@ -215,7 +260,7 @@ function CourseDetailPage() {
 
         if (!resCourse.ok) {
           if (resCourse.status === 401) {
-            alert('Vui lòng đăng nhập để xem chi tiết khóa học');
+            notifyWarning('Vui lòng đăng nhập để xem chi tiết khóa học');
             navigate('/dang-nhap');
             return;
           }
@@ -831,15 +876,45 @@ function CourseDetailPage() {
                           key={comment.id}
                           className="comment-item"
                         >
-                          {/* ACTION: Xóa */}
-                          <div className="comment-actions">
-                            <span
-                              className="comment-delete"
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              Xóa
-                            </span>
-                          </div>
+                          {/* ACTIONS: Edit/Delete - chỉ hiển thị nếu là chủ comment */}
+                          {currentUser && comment.user_id === currentUser.id && (
+                            <div className="comment-actions">
+                              {editingCommentId === comment.id ? (
+                                <>
+                                  <span
+                                    className="comment-save"
+                                    onClick={() => handleUpdateComment(comment.id)}
+                                    style={{ color: '#28a745', cursor: 'pointer', marginRight: '10px' }}
+                                  >
+                                    Lưu
+                                  </span>
+                                  <span
+                                    className="comment-cancel"
+                                    onClick={handleCancelEdit}
+                                    style={{ color: '#666', cursor: 'pointer' }}
+                                  >
+                                    Hủy
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span
+                                    className="comment-edit"
+                                    onClick={() => handleEditComment(comment)}
+                                    style={{ color: '#0050B8', cursor: 'pointer', marginRight: '10px' }}
+                                  >
+                                    Sửa
+                                  </span>
+                                  <span
+                                    className="comment-delete"
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                  >
+                                    Xóa
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          )}
 
                           {/* Header */}
                           <div className="comment-header">
@@ -866,9 +941,27 @@ function CourseDetailPage() {
                             </div>
                           </div>
 
-                          {/* Nội dung */}
+                          {/* Nội dung - Hiển thị input khi đang edit */}
                           <div className="comment-content">
-                            {comment.content}
+                            {editingCommentId === comment.id ? (
+                              <textarea
+                                value={editingContent}
+                                onChange={(e) => setEditingContent(e.target.value)}
+                                placeholder="Chỉnh sửa bình luận..."
+                                style={{
+                                  width: '100%',
+                                  minHeight: '80px',
+                                  padding: '10px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #ddd',
+                                  fontFamily: 'inherit',
+                                  fontSize: '14px',
+                                  resize: 'vertical'
+                                }}
+                              />
+                            ) : (
+                              comment.content
+                            )}
                           </div>
                         </div>
                       ))}

@@ -16,13 +16,26 @@ router.get("/", async (req, res) => {
     let params = [];
     let userLevel = null;
 
-    // Nếu có token, lấy level từ database để filter lịch thi
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    // Nếu có user_id, query level từ database
+    if (userId) {
+      try {
+        const [userRows] = await db.query(
+          "SELECT level FROM users WHERE id = ?",
+          [userId]
+        );
+        if (userRows.length > 0) {
+          userLevel = userRows[0].level;
+        }
+      } catch (e) {
+        // User không tồn tại, tiếp tục mà không filter
+        userLevel = null;
+      }
+    } else if (authHeader && authHeader.startsWith("Bearer ")) {
+      // Fallback: nếu không có user_id, thử lấy từ token
       const token = authHeader.slice(7);
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded && decoded.id) {
-          // Lấy level từ users table
           const [userRows] = await db.query(
             "SELECT level FROM users WHERE id = ?",
             [decoded.id]

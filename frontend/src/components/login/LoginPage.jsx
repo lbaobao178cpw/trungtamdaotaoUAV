@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../lib/apiInterceptor';
+import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
 import './LoginPage.css';
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -79,11 +80,12 @@ function LoginPage() {
             }
 
             // 4. Điều hướng vào trang chủ
+            notifySuccess('Đăng nhập thành công!');
             navigate('/');
 
         } catch (err) {
-            console.error('Login error:', err);
-            setError(err.response?.data?.error || err.message || 'Đăng nhập thất bại');
+            const errorMsg = err.response?.data?.error || err.message || 'Đăng nhập thất bại';
+            notifyError(errorMsg);
         } finally {
             setLoading(false);
         }

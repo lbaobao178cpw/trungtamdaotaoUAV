@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import { notifySuccess, notifyError } from "../../lib/notifications";
 import "../admin/Admin/Admin.css";
 
 const initialLicenseState = {
@@ -35,7 +36,6 @@ const initialLicenseState = {
 export default function LookupManager() {
     const [form, setForm] = useState(initialLicenseState);
     const [isEditing, setIsEditing] = useState(false);
-    const [message, setMessage] = useState(null);
     const [userSearchInput, setUserSearchInput] = useState("");
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const userSearchRef = useRef(null);
@@ -145,10 +145,8 @@ export default function LookupManager() {
                 data: payload,
             });
 
-            setMessage({
-                type: "success",
-                text: `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`,
-            });
+            const successMsg = `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`;
+            notifySuccess(successMsg);
 
             if (!isEditing) handleAddNew();
             refreshLicenses();
@@ -158,12 +156,9 @@ export default function LookupManager() {
                 error?.response?.data?.error?.includes("đã tồn tại") ||
                 (typeof error?.message === "string" && error.message.includes("đã tồn tại"))
             ) {
-                setMessage({
-                    type: "error",
-                    text: "Số giấy phép đã tồn tại. Vui lòng nhập số khác!",
-                });
+                notifyError("Số giấy phép đã tồn tại. Vui lòng nhập số khác!");
             } else {
-                setMessage({ type: "error", text: error.message });
+                notifyError(error.message);
             }
         }
     };
@@ -175,11 +170,11 @@ export default function LookupManager() {
                 url: `${API_ENDPOINTS.LICENSES}/${licenseNumber}`,
                 method: "DELETE",
             });
-            setMessage({ type: "success", text: "Đã xóa thành công!" });
+            notifySuccess("Đã xóa thành công!");
             refreshLicenses();
             if (form.licenseNumber === licenseNumber) handleAddNew();
         } catch (error) {
-            setMessage({ type: "error", text: "Lỗi khi xóa" });
+            notifyError("Lỗi khi xóa");
         }
     };
 
@@ -302,21 +297,6 @@ export default function LookupManager() {
                 </div>
 
                 <div className="form-section">
-                    {message && (
-                        <div
-                            className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"
-                                }`}
-                            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                        >
-                            {message.type === "success" ? (
-                                <CheckCircle2 size={18} />
-                            ) : (
-                                <AlertCircle size={18} />
-                            )}
-                            {message.text}
-                        </div>
-                    )}
-
                     <form onSubmit={handleSave}>
                         <div className="form-group" ref={userSearchRef} style={{ position: 'relative' }}>
                             <label className="form-label">Tìm Kiếm Người Dùng</label>

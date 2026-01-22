@@ -7,6 +7,7 @@ import MediaSelector from "../mediaSelector/MediaSelector";
 import PointPreview from "../pointsPreview/PointPreview";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
+import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import '../admin/Admin/Admin.css';
 
 // MapPicker thường nặng nên dùng Lazy load
@@ -48,7 +49,6 @@ export default function PointManager() {
   // === STATE ===
   const [pointForm, setPointForm] = useState(initialPointState);
   const [isEditingPoint, setIsEditingPoint] = useState(false);
-  const [message, setMessage] = useState(null);
 
   // Modal State (Map & Media)
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -102,7 +102,7 @@ export default function PointManager() {
 
     // 1. Validate cơ bản
     if (!pointForm.id || !pointForm.title) {
-      setMessage({ type: "error", text: "Vui lòng điền ID và Tiêu đề." });
+      notifyWarning("Vui lòng điền ID và Tiêu đề.");
       return;
     }
 
@@ -129,7 +129,8 @@ export default function PointManager() {
       const result = await savePoint({ url, method, data: payload });
 
       if (result.success) {
-        setMessage({ type: "success", text: `${isEditingPoint ? "Đã cập nhật" : "Đã tạo mới"} thành công!` });
+        const msg = `${isEditingPoint ? "Đã cập nhật" : "Đã tạo mới"} thành công!`;
+        notifySuccess(msg);
         if (!isEditingPoint) setPointForm(initialPointState);
         refetch(); // Reload danh sách
       } else {
@@ -137,7 +138,7 @@ export default function PointManager() {
       }
     } catch (error) {
       console.error("Save Error:", error);
-      setMessage({ type: "error", text: `LỖI: ${error.message}` });
+      notifyError(`LỖI: ${error.message}`);
     }
   }, [pointForm, isEditingPoint, savePoint, refetch]);
 
@@ -151,14 +152,14 @@ export default function PointManager() {
       });
 
       if (result.success) {
-        setMessage({ type: "success", text: "Đã xóa thành công." });
+        notifySuccess("Đã xóa thành công.");
         refetch();
         if (pointForm.id === pointId) handleCancelEditPoint();
       } else {
         throw new Error(result.error);
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Lỗi khi xóa: " + error.message });
+      notifyError("Lỗi khi xóa: " + error.message);
     }
   }, [pointForm.id, savePoint, refetch, handleCancelEditPoint]);
 
@@ -167,13 +168,6 @@ export default function PointManager() {
 
   return (
     <>
-      {/* Thông báo lỗi/thành công */}
-      {message && (
-        <div className={message.type === 'success' ? 'message-box msg-success' : 'message-box msg-error'}>
-          {message.text}
-        </div>
-      )}
-
       <div className="split-layout">
 
         {/* CỘT TRÁI: DANH SÁCH ĐIỂM */}

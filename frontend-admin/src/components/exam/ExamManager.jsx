@@ -17,6 +17,7 @@ import {
 
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
+import { notifySuccess, notifyError } from "../../lib/notifications";
 import "../admin/Admin/Admin.css";
 
 const initialExamState = {
@@ -33,7 +34,6 @@ const initialExamState = {
 export default function ExamManager() {
   const [form, setForm] = useState(initialExamState);
   const [isEditing, setIsEditing] = useState(false);
-  const [message, setMessage] = useState(null);
 
   // === FETCH DATA WITH CUSTOM HOOK ===
   const { data: examsData, loading, refetch: refreshExams } = useApi(API_ENDPOINTS.EXAMS);
@@ -44,7 +44,6 @@ export default function ExamManager() {
   const handleAddNew = () => {
     setForm(initialExamState);
     setIsEditing(false);
-    setMessage(null);
   };
 
   const handleEditClick = (exam) => {
@@ -59,7 +58,6 @@ export default function ExamManager() {
       is_active: exam.is_active === 1 || exam.is_active === true
     });
     setIsEditing(true);
-    setMessage(null);
   };
 
   const handleSave = async (e) => {
@@ -84,15 +82,13 @@ export default function ExamManager() {
         data: payload,
       });
 
-      setMessage({
-        type: "success",
-        text: `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`,
-      });
+      const successMsg = `${isEditing ? "Cập nhật" : "Tạo mới"} thành công!`;
+      notifySuccess(successMsg);
 
       if (!isEditing) handleAddNew();
       refreshExams();
     } catch (error) {
-      setMessage({ type: "error", text: error.message });
+      notifyError(error.message);
     }
   };
 
@@ -103,11 +99,11 @@ export default function ExamManager() {
         url: `${API_ENDPOINTS.EXAMS}/${id}`,
         method: "DELETE",
       });
-      setMessage({ type: "success", text: "Đã xóa thành công!" });
+      notifySuccess("Đã xóa thành công!");
       refreshExams();
       if (form.id === id) handleAddNew();
     } catch (error) {
-      setMessage({ type: "error", text: "Lỗi khi xóa" });
+      notifyError("Lỗi khi xóa");
     }
   };
 
@@ -148,13 +144,6 @@ export default function ExamManager() {
         </div>
 
         <div className="form-section">
-          {message && (
-            <div className={`message-box ${message.type === "success" ? "msg-success" : "msg-error"}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {message.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-              {message.text}
-            </div>
-          )}
-
           <form onSubmit={handleSave}>
             <div className="form-group">
               <label className="form-label">Loại Chứng Chỉ</label>
