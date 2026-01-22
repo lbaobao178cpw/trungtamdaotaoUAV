@@ -29,6 +29,7 @@ const initialLicenseState = {
     expireDate: "",
     status: "active",
     drones: [],
+    licenseImage: null,
 };
 
 export default function LookupManager() {
@@ -135,6 +136,7 @@ export default function LookupManager() {
                 expireDate: form.expireDate,
                 status: form.status,
                 drones: form.drones || [],
+                licenseImage: form.licenseImage || null,
             };
 
             await saveLicense({
@@ -193,6 +195,27 @@ export default function LookupManager() {
         setForm({
             ...form,
             drones: form.drones.filter((_, i) => i !== index),
+        });
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setForm({
+                    ...form,
+                    licenseImage: event.target.result,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setForm({
+            ...form,
+            licenseImage: null,
         });
     };
 
@@ -502,6 +525,73 @@ export default function LookupManager() {
                                 <option value="active">Đang hoạt động</option>
                                 <option value="expired">Hết hạn</option>
                             </select>
+                        </div>
+
+                        {/* --- IMAGE SECTION --- */}
+                        <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
+                            <label className="form-label" style={{ marginBottom: "12px" }}>Hình ảnh Giấy phép</label>
+                            <div style={{
+                                border: "2px dashed #ccc",
+                                borderRadius: "8px",
+                                padding: "24px",
+                                textAlign: "center",
+                                backgroundColor: "#fafafa",
+                                cursor: "pointer",
+                                transition: "all 0.3s",
+                            }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.borderColor = "#0066cc";
+                                    e.currentTarget.style.backgroundColor = "#f0f7ff";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.borderColor = "#ccc";
+                                    e.currentTarget.style.backgroundColor = "#fafafa";
+                                }}
+                                onClick={() => document.getElementById("licenseImageInput")?.click()}
+                            >
+                                {!form.licenseImage ? (
+                                    <div>
+                                        <div style={{ fontSize: "32px", marginBottom: "8px" }}>📷</div>
+                                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "4px" }}>
+                                            Nhấp để chọn hình ảnh
+                                        </div>
+                                        <div style={{ fontSize: "12px", color: "#999" }}>
+                                            PNG, JPG, GIF (Tối đa 5MB)
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <img
+                                            src={form.licenseImage}
+                                            alt="License"
+                                            style={{
+                                                maxWidth: "100%",
+                                                maxHeight: "250px",
+                                                borderRadius: "6px",
+                                                marginBottom: "12px"
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveImage();
+                                            }}
+                                            className="btn btn-danger btn-sm"
+                                            style={{ display: "flex", alignItems: "center", gap: "4px", margin: "0 auto" }}
+                                        >
+                                            <Trash2 size={14} /> Xóa hình ảnh
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <input
+                                id="licenseImageInput"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                style={{ display: "none" }}
+                            />
                         </div>
 
                         {/* --- DRONES SECTION --- */}

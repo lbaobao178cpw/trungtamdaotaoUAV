@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './LookupPage.css';
-import { Search, FileText, CreditCard, Smartphone, Camera, CheckCircle, XCircle, Lock, RefreshCw } from 'lucide-react';
+import { Search, FileText, CreditCard, Smartphone, Camera, CheckCircle, XCircle, Lock, RefreshCw, Download } from 'lucide-react';
 import jsQR from 'jsqr';
+import QRCode from 'qrcode';
 
 // API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -21,12 +22,12 @@ function LookupPage() {
     const [otp, setOtp] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showResults, setShowResults] = useState(false);
-    
+
     // States cho API
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [resultData, setResultData] = useState(null);
-    
+
     // States cho OTP
     const [maskedEmail, setMaskedEmail] = useState('');
     const [otpSending, setOtpSending] = useState(false);
@@ -55,6 +56,7 @@ function LookupPage() {
     const [isScanning, setIsScanning] = useState(false);
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const qrCanvasRef = useRef(null);
     const scanIntervalRef = useRef(null);
 
     // Hàm quét QR từ video frame
@@ -145,6 +147,34 @@ function LookupPage() {
         }));
     };
 
+    // Hàm download QR code
+    const downloadQRCode = () => {
+        if (qrCanvasRef.current) {
+            const link = document.createElement('a');
+            link.href = qrCanvasRef.current.toDataURL('image/png');
+            link.download = `QR-${resultData.licenseNumber}.png`;
+            link.click();
+        }
+    };
+
+    // Effect để render QR code khi resultData thay đổi
+    useEffect(() => {
+        if (resultData && resultData.licenseNumber && qrCanvasRef.current) {
+            QRCode.toCanvas(qrCanvasRef.current, resultData.licenseNumber, {
+                errorCorrectionLevel: 'H',
+                type: 'image/png',
+                quality: 0.95,
+                margin: 1,
+                width: 200,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }).catch(err => {
+                console.error('Error generating QR code:', err);
+            });
+        }
+    }, [resultData]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -169,7 +199,7 @@ function LookupPage() {
         setSearchQuery(searchValue);
         setOtp('');
         setOtpError('');
-        
+
         // Gửi OTP
         sendOtp(searchValue);
     };
@@ -180,9 +210,9 @@ function LookupPage() {
         setOtpError('');
 
         try {
-            const searchType = activeTab === 'so-giay-phep' ? 'license' 
-                : activeTab === 'cccd' ? 'cccd' 
-                : 'device';
+            const searchType = activeTab === 'so-giay-phep' ? 'license'
+                : activeTab === 'cccd' ? 'cccd'
+                    : 'device';
 
             const response = await fetch(`${API_BASE_URL}/otp/send`, {
                 method: 'POST',
@@ -216,14 +246,14 @@ function LookupPage() {
     // Hàm gửi lại OTP
     const resendOtp = async () => {
         if (countdown > 0) return;
-        
+
         setOtpSending(true);
         setOtpError('');
 
         try {
-            const searchType = activeTab === 'so-giay-phep' ? 'license' 
-                : activeTab === 'cccd' ? 'cccd' 
-                : 'device';
+            const searchType = activeTab === 'so-giay-phep' ? 'license'
+                : activeTab === 'cccd' ? 'cccd'
+                    : 'device';
 
             const response = await fetch(`${API_BASE_URL}/otp/resend`, {
                 method: 'POST',
@@ -313,9 +343,9 @@ function LookupPage() {
 
         try {
             // Xác thực OTP trước
-            const searchType = activeTab === 'so-giay-phep' ? 'license' 
-                : activeTab === 'cccd' ? 'cccd' 
-                : 'device';
+            const searchType = activeTab === 'so-giay-phep' ? 'license'
+                : activeTab === 'cccd' ? 'cccd'
+                    : 'device';
 
             const verifyResponse = await fetch(`${API_BASE_URL}/otp/verify`, {
                 method: 'POST',
@@ -335,9 +365,9 @@ function LookupPage() {
 
             // OTP đúng - tiến hành tra cứu
             setLoading(true);
-            
+
             let response;
-            
+
             if (activeTab === 'so-giay-phep') {
                 // Tra cứu theo số giấy phép
                 response = await fetch(`${API_BASE_URL}/licenses/lookup/license/${searchQuery}`);
@@ -364,7 +394,7 @@ function LookupPage() {
                 issueDate: data.license?.issue_date ? new Date(data.license.issue_date).toLocaleDateString('vi-VN') : 'N/A',
                 expireDate: data.license?.expiry_date ? new Date(data.license.expiry_date).toLocaleDateString('vi-VN') : 'N/A',
                 status: data.license?.license_status || 'N/A',
-                avatar: data.license?.portrait_image || '/images/icons/avatar.jpg',
+                licenseImage: data.license?.license_image || '/images/icons/license-default.jpg',
                 drones: data.devices?.map(device => ({
                     model: device.model_name || 'N/A',
                     serial: device.serial_number || 'N/A',
@@ -418,11 +448,57 @@ function LookupPage() {
         });
     };
 
-    // Xử lý kết quả QR
+    // Xử lý kết quả QR - tự động fetch dữ liệu
     const handleQrResult = async () => {
         if (qrResult && qrResult.success) {
-            setSearchQuery(qrResult.data);
-            setShowOtpScreen(true);
+            const qrData = qrResult.data;
+            setSearchQuery(qrData);
+            setLoading(true);
+            setError('');
+
+            try {
+                // Giả định QR chứa license number - điều chỉnh nếu cần
+                const response = await fetch(`${API_BASE_URL}/licenses/lookup/license/${qrData}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Không tìm thấy thông tin');
+                }
+
+                // Format dữ liệu từ API
+                const formattedResult = {
+                    licenseNumber: data.license?.license_number || 'N/A',
+                    category: data.license?.license_tier || 'N/A',
+                    name: data.license?.full_name || 'N/A',
+                    idNumber: data.license?.identity_number || 'N/A',
+                    issueDate: data.license?.issue_date ? new Date(data.license.issue_date).toLocaleDateString('vi-VN') : 'N/A',
+                    expireDate: data.license?.expiry_date ? new Date(data.license.expiry_date).toLocaleDateString('vi-VN') : 'N/A',
+                    status: data.license?.license_status || 'N/A',
+                    licenseImage: data.license?.license_image || '/images/icons/license-default.jpg',
+                    drones: data.devices?.map(device => ({
+                        model: device.model_name || 'N/A',
+                        serial: device.serial_number || 'N/A',
+                        weight: device.weight || 'N/A',
+                        status: device.device_status || 'N/A'
+                    })) || []
+                };
+
+                setResultData(formattedResult);
+                setShowResults(true);
+                setCameraActive(false);
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    setMediaStream(null);
+                }
+                stopScanning();
+
+            } catch (err) {
+                console.error('QR Lookup error:', err);
+                setError(err.message || 'Không thể tra cứu thông tin từ QR');
+                alert(err.message || 'Không thể tra cứu thông tin từ QR');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -664,8 +740,8 @@ function LookupPage() {
 
                                 {/* Submit Button */}
                                 {activeTab !== 'qr' && (
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="btn btn-primary btn-search"
                                         disabled={otpSending}
                                     >
@@ -716,7 +792,7 @@ function LookupPage() {
                                 {otpError && <p className="otp-error">{otpError}</p>}
                                 <div className="otp-timer-row">
                                     <p className="otp-timer">Mã xác thực sẽ hết hạn sau 5 phút</p>
-                                    <button 
+                                    <button
                                         type="button"
                                         className={`otp-resend-btn ${countdown > 0 ? 'disabled' : ''}`}
                                         onClick={resendOtp}
@@ -813,22 +889,20 @@ function LookupPage() {
 
                                     <div className="results-right">
                                         <div className="result-photo">
-                                            <img src={resultData.avatar} alt="Avatar" />
+                                            <img src={resultData.licenseImage} alt="License" />
                                         </div>
-                                        <div className="result-qr">
-                                            <div className="qr-placeholder">
-                                                <svg width="100" height="100" viewBox="0 0 100 100" fill="black">
-                                                    <rect x="10" y="10" width="30" height="30" />
-                                                    <rect x="60" y="10" width="30" height="30" />
-                                                    <rect x="10" y="60" width="30" height="30" />
-                                                    <rect x="25" y="25" width="8" height="8" fill="white" />
-                                                    <rect x="75" y="25" width="8" height="8" fill="white" />
-                                                    <rect x="25" y="75" width="8" height="8" fill="white" />
-                                                    <rect x="45" y="45" width="10" height="10" />
-                                                    <rect x="50" y="50" width="5" height="5" fill="white" />
-                                                </svg>
+                                        <div className="result-qr" id="result-qr-code">
+                                            <div className="qr-code-container">
+                                                <canvas ref={qrCanvasRef} />
                                             </div>
-                                            <p>Quét mã QR để xác thực</p>
+                                            <p>Mã QR giấy phép</p>
+                                            <button
+                                                className="btn btn-qr-download"
+                                                onClick={downloadQRCode}
+                                                title="Tải mã QR"
+                                            >
+                                                <Download size={16} /> Tải QR code
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -839,11 +913,6 @@ function LookupPage() {
                                         onClick={handleNewSearch}
                                     >
                                         Tra cứu mới
-                                    </button>
-                                    <button
-                                        className="btn btn-primary"
-                                    >
-                                        Xuất kết quả tra cứu →
                                     </button>
                                 </div>
                             </div>
