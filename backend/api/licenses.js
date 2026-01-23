@@ -26,7 +26,9 @@ router.get("/lookup/license/:licenseNumber", async (req, res) => {
         u.full_name,
         u.avatar,
         p.identity_number,
-        p.target_tier as license_tier
+        p.target_tier as license_tier,
+        p.birth_date,
+        p.address
       FROM drone_licenses l
       LEFT JOIN users u ON l.user_id = u.id
       LEFT JOIN user_profiles p ON u.id = p.user_id
@@ -77,7 +79,7 @@ router.get("/lookup/cccd/:cccdNumber", async (req, res) => {
 
     // Tìm user theo CCCD và ngày sinh
     const [users] = await db.query(`
-      SELECT u.id, u.full_name, u.avatar, p.identity_number, p.birth_date, p.target_tier
+      SELECT u.id, u.full_name, u.avatar, p.identity_number, p.birth_date, p.target_tier, p.address
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       WHERE p.identity_number = ? AND DATE(p.birth_date) = DATE(?)
@@ -110,6 +112,8 @@ router.get("/lookup/cccd/:cccdNumber", async (req, res) => {
       full_name: user.full_name,
       identity_number: user.identity_number,
       license_tier: user.target_tier,
+      birth_date: user.birth_date,
+      address: user.address,
       portrait_image: licenses[0].portrait_image || user.avatar
     };
 
@@ -175,7 +179,9 @@ router.get("/lookup/device/:serialNumber", async (req, res) => {
         u.full_name,
         u.avatar,
         p.identity_number,
-        p.target_tier as license_tier
+        p.target_tier as license_tier,
+        p.birth_date,
+        p.address
       FROM drone_licenses l
       LEFT JOIN users u ON l.user_id = u.id
       LEFT JOIN user_profiles p ON u.id = p.user_id

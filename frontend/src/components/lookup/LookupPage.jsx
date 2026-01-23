@@ -391,6 +391,8 @@ function LookupPage() {
                 category: data.license?.license_tier || 'N/A',
                 name: data.license?.full_name || 'N/A',
                 idNumber: data.license?.identity_number || 'N/A',
+                birthDate: data.license?.birth_date ? new Date(data.license.birth_date).toLocaleDateString('vi-VN') : 'N/A',
+                address: data.license?.address || 'N/A',
                 issueDate: data.license?.issue_date ? new Date(data.license.issue_date).toLocaleDateString('vi-VN') : 'N/A',
                 expireDate: data.license?.expiry_date ? new Date(data.license.expiry_date).toLocaleDateString('vi-VN') : 'N/A',
                 status: data.license?.license_status || 'N/A',
@@ -471,6 +473,8 @@ function LookupPage() {
                     category: data.license?.license_tier || 'N/A',
                     name: data.license?.full_name || 'N/A',
                     idNumber: data.license?.identity_number || 'N/A',
+                    birthDate: data.license?.birth_date ? new Date(data.license.birth_date).toLocaleDateString('vi-VN') : 'N/A',
+                    address: data.license?.address || 'N/A',
                     issueDate: data.license?.issue_date ? new Date(data.license.issue_date).toLocaleDateString('vi-VN') : 'N/A',
                     expireDate: data.license?.expiry_date ? new Date(data.license.expiry_date).toLocaleDateString('vi-VN') : 'N/A',
                     status: data.license?.license_status || 'N/A',
@@ -828,86 +832,108 @@ function LookupPage() {
                         </div>
                     ) : resultData ? (
                         <div className="search-card">
-
                             <div className="results-card-inline">
-                                <div className="results-header">
-                                    <h3>Kết quả tra cứu</h3>
-                                    <span className={`status-badge ${resultData.status === 'Đang hoạt động' ? 'status-active' : 'status-inactive'}`}>
-                                        {resultData.status}
-                                    </span>
-                                </div>
 
-                                <div className="results-content">
-                                    <div className="results-left">
-                                        <div className="result-item">
-                                            <label>Số giấy phép</label>
-                                            <p>{resultData.licenseNumber}</p>
-                                        </div>
-                                        <div className="result-item">
-                                            <label>Loại chứng chỉ</label>
-                                            <p>{resultData.category}</p>
-                                        </div>
-
-                                        <div className="result-item">
-                                            <label>Họ và tên</label>
-                                            <p>{resultData.name}</p>
-                                        </div>
-                                        <div className="result-item">
-                                            <label>Số CCCD/CMND</label>
-                                            <p>{resultData.idNumber}</p>
+                                {/* License Card - 2 Mặt */}
+                                <div className="license-card-container">
+                                    {/* Mặt trước */}
+                                    <div className="license-card-front">
+                                        <div className="license-header-top">
+                                            <div className="header-text-content">
+                                                <p className="country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+                                                <p className="tagline">Độc lập - Tự do - Hạnh phúc</p>
+                                                <p className="title">GIẤY PHÉP ĐIỀU KHIỂN PHƯƠNG TIỆN BAY</p>
+                                            </div>
+                                            <div className="qr-box">
+                                                <canvas ref={qrCanvasRef} className="license-qr" />
+                                                <p className="qr-label">Mã QR</p>
+                                            </div>
                                         </div>
 
-                                        <div className="result-item">
-                                            <label>Ngày cấp</label>
-                                            <p>{resultData.issueDate}</p>
-                                        </div>
-                                        <div className="result-item">
-                                            <label>Ngày hết hạn</label>
-                                            <p>{resultData.expireDate}</p>
-                                        </div>
-
-                                        <div className="result-section">
-                                            <h4>Thiết bị drone đã đăng ký</h4>
-                                            {resultData.drones.map((drone, idx) => (
-                                                <div key={idx} className="drone-item">
-                                                    <div className="drone-info">
-                                                        <label>Mẫu thiết bị</label>
-                                                        <p>{drone.model}</p>
-                                                        <label>Trọng lượng</label>
-                                                        <p>{drone.weight}</p>
-                                                    </div>
-                                                    <div className="drone-info">
-                                                        <label>Số seri</label>
-                                                        <p>{drone.serial}</p>
-                                                        <label>Trạng thái</label>
-                                                        <p className="status-text">{drone.status}</p>
+                                        <div className="license-body">
+                                            <div className="left-section">
+                                                <div className="photo-box">
+                                                    <div className="license-photo">
+                                                        <img src={resultData.licenseImage} alt="User Photo" />
                                                     </div>
                                                 </div>
-                                            ))}
+                                            </div>
+
+                                            <div className="middle-section">
+                                                <div className="info-row">
+                                                    <span className="label">Số:</span>
+                                                    <span className="value">{resultData.licenseNumber}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="label">Họ và tên:</span>
+                                                    <span className="value">{resultData.name}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="label">Ngày sinh:</span>
+                                                    <span className="value">{resultData.birthDate || 'N/A'}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="label">Nơi cư trú:</span>
+                                                    <span className="value">{resultData.address || 'N/A'}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="label">Loại chứng chỉ:</span>
+                                                    <span className="value">{resultData.category || 'N/A'}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="label">Ngày cấp:</span>
+                                                    <span className="value">{resultData.issueDate || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="expiry-box">
+                                            <span>Có giá trị đến: {resultData.expireDate}</span>
                                         </div>
                                     </div>
 
-                                    <div className="results-right">
-                                        <div className="result-photo">
-                                            <img src={resultData.licenseImage} alt="License" />
-                                        </div>
-                                        <div className="result-qr" id="result-qr-code">
-                                            <div className="qr-code-container">
-                                                <canvas ref={qrCanvasRef} />
+                                    {/* Mặt sau */}
+                                    <div className="license-card-back">
+                                        <h4 className="back-title">CÁC LOẠI PHƯƠNG TIỆN BAY ĐƯỢC ĐIỀU KHIỂN</h4>
+
+                                        <div className="drone-categories">
+                                            <div className="category-item">
+                                                <span className="bullet">-</span>
+                                                <label>Tàu bay không người lái có trong lương cầm nâng dưới 2kg</label>
                                             </div>
-                                            <p>Mã QR giấy phép</p>
-                                            <button
-                                                className="btn btn-qr-download"
-                                                onClick={downloadQRCode}
-                                                title="Tải mã QR"
-                                            >
-                                                <Download size={16} /> Tải QR code
-                                            </button>
+                                            <div className="category-item">
+                                                <span className="bullet">-</span>
+                                                <label>Phương tiện bay khác</label>
+                                            </div>
+                                        </div>
+
+                                        <div className="back-content">
+                                            <div className="back-section">
+                                                <h5>Thiết bị đã đăng ký</h5>
+                                                {resultData.drones && resultData.drones.length > 0 ? (
+                                                    resultData.drones.map((drone, idx) => (
+                                                        <div key={idx} className="back-drone-item">
+                                                            <p><strong>Mẫu:</strong> {drone.model}</p>
+                                                            <p><strong>Seri:</strong> {drone.serial}</p>
+                                                            <p><strong>Trọng lượng:</strong> {drone.weight}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p>Không có thiết bị đã đăng ký</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="modal-buttons">
+                                    <button
+                                        className="btn btn-qr-download"
+                                        onClick={downloadQRCode}
+                                        title="Tải mã QR"
+                                    >
+                                        <Download size={16} /> Tải QR code
+                                    </button>
                                     <button
                                         className="btn btn-secondary"
                                         onClick={handleNewSearch}

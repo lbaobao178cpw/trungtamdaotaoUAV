@@ -900,8 +900,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Form Buttons */
@@ -1177,5 +1182,311 @@
     .btn {
         width: 100%;
         justify-content: center;
+    }
+}
+
+/* =========================================
+   LICENSE CARD - 2 MẶTS
+   ========================================= */
+.license-card-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+/* Mặt Trước */
+.license-card-front {
+    background: #f9fafb;
+    border: 3px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    color: #000;
+    font-family: 'Segoe UI', 'Times New Roman', serif;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+.license-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #333;
+}
+
+.header-text-content {
+    flex: 1;
+    text-align: center;
+}
+
+.header-text-content p {
+    margin: 2px 0;
+    font-weight: bold;
+    color: #000;
+}
+
+.header-text-content .country {
+    font-size: 15px;
+}
+
+.header-text-content .tagline {
+    font-size: 13px;
+    color: #333;
+}
+
+.header-text-content .title {
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    border: 2px solid #333;
+    padding: 2px;
+}
+
+.qr-box .license-qr {
+    width: 55px !important;
+    height: 55px !important;
+    border: 1px solid #999 !important;
+}
+
+.qr-label {
+    font-size: 8px;
+    margin: 0;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.license-body {
+    display: grid;
+    grid-template-columns: 85px 1fr;
+    gap: 8px;
+    flex: 1;
+    margin-bottom: 6px;
+}
+
+.left-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.license-photo {
+    width: 75px;
+    height: 95px;
+    border: 2px solid #333;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.license-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-label {
+    font-size: 9px;
+    margin: 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.rank-label {
+    font-size: 9px;
+    margin: 5px 0 0 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.middle-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    font-size: 13px;
+}
+
+.info-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.info-row .label {
+    font-weight: bold;
+    min-width: 70px;
+    color: #000;
+}
+
+.info-row .value {
+    flex: 1;
+    border-bottom: none;
+    color: #000;
+}
+
+.signature-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: none;
+}
+
+.date-text {
+    font-size: 9px;
+    margin: 0 0 6px 0;
+    text-align: center;
+    font-style: italic;
+}
+
+.sig-area {
+    text-align: center;
+    font-size: 9px;
+}
+
+.sig-title {
+    margin: 0 0 20px 0;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.sig-name {
+    margin: 0;
+    font-weight: bold;
+}
+
+.expiry-box {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 4px;
+    border-top: 2px solid #333;
+    text-align: left;
+}
+
+/* Mặt Sau */
+.license-card-back {
+    background: #f9fafb;
+    border: 3px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    color: #000;
+    font-family: 'Segoe UI', 'Times New Roman', serif;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+}
+
+.back-title {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 900;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #333;
+    color: #000;
+}
+
+.drone-categories {
+    margin-bottom: 8px;
+    padding: 0 8px;
+}
+
+.category-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.category-item .bullet {
+    font-weight: bold;
+    min-width: 10px;
+    color: #000;
+}
+
+.category-item label {
+    margin: 0;
+    cursor: pointer;
+    color: #000;
+    flex: 1;
+}
+
+.back-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.back-section {
+    border: 1px solid #333;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.back-section h5 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    font-weight: bold;
+    color: #000;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+.back-section p {
+    margin: 3px 0;
+    color: #000;
+    font-size: 13px;
+}
+
+.back-drone-item {
+    background: #f9f9f9;
+    padding: 5px;
+    margin: 3px 0;
+    border-radius: 3px;
+}
+
+.back-drone-item p {
+    margin: 2px 0;
+    font-size: 13px;
+}
+
+/* Responsive - Single Column for Mobile */
+@media (max-width: 900px) {
+    .license-card-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .license-card-front,
+    .license-card-back {
+        min-height: auto;
+    }
+
+    .license-body {
+        grid-template-columns: 1fr;
+    }
+
+    .qr-box {
+        align-self: flex-end;
     }
 }
