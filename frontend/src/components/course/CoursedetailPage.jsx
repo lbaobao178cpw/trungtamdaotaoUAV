@@ -643,6 +643,33 @@ function CourseDetailPage() {
                   <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
                   Trình duyệt không hỗ trợ.
                 </video>
+                <video
+                  key={activeLesson.id}
+                  ref={videoRef}
+                  controls
+                  autoPlay
+                  className="main-video-player"
+                >
+                  <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
+                  Trình duyệt không hỗ trợ.
+                </video>
+                {activeLesson.src?.includes('youtube.com/embed') ? (
+                  <iframe
+                    key={activeLesson.id}
+                    className="main-video-player"
+                    src={activeLesson.src + '?modestbranding=1&rel=0&fs=1&autoplay=0'}
+                    title={activeLesson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    sandbox="allow-same-origin allow-scripts allow-presentation allow-popups"
+                    allowFullScreen
+                    style={{ border: 'none' }}
+                  />
+                ) : (
+                  <video key={activeLesson.id} controls autoPlay className="main-video-player">
+                    <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
+                    Trình duyệt không hỗ trợ.
+                  </video>
+                )}
               </div>
             )}
 
