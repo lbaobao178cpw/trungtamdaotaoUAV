@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import MediaSelector from "../mediaSelector/MediaSelector";
-import { uploadImage, uploadVideo } from "../../lib/cloudinaryService";
+import { uploadImage, uploadVideo, uploadDocument } from "../../lib/cloudinaryService";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
 import "./CourseManager.css";
@@ -38,6 +38,8 @@ export default function CourseManager() {
   const [isVideoUploading, setIsVideoUploading] = useState(false);
   const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
+  const [isDocumentUploading, setIsDocumentUploading] = useState(false);
+  const [documentUploadProgress, setDocumentUploadProgress] = useState(0);
 
   // Form States
   const [courseFormData, setCourseFormData] = useState({
@@ -70,6 +72,9 @@ export default function CourseManager() {
     duration: "",
     questions: [],
     passScore: 0,
+    documentUrl: "",
+    displayName: "",  // Tên file gốc
+    youtubeUrl: "",
   });
 
   const [tempQuestion, setTempQuestion] = useState({
@@ -306,6 +311,8 @@ export default function CourseManager() {
           title: l.title,
           type: l.type,
           content: l.video_url,
+          documentUrl: l.type === 'document' ? l.video_url : '',
+          displayName: l.display_name || '',  // Tên file gốc
           duration: l.duration,
           questions:
             (typeof l.quiz_data === "string"
@@ -350,7 +357,11 @@ export default function CourseManager() {
       lessons: chap.lessons.map((l) => ({
         title: l.title,
         type: l.type,
-        video_url: l.content,
+        // Map content dựa trên loại bài học
+        content: l.type === 'document' ? (l.documentUrl || l.content || l.video_url || '') : (l.content || l.video_url || ''),
+        video_url: l.type === 'document' ? (l.documentUrl || l.content || l.video_url || '') : (l.content || l.video_url || ''),
+        // Lưu tên file gốc (display_name)
+        display_name: l.displayName || l.display_name || null,
         duration: l.duration,
         quiz_data: l.questions || [],
       })),
@@ -442,6 +453,9 @@ export default function CourseManager() {
       duration: "",
       questions: [],
       passScore: 0,
+      documentUrl: "",
+      displayName: "",
+      youtubeUrl: "",
     });
     resetTempQuestion();
     setIsLessonModalOpen(true);
@@ -451,6 +465,8 @@ export default function CourseManager() {
     setActiveChapterIdForLesson(chapterId);
     setLessonFormData({
       ...lesson,
+      documentUrl: lesson.documentUrl || (lesson.type === 'document' ? lesson.content : ''),
+      displayName: lesson.displayName || lesson.display_name || '',
       questions: lesson.questions || [],
       passScore: lesson.passScore || 0,
     });
@@ -467,8 +483,19 @@ export default function CourseManager() {
       return;
     }
 
-    if (lessonFormData.type !== "quiz" && !lessonFormData.content.trim()) {
-      notifyWarning("Vui lòng nhập URL nội dung hoặc upload video");
+    // Kiểm tra nội dung dựa trên loại bài học
+    if (lessonFormData.type === "video" && !lessonFormData.content.trim()) {
+      notifyWarning("Vui lòng nhập URL hoặc upload video");
+      return;
+    }
+
+    if (lessonFormData.type === "document" && !lessonFormData.documentUrl.trim()) {
+      notifyWarning("Vui lòng upload tài liệu");
+      return;
+    }
+
+    if (lessonFormData.type === "quiz" && lessonFormData.questions.length === 0) {
+      notifyWarning("Vui lòng thêm ít nhất một câu hỏi cho quiz");
       return;
     }
 
@@ -606,6 +633,7 @@ export default function CourseManager() {
         // Jump lên 100%
         setVideoUploadProgress(100);
         setLessonFormData((prev) => ({ ...prev, content: result.url }));
+        notifySuccess("Upload video thành công!");
         setTimeout(() => {
           setIsVideoUploadingOpen(false);
           setVideoUploadProgress(0);
@@ -618,6 +646,71 @@ export default function CourseManager() {
       notifyError("Lỗi upload video: " + error.message);
       setVideoUploadProgress(0);
       setIsVideoUploading(false);
+    }
+  };
+
+  // Handle Document Upload
+  const handleDocumentUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsDocumentUploading(true);
+      setDocumentUploadProgress(0);
+
+      // Lưu tên file gốc (bao gồm extension)
+      const originalFileName = file.name;
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setDocumentUploadProgress((prev) => {
+          if (prev >= 99) return 99;
+          return prev + Math.random() * 25;
+        });
+      }, 400);
+
+      const result = await uploadDocument(file);
+      clearInterval(progressInterval);
+
+      if (result.success) {
+        setDocumentUploadProgress(100);
+        // Lưu cả URL và tên file gốc (display_name)
+        setLessonFormData((prev) => ({
+          ...prev,
+          documentUrl: result.url,
+          displayName: originalFileName  // Tên file gốc với extension
+        }));
+        notifySuccess("Upload tài liệu thành công!");
+        setTimeout(() => {
+          setDocumentUploadProgress(0);
+          setIsDocumentUploading(false);
+        }, 500);
+      } else {
+        throw new Error(result.error || "Upload thất bại");
+      }
+    } catch (error) {
+      notifyError("Lỗi upload tài liệu: " + error.message);
+      setDocumentUploadProgress(0);
+      setIsDocumentUploading(false);
+    }
+  };
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeId = (url) => {
+    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([^\s&]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  // Handle YouTube URL input
+  const handleYouTubeUrlChange = (url) => {
+    setLessonFormData((prev) => ({ ...prev, youtubeUrl: url }));
+
+    const videoId = extractYouTubeId(url);
+    if (videoId && url.trim()) {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      setLessonFormData((prev) => ({ ...prev, content: embedUrl }));
+      notifySuccess("Liên kết YouTube được nhận diện!");
     }
   };
 
@@ -797,7 +890,7 @@ export default function CourseManager() {
                               {lesson.title}
                             </span>
                             <span className="cm-lesson-meta">
-                              {lesson.type} • {lesson.duration}
+                              {lesson.type === 'quiz' ? `${lesson.type} • ${lesson.duration}p` : lesson.type}
                             </span>
                           </div>
                           <div className="cm-lesson-actions">
@@ -1026,49 +1119,136 @@ export default function CourseManager() {
 
               {lessonFormData.type !== "quiz" ? (
                 <>
-                  <div className="cm-form-group">
-                    <label className="cm-form-label">Thời lượng</label>
-                    <input
-                      className="cm-form-input"
-                      value={lessonFormData.duration}
-                      onChange={(e) =>
-                        setLessonFormData({
-                          ...lessonFormData,
-                          duration: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="cm-form-group">
-                    <label className="cm-form-label">Nội dung (URL)</label>
-                    <div className="cm-media-input-group">
-                      <input
-                        className="cm-form-input"
-                        value={lessonFormData.content}
-                        onChange={(e) =>
-                          setLessonFormData({
-                            ...lessonFormData,
-                            content: e.target.value,
-                          })
-                        }
-                        placeholder="URL video..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsVideoUploadingOpen(true)}
-                        className="cm-btn cm-btn-primary cm-btn-sm"
-                      >
-                        <Video size={16} /> Upload
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openMediaSelector("lesson-content")}
-                        className="cm-btn cm-btn-secondary"
-                      >
-                        Chọn
-                      </button>
+                  {/* VIDEO CONTENT */}
+                  {lessonFormData.type === "video" && (
+                    <>
+                      <div className="cm-form-group">
+                        <label className="cm-form-label">Video từ YouTube</label>
+                        <input
+                          className="cm-form-input"
+                          value={lessonFormData.youtubeUrl}
+                          onChange={(e) => handleYouTubeUrlChange(e.target.value)}
+                          placeholder="https://youtube.com/watch?v=... hoặc youtu.be/..."
+                        />
+                        <small style={{ color: "#666", marginTop: "5px", display: "block" }}>
+                          Nhập liên kết YouTube, hệ thống sẽ tự động nhận diện
+                        </small>
+                      </div>
+
+                      <div className="cm-form-group">
+                        <label className="cm-form-label">Hoặc Upload Video</label>
+                        <div className="cm-media-input-group">
+                          <input
+                            className="cm-form-input"
+                            value={lessonFormData.content}
+                            onChange={(e) =>
+                              setLessonFormData({
+                                ...lessonFormData,
+                                content: e.target.value,
+                              })
+                            }
+                            placeholder="URL video hoặc YouTube embed URL..."
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setIsVideoUploadingOpen(true)}
+                            className="cm-btn cm-btn-primary cm-btn-sm"
+                            disabled={isVideoUploading}
+                          >
+                            <Video size={16} /> Upload
+                          </button>
+                        </div>
+                        {isVideoUploadingOpen && (
+                          <div style={{ marginTop: "10px" }}>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={handleVideoUpload}
+                              style={{ display: "block", marginBottom: "10px" }}
+                            />
+                            {isVideoUploading && (
+                              <div style={{ marginTop: "10px" }}>
+                                <div style={{
+                                  textAlign: "center",
+                                  color: "#0066cc",
+                                  fontWeight: "600",
+                                  marginBottom: "5px"
+                                }}>
+                                  Đang upload... {Math.round(videoUploadProgress)}%
+                                </div>
+                                <div style={{
+                                  width: "100%",
+                                  height: "6px",
+                                  background: "#e2e8f0",
+                                  borderRadius: "3px",
+                                  overflow: "hidden"
+                                }}>
+                                  <div style={{
+                                    width: `${videoUploadProgress}%`,
+                                    height: "100%",
+                                    background: "linear-gradient(90deg, #0066cc, #0052a3)",
+                                    transition: "width 0.3s ease"
+                                  }} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* DOCUMENT CONTENT */}
+                  {lessonFormData.type === "document" && (
+                    <div className="cm-form-group">
+                      <label className="cm-form-label">Upload Tài liệu</label>
+                      <div style={{ marginBottom: "10px" }}>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                          onChange={handleDocumentUpload}
+                          style={{ display: "block", marginBottom: "10px" }}
+                          disabled={isDocumentUploading}
+                        />
+                        <small style={{ color: "#666", display: "block" }}>
+                          Hỗ trợ: PDF, Word, Excel, PowerPoint
+                        </small>
+                      </div>
+                      {isDocumentUploading && (
+                        <div style={{ marginTop: "10px" }}>
+                          <div style={{
+                            textAlign: "center",
+                            color: "#0066cc",
+                            fontWeight: "600",
+                            marginBottom: "5px"
+                          }}>
+                            Đang upload... {Math.round(documentUploadProgress)}%
+                          </div>
+                          <div style={{
+                            width: "100%",
+                            height: "6px",
+                            background: "#e2e8f0",
+                            borderRadius: "3px",
+                            overflow: "hidden"
+                          }}>
+                            <div style={{
+                              width: `${documentUploadProgress}%`,
+                              height: "100%",
+                              background: "linear-gradient(90deg, #0066cc, #0052a3)",
+                              transition: "width 0.3s ease"
+                            }} />
+                          </div>
+                        </div>
+                      )}
+                      {lessonFormData.documentUrl && (
+                        <div style={{ marginTop: "10px", padding: "10px", background: "#f0f9ff", borderRadius: "6px" }}>
+                          <span style={{ color: "#0066cc", wordBreak: "break-all" }}>
+                            📄 {lessonFormData.displayName || 'Tài liệu đã upload'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </>
               ) : (
                 <div className="cm-quiz-builder">
