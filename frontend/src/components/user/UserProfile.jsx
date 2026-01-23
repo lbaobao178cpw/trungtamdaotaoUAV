@@ -4,6 +4,7 @@ import { apiClient } from '../../lib/apiInterceptor';
 import { notifyWarning, notifyError } from '../../lib/notifications';
 
 import './UserProfile.css';
+import formatDateDDMM from '../../lib/formatDate';
 
 const API_BASE = "http://localhost:5000/api/users";
 
@@ -77,15 +78,12 @@ function UserProfile() {
     }
   }, [id, token, navigate, currentUser]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '--';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-  };
+  const formatDate = (dateString) => formatDateDDMM(dateString);
 
   const menuItems = [
 
     { id: 'learning', label: 'Lịch Sử Học tập', path: `/profile/${id}/learning-history` },
+    { id: 'examHistory', label: 'Lịch thi đã đăng kí', path: `/profile/${id}/exam-history` },
     { id: 'comments', label: 'Bình Luận', path: `/profile/${id}/comments` },
     { id: 'personal', label: 'Thông Tin Cá Nhân', path: `/profile/${id}` },
     { id: 'changePassword', label: 'Đổi mật khẩu', path: `/profile/${id}/doi-mat-khau` }

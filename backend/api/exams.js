@@ -12,9 +12,24 @@ router.get("/", async (req, res) => {
   const authHeader = req.headers.authorization;
 
   try {
-    let query = "SELECT * FROM exam_schedules ORDER BY exam_date ASC";
     let params = [];
     let userLevel = null;
+    // By default non-admin users see only upcoming exams (today and future).
+    // Admin (when authenticated) should see all exams including past ones.
+    let includePast = false;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET);
+        if (decoded && decoded.role === 'admin') includePast = true;
+      } catch (e) {
+        includePast = false;
+      }
+    }
+
+    // Default query (no user filter)
+    let query = includePast
+      ? "SELECT * FROM exam_schedules ORDER BY exam_date ASC"
+      : "SELECT * FROM exam_schedules WHERE DATE(exam_date) >= CURDATE() ORDER BY exam_date ASC";
 
     // Nếu có user_id, query level từ database
     if (userId) {
@@ -52,6 +67,7 @@ router.get("/", async (req, res) => {
 
     // Nếu có user_id, kiểm tra đăng ký + filter theo level
     if (userId) {
+      const dateCond = includePast ? '' : 'AND DATE(s.exam_date) >= CURDATE()';
       if (userLevel === "Cơ bản") {
         // User hạng A chỉ xem lịch hạng A
         query = `
@@ -59,7 +75,7 @@ router.get("/", async (req, res) => {
                  (SELECT COUNT(*) FROM exam_registrations r 
                   WHERE r.exam_schedule_id = s.id AND r.user_id = ?) as is_registered
           FROM exam_schedules s
-          WHERE s.type LIKE '%Hạng A%'
+          WHERE s.type LIKE '%Hạng A%' ${dateCond}
           ORDER BY s.exam_date ASC
         `;
       } else if (userLevel === "Nâng cao") {
@@ -69,16 +85,17 @@ router.get("/", async (req, res) => {
                  (SELECT COUNT(*) FROM exam_registrations r 
                   WHERE r.exam_schedule_id = s.id AND r.user_id = ?) as is_registered
           FROM exam_schedules s
-          WHERE s.type LIKE '%Hạng A%' OR s.type LIKE '%Hạng B%'
+          WHERE (s.type LIKE '%Hạng A%' OR s.type LIKE '%Hạng B%') ${dateCond}
           ORDER BY s.exam_date ASC
         `;
       } else {
-        // Không có level hoặc token không hợp lệ, show all
+        // Không có level hoặc token không hợp lệ, show all (but still respect includePast)
         query = `
           SELECT s.*, 
                  (SELECT COUNT(*) FROM exam_registrations r 
                   WHERE r.exam_schedule_id = s.id AND r.user_id = ?) as is_registered
           FROM exam_schedules s
+          WHERE 1=1 ${dateCond}
           ORDER BY s.exam_date ASC
         `;
       }
@@ -130,7 +147,8 @@ router.get("/month", async (req, res) => {
       }
     }
 
-    let query = `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1`;
+    // Only include upcoming exams (today or future)
+    let query = `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1 AND DATE(exam_date) >= CURDATE()`;
     let params = [year, month];
 
     // Filter theo level nếu có token
@@ -237,9 +255,11 @@ router.post("/book", verifyStudent, async (req, res) => {
     }
 
     // 3. Tạo đăng ký
+    // Insert minimal registration fields to match DB schema (no extra payment_status field).
+    // Use allowed status value 'registered' (matches ENUM in schema).
     await connection.query(
-      `INSERT INTO exam_registrations (user_id, exam_schedule_id, status, payment_status, created_at) 
-       VALUES (?, ?, 'pending', 'unpaid', NOW())`,
+      `INSERT INTO exam_registrations (user_id, exam_schedule_id, status) 
+       VALUES (?, ?, 'registered')`,
       [user_id, exam_schedule_id]
     );
 
@@ -250,7 +270,13 @@ router.post("/book", verifyStudent, async (req, res) => {
     );
 
     await connection.commit();
-    res.status(201).json({ message: "Đăng ký thi thành công!" });
+    // Lấy số chỗ còn lại và trả về cho client để client có thể cập nhật giao diện
+    const [updatedRows] = await connection.query(
+      "SELECT spots_left FROM exam_schedules WHERE id = ?",
+      [exam_schedule_id]
+    );
+    const remaining = updatedRows && updatedRows[0] ? updatedRows[0].spots_left : null;
+    res.status(201).json({ message: "Đăng ký thành công!", spots_left: remaining });
 
   } catch (error) {
     await connection.rollback();
@@ -258,6 +284,26 @@ router.post("/book", verifyStudent, async (req, res) => {
     res.status(500).json({ error: "Lỗi server khi đăng ký thi: " + error.message });
   } finally {
     connection.release();
+  }
+});
+
+// --- GET: Lấy lịch sử đăng ký của người dùng đang đăng nhập ---
+router.get("/my-registrations", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const query = `
+      SELECT r.id AS registration_id, r.status AS registration_status, r.created_at,
+             s.id AS schedule_id, s.type, s.location, s.address, s.exam_date, s.exam_time, s.spots_left, s.is_active
+      FROM exam_registrations r
+      JOIN exam_schedules s ON r.exam_schedule_id = s.id
+      WHERE r.user_id = ?
+      ORDER BY s.exam_date DESC
+    `;
+    const [rows] = await db.query(query, [userId]);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error in /my-registrations:", error);
+    res.status(500).json({ error: "Lỗi lấy lịch sử đăng ký", details: error.message });
   }
 });
 
