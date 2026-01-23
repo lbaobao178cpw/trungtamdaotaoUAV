@@ -147,8 +147,8 @@ router.get("/month", async (req, res) => {
       }
     }
 
-    // Only include upcoming exams (today or future)
-    let query = `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1 AND DATE(exam_date) >= CURDATE()`;
+    // Include all exams in the specified month (past and upcoming)
+    let query = `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1`;
     let params = [year, month];
 
     // Filter theo level nếu có token

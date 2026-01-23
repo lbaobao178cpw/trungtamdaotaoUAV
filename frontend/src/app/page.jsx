@@ -260,11 +260,8 @@ function UAVLandingPage() {
     const month = now.getMonth() + 1; // 1-based
     console.log("📋 [LandingPage] Fetching all exams | User:", user?.id || 'null', "| Token:", localStorage.getItem('user_token') ? '✅' : '❌');
 
-    // Get all exams instead of just current month
-    let endpoint = "/exams";
-    if (user?.id) {
-      endpoint = `/exams?user_id=${user.id}`;
-    }
+    // Fetch exams for the current month (include past dates in month)
+    const endpoint = `/exams/month?year=${year}&month=${month}`;
 
     apiClient.get(endpoint)
       .then((res) => {
