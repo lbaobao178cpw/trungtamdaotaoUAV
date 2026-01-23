@@ -39,6 +39,8 @@ function CourseDetailPage() {
   const [userAnswers, setUserAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
 
   // === COMMENT STATE ===
   const [comments, setComments] = useState([]);
@@ -336,6 +338,31 @@ function CourseDetailPage() {
     if (id) fetchAllData();
   }, [id, token, navigate]);
 
+  // Kiểm tra URL có phải YouTube không
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+
+    // Xử lý youtu.be
+    let match = url.match(/youtu\.be\/([^\s&?]+)/);
+    if (match) return match[1];
+
+    // Xử lý youtube.com/watch?v=
+    match = url.match(/youtube\.com\/watch\?v=([^\s&]+)/);
+    if (match) return match[1];
+
+    // Xử lý youtube.com/embed/
+    match = url.match(/youtube\.com\/embed\/([^\s&?]+)/);
+    if (match) return match[1];
+
+    return null;
+  };
+
+  // Chuyển YouTube URL thành embed URL
+  const getYouTubeEmbedUrl = (videoUrl) => {
+    const videoId = extractYouTubeId(videoUrl);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : videoUrl;
+  };
+
   const formatLessonData = (l) => {
     let parsedQuestions = [];
     const rawQuizData = l.quiz_data || l.content_data;
@@ -344,12 +371,25 @@ function CourseDetailPage() {
     } else if (typeof rawQuizData === 'string') {
       try { parsedQuestions = JSON.parse(rawQuizData); } catch (e) { parsedQuestions = []; }
     }
+
+    // Lấy video URL (ưu tiên video_url, nếu không có thì content)
+    let videoUrl = l.video_url || l.content || '';
+
+    // Nếu là YouTube URL, chuyển thành embed URL
+    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+      videoUrl = getYouTubeEmbedUrl(videoUrl);
+    }
+
+    // Lấy quiz_time: ưu tiên quiz_time, nếu không có thì dùng duration (admin lưu vào duration)
+    const quizTime = l.quiz_time || (l.type === 'quiz' ? parseInt(l.duration) || 100 : null);
+
     return {
       ...l,
-      src: l.video_url || '',
+      src: videoUrl,
       type: l.type || 'video',
       duration: l.duration || '00:00',
-      questions: parsedQuestions
+      questions: parsedQuestions,
+      quiz_time: quizTime
     };
   };
 
@@ -414,7 +454,19 @@ function CourseDetailPage() {
   };
 
   // Quiz Logic Handlers
-  const handleStartQuiz = () => { setQuizStarted(true); setQuizSubmitted(false); setUserAnswers({}); setScore(0); };
+  const handleStartQuiz = () => {
+    // Lấy thời gian từ quiz_time của lesson (đã được format từ duration trong formatLessonData)
+    // Nếu không có thì mặc định 60 phút
+    const quizTimeInMinutes = activeLesson?.quiz_time || 60;
+    const quizTimeInSeconds = quizTimeInMinutes * 60;
+    console.log('Quiz time from lesson:', activeLesson?.quiz_time, 'Using:', quizTimeInMinutes, 'minutes');
+    setQuizStarted(true);
+    setQuizSubmitted(false);
+    setUserAnswers({});
+    setScore(0);
+    setTimeLeft(quizTimeInSeconds);
+    setTotalTime(quizTimeInSeconds);
+  };
   const handleSelectAnswer = (qIdx, optionIdx) => { if (quizSubmitted) return; setUserAnswers(prev => ({ ...prev, [qIdx]: optionIdx })); };
   const handleSubmitQuiz = () => {
     if (!activeLesson?.questions) return;
@@ -425,138 +477,55 @@ function CourseDetailPage() {
     setScore(correctCount);
     setQuizSubmitted(true);
   };
-  const handleRetryQuiz = () => { setQuizSubmitted(false); setUserAnswers({}); setCurrentQuestionIdx(0); setScore(0); setQuizStarted(false); };
+  const handleRetryQuiz = () => {
+    setQuizSubmitted(false);
+    setUserAnswers({});
+    setCurrentQuestionIdx(0);
+    setScore(0);
+    setQuizStarted(false);
+    setTimeLeft(0);
+    setTotalTime(0);
+  };
+
+  // === TIMER EFFECT ===
+  useEffect(() => {
+    let interval;
+
+    if (quizStarted && !quizSubmitted && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            // Tự động submit khi hết giờ
+            clearInterval(interval);
+            handleSubmitQuiz();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (timeLeft === 0 && quizStarted && !quizSubmitted) {
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [quizStarted, quizSubmitted, timeLeft]);
+
+  // Format time display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get time warning color
+  const getTimeColor = () => {
+    if (timeLeft > 300) return '#10b981'; // > 5 min = green
+    if (timeLeft > 60) return '#f1c21b'; // > 1 min = yellow
+    return '#da1e28'; // <= 1 min = red
+  };
 
   if (loading) return <div className="lms-page"><div style={{ padding: 40, textAlign: 'center', color: '#fff' }}>Đang tải dữ liệu...</div></div>;
 
-  // Hiển thị UI khi bị từ chối quyền truy cập theo hạng
-  // if (accessDenied) {
-  //   return (
-  //     <div className="lms-page" ref={topRef}>
-  //       <div style={{ 
-  //         display: 'flex', 
-  //         flexDirection: 'column', 
-  //         alignItems: 'center', 
-  //         justifyContent: 'center', 
-  //         minHeight: '60vh',
-  //         padding: '40px 20px',
-  //         textAlign: 'center'
-  //       }}>
-  //         <div style={{
-  //           background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-  //           borderRadius: '20px',
-  //           padding: '50px 40px',
-  //           maxWidth: '500px',
-  //           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-  //           border: '1px solid rgba(255,255,255,0.1)'
-  //         }}>
-  //           {/* Icon khóa */}
-  //           <div style={{
-  //             width: '80px',
-  //             height: '80px',
-  //             borderRadius: '50%',
-  //             background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-  //             display: 'flex',
-  //             alignItems: 'center',
-  //             justifyContent: 'center',
-  //             margin: '0 auto 24px'
-  //           }}>
-  //             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-  //               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-  //               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  //             </svg>
-  //           </div>
-
-  //           <h2 style={{ 
-  //             color: '#fff', 
-  //             fontSize: '1.8rem', 
-  //             marginBottom: '16px',
-  //             fontWeight: '600'
-  //           }}>
-  //             Khóa học bị khóa
-  //           </h2>
-
-  //           <p style={{ 
-  //             color: '#b0b0b0', 
-  //             fontSize: '1rem', 
-  //             lineHeight: '1.6',
-  //             marginBottom: '24px'
-  //           }}>
-  //             {accessDenied.message}
-  //           </p>
-
-  //           <div style={{
-  //             background: 'rgba(255,255,255,0.05)',
-  //             borderRadius: '12px',
-  //             padding: '20px',
-  //             marginBottom: '30px'
-  //           }}>
-  //             <div style={{ 
-  //               display: 'flex', 
-  //               justifyContent: 'space-between',
-  //               marginBottom: '12px'
-  //             }}>
-  //               <span style={{ color: '#888' }}>Hạng của bạn:</span>
-  //               <span style={{ 
-  //                 color: accessDenied.currentTier === 'Chưa đăng ký' ? '#ff6b6b' : '#4ecdc4',
-  //                 fontWeight: '600'
-  //               }}>
-  //                 {accessDenied.currentTier}
-  //               </span>
-  //             </div>
-  //             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-  //               <span style={{ color: '#888' }}>Yêu cầu:</span>
-  //               <span style={{ 
-  //                 color: '#ffd93d',
-  //                 fontWeight: '600'
-  //               }}>
-  //                 Hạng {accessDenied.requiredTier}
-  //               </span>
-  //             </div>
-  //           </div>
-
-  //           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-  //             <button
-  //               onClick={() => navigate('/khoa-hoc')}
-  //               style={{
-  //                 padding: '12px 24px',
-  //                 borderRadius: '10px',
-  //                 border: '1px solid rgba(255,255,255,0.2)',
-  //                 background: 'transparent',
-  //                 color: '#fff',
-  //                 cursor: 'pointer',
-  //                 fontSize: '0.95rem',
-  //                 transition: 'all 0.3s'
-  //               }}
-  //               onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-  //               onMouseOut={(e) => e.target.style.background = 'transparent'}
-  //             >
-  //               ← Quay lại
-  //             </button>
-  //             <button
-  //               onClick={() => navigate('/dang-ky-thi')}
-  //               style={{
-  //                 padding: '12px 24px',
-  //                 borderRadius: '10px',
-  //                 border: 'none',
-  //                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  //                 color: '#fff',
-  //                 cursor: 'pointer',
-  //                 fontSize: '0.95rem',
-  //                 fontWeight: '600',
-  //                 transition: 'all 0.3s'
-  //               }}
-  //               onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-  //               onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-  //             >
-  //               Nâng cấp hạng
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   if (accessDenied) {
     return (
       <div className="lms-page" ref={topRef}>
@@ -655,7 +624,6 @@ function CourseDetailPage() {
                           <div className="lesson-icon">{getLessonIcon(lesson.type)}</div>
                           <div className="lesson-info">
                             <div className="lesson-title">{lesson.title}</div>
-                            <div className="lesson-duration">{lesson.duration} phút</div>
                           </div>
                         </div>
                       ))
@@ -671,13 +639,7 @@ function CourseDetailPage() {
             {/* 1. VIDEO PLAYER */}
             {activeLesson?.type === 'video' && (
               <div className="video-wrapper">
-                <video
-                  key={activeLesson.id}
-                  ref={videoRef}
-                  controls
-                  autoPlay
-                  className="main-video-player"
-                >
+                <video key={activeLesson.id} controls autoPlay className="main-video-player">
                   <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
                   Trình duyệt không hỗ trợ.
                 </video>
@@ -686,12 +648,32 @@ function CourseDetailPage() {
 
             {/* 2. DOCUMENT VIEWER */}
             {activeLesson?.type === 'document' && (
-              <div className="doc-wrapper">
-                {activeLesson.src?.toLowerCase().endsWith('.pdf') ? (
-                  <iframe src={getFullMediaPath(activeLesson.src)} className="pdf-viewer" title="Document Viewer"></iframe>
-                ) : (
-                  <img src={getFullMediaPath(activeLesson.src)} alt={activeLesson.title} />
-                )}
+              <div className="doc-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '24px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <FileText size={64} color="#0050b8" style={{ marginBottom: '16px' }} />
+                  <h3 style={{ marginBottom: '8px', color: '#333' }}>{activeLesson.title}</h3>
+                  <p style={{ color: '#666', marginBottom: '24px' }}>Nhấn nút dưới để tải về tài liệu</p>
+                  <a
+                    href={`http://localhost:5000/api/courses/lessons/${activeLesson.id}/download-document`}
+                    download
+                    className="btn-download-doc"
+                    style={{
+                      display: 'inline-block',
+                      padding: '12px 32px',
+                      backgroundColor: '#0050b8',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      fontSize: '16px',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#003a82'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#0050b8'}
+                  >
+                    ⬇️ Tải tài liệu
+                  </a>
+                </div>
               </div>
             )}
 
@@ -701,8 +683,12 @@ function CourseDetailPage() {
                 {!quizStarted && !quizSubmitted && (
                   <div className="quiz-card">
                     <h2 className="quiz-title">{activeLesson.title}</h2>
-                    <p className="quiz-desc">
-                      Bài kiểm tra trắc nghiệm gồm {activeLesson.questions?.length || 0} câu hỏi.
+                    <p className="quiz-desc" style={{ marginBottom: '24px', fontSize: '16px', lineHeight: '1.6' }}>
+                      Bài kiểm tra trắc nghiệm gồm <strong>{activeLesson.questions?.length || 0} câu hỏi</strong>
+                      <br />
+                      <span style={{ fontSize: '14px', color: '#999', marginTop: '8px', display: 'block' }}>
+                        Thời gian: <strong>{activeLesson?.quiz_time || 60} phút</strong>
+                      </span>
                     </p>
                     <button className="btn-start-learning" onClick={handleStartQuiz}>
                       Bắt đầu làm bài
@@ -713,51 +699,398 @@ function CourseDetailPage() {
                 {quizStarted && !quizSubmitted && activeLesson.questions && (
                   <div className="quiz-playing-card">
                     <div className="qp-header">
-                      <h3>Câu hỏi {currentQuestionIdx + 1} / {activeLesson.questions.length}</h3>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#0050b8' }}>
+                          Câu {currentQuestionIdx + 1} / {activeLesson.questions.length}
+                        </h3>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                          {/* Timer */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 16px',
+                            background: getTimeColor() === '#da1e28' ? '#fee2e2' : getTimeColor() === '#f1c21b' ? '#fff3cd' : '#defbe6',
+                            borderRadius: '20px',
+                            fontWeight: '700',
+                            fontSize: '14px',
+                            color: getTimeColor(),
+                            animation: timeLeft <= 60 ? 'pulse 1s infinite' : 'none'
+                          }}>
+                            <span style={{ minWidth: '40px' }}>{formatTime(timeLeft)}</span>
+                          </div>
+
+                          {/* Progress */}
+                          <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                            padding: '6px 12px',
+                            background: '#f0f0f0',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: '#666'
+                          }}>
+                            <span style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: '#0050b8',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: '700'
+                            }}>
+                              {currentQuestionIdx + 1}
+                            </span>
+                            <span>Tiến độ</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        height: '4px',
+                        background: '#e0e0e0',
+                        borderRadius: '2px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${((currentQuestionIdx + 1) / activeLesson.questions.length) * 100}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #0050b8, #003a82)',
+                          transition: 'width 0.3s ease'
+                        }}></div>
+                      </div>
                     </div>
+
                     <div className="qp-body">
-                      <h4 className="qp-question-text">
+                      <h4 className="qp-question-text" style={{
+                        marginBottom: '32px',
+                        fontSize: '20px',
+                        lineHeight: '1.5',
+                        color: '#222'
+                      }}>
                         {activeLesson.questions[currentQuestionIdx]?.text}
                       </h4>
+
                       <div className="qp-options-list">
                         {activeLesson.questions[currentQuestionIdx]?.options.map((opt, oIdx) => (
                           <div
                             key={oIdx}
                             className={`qp-option-item ${userAnswers[currentQuestionIdx] === oIdx ? 'selected' : ''}`}
                             onClick={() => handleSelectAnswer(currentQuestionIdx, oIdx)}
+                            style={{
+                              padding: '16px 20px',
+                              border: userAnswers[currentQuestionIdx] === oIdx ? '2px solid #0050b8' : '1px solid #ddd',
+                              borderRadius: '10px',
+                              cursor: timeLeft > 0 ? 'pointer' : 'not-allowed',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '16px',
+                              transition: 'all 0.25s ease',
+                              background: userAnswers[currentQuestionIdx] === oIdx ? '#f0f6ff' : '#fff',
+                              fontSize: '16px',
+                              fontWeight: userAnswers[currentQuestionIdx] === oIdx ? '600' : '500',
+                              color: userAnswers[currentQuestionIdx] === oIdx ? '#0050b8' : '#333',
+                              opacity: timeLeft > 0 ? 1 : 0.6
+                            }}
                           >
-                            {userAnswers[currentQuestionIdx] === oIdx ? (
-                              <CheckCircle2 size={20} className="radio-icon" color="#0050b8" />
-                            ) : (
-                              <Circle size={20} className="radio-icon" />
-                            )}
+                            <span style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: userAnswers[currentQuestionIdx] === oIdx ? '#0050b8' : '#e0e0e0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#fff',
+                              fontWeight: '700',
+                              fontSize: '14px',
+                              flexShrink: 0
+                            }}>
+                              {String.fromCharCode(65 + oIdx)}
+                            </span>
                             <span>{opt}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="qp-footer">
-                      <button className="btn-nav-quiz" disabled={currentQuestionIdx === 0} onClick={() => setCurrentQuestionIdx(p => p - 1)}>Quay lại</button>
-                      {currentQuestionIdx < activeLesson.questions.length - 1 ? (
-                        <button className="btn-nav-quiz next" onClick={() => setCurrentQuestionIdx(p => p + 1)}>Câu tiếp theo</button>
-                      ) : (
-                        <button className="btn-submit-quiz" onClick={handleSubmitQuiz}>Nộp bài</button>
-                      )}
+
+                    <div className="qp-footer" style={{
+                      padding: '20px 40px',
+                      borderTop: '1px solid #ddd',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      background: '#f9fafb',
+                      gap: '16px'
+                    }}>
+                      <button
+                        className="btn-nav-quiz"
+                        disabled={currentQuestionIdx === 0 || timeLeft === 0}
+                        onClick={() => setCurrentQuestionIdx(p => p - 1)}
+                        style={{
+                          padding: '12px 24px',
+                          borderRadius: '8px',
+                          border: '1px solid #ddd',
+                          background: '#fff',
+                          color: currentQuestionIdx === 0 || timeLeft === 0 ? '#ccc' : '#333',
+                          fontSize: '15px',
+                          fontWeight: '600',
+                          cursor: currentQuestionIdx === 0 || timeLeft === 0 ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.2s',
+                          opacity: currentQuestionIdx === 0 || timeLeft === 0 ? 0.5 : 1
+                        }}
+                      >
+                        Quay lại
+                      </button>
+
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <span style={{
+                          padding: '12px 16px',
+                          background: '#fff3cd',
+                          color: '#856404',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          {Object.keys(userAnswers).length}/{activeLesson.questions.length} trả lời
+                        </span>
+
+                        {currentQuestionIdx < activeLesson.questions.length - 1 ? (
+                          <button
+                            className="btn-nav-quiz next"
+                            onClick={() => setCurrentQuestionIdx(p => p + 1)}
+                            disabled={timeLeft === 0}
+                            style={{
+                              padding: '12px 24px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: timeLeft === 0 ? '#ccc' : '#0050b8',
+                              color: '#fff',
+                              fontSize: '15px',
+                              fontWeight: '600',
+                              cursor: timeLeft === 0 ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s',
+                              boxShadow: timeLeft === 0 ? 'none' : '0 2px 8px rgba(0, 80, 184, 0.25)'
+                            }}
+                            onMouseOver={(e) => {
+                              if (timeLeft > 0) {
+                                e.target.style.background = '#003a82';
+                                e.target.style.boxShadow = '0 4px 12px rgba(0, 80, 184, 0.4)';
+                              }
+                            }}
+                            onMouseOut={(e) => {
+                              if (timeLeft > 0) {
+                                e.target.style.background = '#0050b8';
+                                e.target.style.boxShadow = '0 2px 8px rgba(0, 80, 184, 0.25)';
+                              }
+                            }}
+                          >
+                            Tiếp theo
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-submit-quiz"
+                            onClick={handleSubmitQuiz}
+                            disabled={timeLeft === 0}
+                            style={{
+                              padding: '12px 30px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: timeLeft === 0 ? '#ccc' : '#10b981',
+                              color: '#fff',
+                              fontSize: '15px',
+                              fontWeight: '600',
+                              cursor: timeLeft === 0 ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s',
+                              boxShadow: timeLeft === 0 ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.25)'
+                            }}
+                            onMouseOver={(e) => {
+                              if (timeLeft > 0) {
+                                e.target.style.background = '#059669';
+                                e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                              }
+                            }}
+                            onMouseOut={(e) => {
+                              if (timeLeft > 0) {
+                                e.target.style.background = '#10b981';
+                                e.target.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.25)';
+                              }
+                            }}
+                          >
+                            Nộp bài
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {quizSubmitted && (
-                  <div className="quiz-card">
-                    <CheckCircle size={50} className="quiz-success-icon" />
-                    <h2 className="quiz-success-title">Hoàn thành bài thi!</h2>
-                    <p className="quiz-success-text">
-                      Bạn trả lời đúng <strong className="quiz-score">{score}</strong> / {activeLesson.questions?.length} câu.
+                  <div className="quiz-card" style={{
+                    background: 'linear-gradient(135deg, #f0f6ff 0%, #e8f4ff 100%)',
+                    padding: '60px 40px'
+                  }}>
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 24px',
+                      boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)',
+                      fontSize: '40px'
+                    }}>
+                      ✓
+                    </div>
+
+                    <h2 className="quiz-success-title" style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      color: '#0050b8',
+                      marginBottom: '12px'
+                    }}>
+                      Hoàn thành bài thi!
+                    </h2>
+
+                    <p style={{
+                      fontSize: '16px',
+                      color: '#666',
+                      marginBottom: '24px',
+                      lineHeight: '1.5'
+                    }}>
+                      Kết quả của bạn đã được ghi nhận
                     </p>
-                    <button className="btn-start-learning" onClick={handleRetryQuiz}>
-                      <RefreshCw size={16} className="quiz-retry-icon" />
-                      Thực hiện lại bài thi
-                    </button>
+
+                    <div style={{
+                      background: '#fff',
+                      borderRadius: '12px',
+                      padding: '32px',
+                      marginBottom: '24px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      border: '2px solid #10b981'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '24px',
+                        marginBottom: '16px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{
+                            fontSize: '56px',
+                            fontWeight: '800',
+                            color: '#10b981',
+                            lineHeight: '1'
+                          }}>
+                            {score}
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            color: '#999',
+                            marginTop: '4px',
+                            fontWeight: '600'
+                          }}>
+                            Câu đúng
+                          </div>
+                        </div>
+
+                        <div style={{
+                          fontSize: '32px',
+                          color: '#ddd'
+                        }}>
+                          /
+                        </div>
+
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{
+                            fontSize: '56px',
+                            fontWeight: '800',
+                            color: '#0050b8',
+                            lineHeight: '1'
+                          }}>
+                            {activeLesson.questions?.length || 0}
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            color: '#999',
+                            marginTop: '4px',
+                            fontWeight: '600'
+                          }}>
+                            Tổng câu
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{
+                        height: '8px',
+                        background: '#e0e0e0',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                        marginBottom: '16px'
+                      }}>
+                        <div style={{
+                          width: `${(score / (activeLesson.questions?.length || 1)) * 100}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #10b981, #059669)',
+                          borderRadius: '4px'
+                        }}></div>
+                      </div>
+
+                      <div style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#0050b8',
+                        textAlign: 'center'
+                      }}>
+                        Điểm: {((score / (activeLesson.questions?.length || 1)) * 100).toFixed(1)}%
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      gap: '12px',
+                      justifyContent: 'center'
+                    }}>
+                      <button
+                        className="btn-start-learning"
+                        onClick={handleRetryQuiz}
+                        style={{
+                          padding: '14px 32px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#0050b8',
+                          color: '#fff',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 8px rgba(0, 80, 184, 0.25)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = '#003a82';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 80, 184, 0.4)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = '#0050b8';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 80, 184, 0.25)';
+                        }}
+                      >
+                        Làm lại bài thi
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -813,209 +1146,15 @@ function CourseDetailPage() {
                 </>
               ) : (
                 <div className="comments-section">
-                  {/* Form thêm bình luận */}
-                  {token ? (
-                    <div className="comment-form" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #333' }}>
-                      <h4 className="comment-form-title">Nhận xét của bạn</h4>
-
-
-                      {/* Chọn số sao */}
-                      <div className="comment-rating-block" >
-                        <label className="comment-rating-label">Đánh giá:</label>
-                        <div className="comment-rating-stars">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <button
-                              key={star}
-                              type="button"
-                              className="star-button"
-                              onClick={() => setCommentRating(star)}
-                              onMouseEnter={() => setHoverRating(star)}
-                              onMouseLeave={() => setHoverRating(0)}
-                            >
-                              <Star
-                                size={24}
-                                fill={star <= (hoverRating || commentRating) ? '#FFC107' : '#ddd'}
-                                color={star <= (hoverRating || commentRating) ? '#FFC107' : '#ddd'}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Nội dung bình luận */}
-                      <textarea
-                        className="comment-textarea"
-                        value={commentContent}
-                        onChange={(e) => setCommentContent(e.target.value)}
-                        placeholder="Chia sẻ ý kiến của bạn..."
-                      />
-                      <button className="comment-submit-btn" onClick={handlePostComment}>
-                        Gửi bình luận
-                      </button>
-
-                    </div>
-                  ) : (
-                    <div div className="comment-login-warning">
-                      <p>
-                        Vui lòng{' '}
-                        <span className="login-link" onClick={() => navigate('/dang-nhap')}>
-                          đăng nhập
-                        </span>{' '}
-                        để bình luận
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Danh sách bình luận */}
-                  {loadingComments ? (
-                    <div className="comments-loading">Đang tải bình luận...</div>
-                  ) : comments.length > 0 ? (
-                    <div className="comments-list">
-                      {comments.map(comment => (
-                        <div
-                          key={comment.id}
-                          className="comment-item"
-                        >
-                          {/* ACTIONS: Edit/Delete - chỉ hiển thị nếu là chủ comment */}
-                          {currentUser && comment.user_id === currentUser.id && (
-                            <div className="comment-actions">
-                              {editingCommentId === comment.id ? (
-                                <>
-                                  <span
-                                    className="comment-save"
-                                    onClick={() => handleUpdateComment(comment.id)}
-                                    style={{ color: '#28a745', cursor: 'pointer', marginRight: '10px' }}
-                                  >
-                                    Lưu
-                                  </span>
-                                  <span
-                                    className="comment-cancel"
-                                    onClick={handleCancelEdit}
-                                    style={{ color: '#666', cursor: 'pointer' }}
-                                  >
-                                    Hủy
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span
-                                    className="comment-edit"
-                                    onClick={() => handleEditComment(comment)}
-                                    style={{ color: '#0050B8', cursor: 'pointer', marginRight: '10px' }}
-                                  >
-                                    Sửa
-                                  </span>
-                                  <span
-                                    className="comment-delete"
-                                    onClick={() => handleDeleteComment(comment.id)}
-                                  >
-                                    Xóa
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Header */}
-                          <div className="comment-header">
-                            <div className="comment-avatar">
-                              {comment.full_name?.charAt(0).toUpperCase() || 'U'}
-                            </div>
-                            <div className="comment-user-info">
-                              <div className="comment-user-name">{comment.full_name}</div>
-                              <div className="comment-date">
-                                {new Date(comment.created_at).toLocaleDateString('vi-VN')}
-                              </div>
-                              {comment.rating && (
-                                <div style={{ display: 'flex', gap: '3px', marginTop: '5px' }}>
-                                  {[1, 2, 3, 4, 5].map(star => (
-                                    <Star
-                                      key={star}
-                                      size={14}
-                                      fill={star <= comment.rating ? '#FFC107' : '#ddd'}
-                                      color={star <= comment.rating ? '#FFC107' : '#ddd'}
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Nội dung - Hiển thị input khi đang edit */}
-                          <div className="comment-content">
-                            {editingCommentId === comment.id ? (
-                              <textarea
-                                value={editingContent}
-                                onChange={(e) => setEditingContent(e.target.value)}
-                                placeholder="Chỉnh sửa bình luận..."
-                                style={{
-                                  width: '100%',
-                                  minHeight: '80px',
-                                  padding: '10px',
-                                  borderRadius: '6px',
-                                  border: '1px solid #ddd',
-                                  fontFamily: 'inherit',
-                                  fontSize: '14px',
-                                  resize: 'vertical'
-                                }}
-                              />
-                            ) : (
-                              comment.content
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', color: '#aaa', padding: '30px' }}>
-                      <MessageSquare size={48} color="#666" style={{ marginBottom: '15px' }} />
-                      <p>Chưa có bình luận nào. Hãy là người bình luận đầu tiên!</p>
-                    </div>
-                  )}
+                  {/* ...existing comments code... */}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Sidebar Right */}
-          {/* <div className="intro-right-col">
-            <div className="sidebar-card related-card">
-              <h4>Khóa Học Liên Quan</h4>
-              {relatedCourses.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {relatedCourses.map(rc => (
-                    <div
-                      key={rc.id}
-                      className="related-item"
-                      onClick={() => { navigate(`/khoa-hoc/${rc.id}`); window.scrollTo(0, 0); }}
-                      style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #fff', transition: 'all 0.3s' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.backgroundColor = '#fff' }}
-                    >
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <img
-                          src={getFullMediaPath(rc.image)}
-                          alt={rc.title}
-                          style={{ width: '60px', height: '40px', borderRadius: '4px', objectFit: 'cover' }}
-                          onError={(e) => e.target.src = 'https://placehold.co/60x40/333/fff?text=Course'}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ color: '#3d3d3d', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '5px' }}>{rc.title}</div>
-                          <div style={{ color: '#aaa', fontSize: '0.8rem', fontWeight: 'bold' }}>Cấp độ: {rc.level}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: '#aaa', fontSize: '0.9rem' }}>Không có khóa học cùng cấp độ.</p>
-              )}
-            </div>
-          </div> */}
           <div className="intro-right-col">
             <div className="sidebar-card related-card">
               <h4>Khóa Học Liên Quan</h4>
-
               {relatedCourses.length > 0 ? (
                 <div className="related-list">
                   {relatedCourses.map(rc => (
@@ -1054,12 +1193,10 @@ function CourseDetailPage() {
               )}
             </div>
           </div>
-
         </div>
       </div>
     </div>
   );
 }
-
 
 export default CourseDetailPage;

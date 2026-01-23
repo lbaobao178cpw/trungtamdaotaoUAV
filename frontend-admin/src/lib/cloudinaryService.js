@@ -60,6 +60,26 @@ export const uploadVideo = async (file) => {
   return uploadToCloudinary(file, "uav-training/videos");
 };
 
+export const uploadDocument = async (file) => {
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file PDF, Word, Excel, PowerPoint",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/documents");
+};
+
 export const deleteFromCloudinary = async (publicId) => {
   try {
     // Dùng apiClient để có request interceptor
