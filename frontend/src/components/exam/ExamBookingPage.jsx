@@ -41,10 +41,17 @@ const ExamBookingPage = () => {
         exam_schedule_id: examId,
       });
 
-      const data = response.data;
+      const data = response.data || {};
+      const remaining = typeof data.spots_left === 'number' ? data.spots_left : null;
 
-      alert("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.");
-      navigate("/"); // Hoặc chuyển về trang profile/lịch sử
+      if (remaining !== null) {
+        alert(`Đăng ký thành công! Chỗ trống còn lại: ${remaining}. Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.`);
+      } else {
+        alert("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.");
+      }
+
+      // Quay về trang danh sách lịch thi để người dùng thấy cập nhật
+      navigate("/thi-sat-hach");
     } catch (error) {
       alert(error.response?.data?.error || error.message || "Lỗi đăng ký");
     } finally {
