@@ -77,8 +77,8 @@ router.get("/course/:course_id", async (req, res) => {
         c.content,
         c.rating,
         c.created_at,
-        u.full_name,
-        u.avatar
+        u.full_name as user_name,
+        u.avatar as user_avatar
        FROM comments c
        JOIN users u ON c.user_id = u.id
        WHERE c.course_id = ?

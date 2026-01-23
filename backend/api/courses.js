@@ -590,4 +590,410 @@ router.get("/lessons/:lessonId/download-document", async (req, res) => {
   }
 });
 
+// --- POST: Lưu kết quả quiz ---
+router.post("/:courseId/quiz-result", verifyToken, async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+    const { lessonId, score, correctAnswers, totalQuestions } = req.body;
+
+    if (score === undefined || lessonId === undefined) {
+      return res.status(400).json({ error: "Thiếu thông tin điểm quiz" });
+    }
+
+    // Kiểm tra bảng quiz_results có tồn tại không, nếu chưa thì tạo
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS quiz_results (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        lesson_id INT,
+        score DECIMAL(5,2) NOT NULL,
+        correct_answers INT,
+        total_questions INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_user_course (user_id, course_id),
+        INDEX idx_lesson (lesson_id)
+      )
+    `);
+
+    // Lưu kết quả quiz (cho phép làm lại nhiều lần)
+    await db.query(`
+      INSERT INTO quiz_results (user_id, course_id, lesson_id, score, correct_answers, total_questions)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [userId, courseId, lessonId, score, correctAnswers, totalQuestions]);
+
+    res.json({
+      message: "Lưu kết quả quiz thành công",
+      score,
+      correctAnswers,
+      totalQuestions
+    });
+
+  } catch (error) {
+    console.error("Lỗi lưu kết quả quiz:", error);
+    res.status(500).json({ error: "Lỗi server khi lưu kết quả quiz" });
+  }
+});
+
+// --- POST: Track video watching progress ---
+router.post("/:courseId/track-video/:lessonId", verifyToken, async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const { watchedSeconds = 0, totalSeconds = 0 } = req.body;
+    const userId = req.user.id;
+
+    console.log(`🎥 Tracking video: lesson=${lessonId}, watched=${watchedSeconds}s/${totalSeconds}s`);
+
+    // Lấy thông tin lesson
+    const [lesson] = await db.query(
+      "SELECT id, duration FROM lessons WHERE id = ?",
+      [lessonId]
+    );
+
+    if (lesson.length === 0) {
+      return res.status(404).json({ error: "Lesson không tồn tại" });
+    }
+
+    const lessonDuration = lesson[0].duration || totalSeconds || 1;
+    const watchedPercentage = Math.round((watchedSeconds / lessonDuration) * 100);
+
+    console.log(`📊 Watched: ${watchedPercentage}%`);
+
+    // Nếu xem >= 80%, mark as completed
+    if (watchedPercentage >= 80) {
+      // Mark as completed - table and columns already migrated
+      await db.query(`
+        INSERT INTO lesson_completion (user_id, lesson_id, course_id, watched_seconds, watched_percentage)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          watched_seconds = VALUES(watched_seconds),
+          watched_percentage = VALUES(watched_percentage),
+          completed_at = NOW()
+      `, [userId, lessonId, courseId, watchedSeconds, watchedPercentage]);
+
+      console.log(`✅ Lesson marked as completed (${watchedPercentage}%)`);
+    }
+
+    res.json({
+      message: "Video tracked",
+      watchedPercentage,
+      isCompleted: watchedPercentage >= 80,
+      watchedSeconds,
+      totalSeconds: lessonDuration
+    });
+
+  } catch (error) {
+    console.error("Lỗi tracking video:", error);
+    res.status(500).json({ error: "Lỗi server khi tracking video" });
+  }
+});
+
+// --- POST: Track lesson (for documents) ---
+router.post("/:courseId/track-lesson/:lessonId", verifyToken, async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const userId = req.user.id;
+
+    console.log(`📍 Tracking lesson: user=${userId}, course=${courseId}, lesson=${lessonId}`);
+
+    // Kiểm tra bảng lesson_completion
+    const [checkTable] = await db.query(`
+      SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'lesson_completion'
+    `);
+
+    // Nếu chưa có table, tạo
+    if (checkTable.length === 0) {
+      await db.query(`
+        CREATE TABLE lesson_completion (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          lesson_id INT NOT NULL,
+          course_id INT NOT NULL,
+          completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_user_lesson (user_id, lesson_id),
+          INDEX idx_user_course (user_id, course_id)
+        )
+      `);
+      console.log('Created lesson_completion table');
+    }
+
+    // Insert hoặc ignore nếu đã có
+    await db.query(`
+      INSERT IGNORE INTO lesson_completion (user_id, lesson_id, course_id)
+      VALUES (?, ?, ?)
+    `, [userId, lessonId, courseId]);
+
+    // Tính lại progress percentage
+    // Lấy tổng số lesson trong khóa học
+    const [totalLessons] = await db.query(`
+      SELECT COUNT(DISTINCT l.id) as total 
+      FROM lessons l
+      INNER JOIN chapters c ON l.chapter_id = c.id
+      WHERE c.course_id = ?
+      GROUP BY c.course_id
+    `, [courseId]);
+
+    // Nếu không có result, try query khác
+    let totalCount = totalLessons[0]?.total;
+
+    if (!totalCount) {
+      const [fallback] = await db.query(`
+        SELECT COUNT(*) as total FROM lessons
+        WHERE chapter_id IN (
+          SELECT id FROM chapters WHERE course_id = ?
+        )
+      `, [courseId]);
+      totalCount = fallback[0]?.total || 1;
+    }
+
+    totalCount = totalCount || 1;
+
+    // Lấy số lesson đã hoàn thành
+    // - Non-video (documents, quiz): Count ngay khi tracked
+    // - Videos: Count nếu watched_percentage >= 80% (tracked via track-video)
+    //           HOẶC watched_percentage = 0 (tracked via track-lesson = YouTube/instant)
+    const [completedLessons] = await db.query(`
+      SELECT COUNT(DISTINCT lc.lesson_id) as completed 
+      FROM lesson_completion lc
+      LEFT JOIN lessons l ON lc.lesson_id = l.id
+      WHERE lc.user_id = ? 
+        AND lc.course_id = ?
+        AND (
+          l.type != 'video'  -- Non-videos: count immediately
+          OR (l.type = 'video' AND (lc.watched_percentage = 0 OR lc.watched_percentage >= 80))  -- Videos: count if tracked (0=instant/YouTube) or >= 80% (HTML5)
+        )
+    `, [userId, courseId]);
+
+    const completedCount = completedLessons[0]?.completed || 0;
+    // Cap progress ở 100%
+    const progressPercentage = Math.min(100, Math.round((completedCount / totalCount) * 100));
+
+    console.log(`✅ Progress: ${completedCount}/${totalCount} = ${progressPercentage}% (Course ${courseId})`);
+
+    // Cập nhật progress
+    await db.query(`
+      INSERT INTO user_course_progress (user_id, course_id, progress_percentage, progress_percentage_value)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        progress_percentage = VALUES(progress_percentage),
+        progress_percentage_value = VALUES(progress_percentage_value)
+    `, [userId, courseId, progressPercentage, progressPercentage]);
+
+    res.json({
+      message: "Tracking thành công",
+      lessonId,
+      progressPercentage,
+      completedCount,
+      totalCount
+    });
+
+  } catch (error) {
+    console.error("Lỗi tracking lesson:", error);
+    res.status(500).json({ error: "Lỗi server khi tracking lesson" });
+  }
+});
+
+// --- GET: Lấy tiến độ học của học sinh trong khóa học ---
+router.get("/:courseId/progress/:userId", verifyToken, async (req, res) => {
+  try {
+    const { courseId, userId } = req.params;
+
+    // Kiểm tra quyền (chỉ admin hoặc chính học sinh đó mới xem được)
+    if (req.user.id != userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Không có quyền xem tiến độ này" });
+    }
+
+    // Lấy thông tin khóa học
+    const [course] = await db.query(
+      "SELECT id FROM courses WHERE id = ?",
+      [courseId]
+    );
+
+    if (course.length === 0) {
+      return res.status(404).json({ error: "Khóa học không tồn tại" });
+    }
+
+    // Lấy tiến độ học từ user_course_progress
+    const [progress] = await db.query(`
+      SELECT 
+        user_id,
+        course_id,
+        quiz_score,
+        progress_percentage_value,
+        overall_score,
+        started_at,
+        completed_at,
+        score_calculated_at
+      FROM user_course_progress
+      WHERE user_id = ? AND course_id = ?
+    `, [userId, courseId]);
+
+    if (progress.length === 0) {
+      // Nếu chưa có record, tạo mới
+      console.log(`Creating new progress record for user ${userId}, course ${courseId}`);
+      await db.query(`
+        INSERT INTO user_course_progress (user_id, course_id, progress_percentage, progress_percentage_value, quiz_score, overall_score)
+        VALUES (?, ?, 0, 0, 0, NULL)
+      `, [userId, courseId]);
+
+      return res.json({
+        message: "Chưa có tiến độ học",
+        user_id: userId,
+        course_id: courseId,
+        quiz_score: 0,
+        progress_percentage_value: 0,
+        overall_score: null,
+        started_at: new Date(),
+        completed_at: null,
+        score_calculated_at: null
+      });
+    }
+
+    res.json({
+      message: "Lấy tiến độ học thành công",
+      ...progress[0]
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy tiến độ học:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy tiến độ học" });
+  }
+});
+
+// --- POST: Tính lại điểm tổng thể (Gọi sau khi hoàn thành quiz hoặc xem video) ---
+router.post("/:courseId/calculate-score/:userId", verifyToken, async (req, res) => {
+  try {
+    const { courseId, userId } = req.params;
+
+    // Kiểm tra quyền
+    if (req.user.id != userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Không có quyền tính điểm" });
+    }
+
+    // 1. Lấy tổng số bài học (video + tài liệu + quiz) trong khóa
+    const [totalLessons] = await db.query(`
+      SELECT COUNT(*) as total FROM lessons l
+      JOIN chapters c ON l.chapter_id = c.id
+      WHERE c.course_id = ?
+    `, [courseId]);
+
+    const totalLessonCount = totalLessons[0].total || 0;
+
+    if (totalLessonCount === 0) {
+      return res.status(400).json({ error: "Khóa học không có bài học" });
+    }
+
+    // 2. Lấy số bài học mà học sinh đã hoàn thành (viewed/taken quiz)
+    // Giả sử: nếu có record trong lesson_completion hoặc quiz_results thì đã hoàn thành
+    // Nếu chưa có table này, dùng tiến độ từ user_course_progress
+    const [userProgress] = await db.query(`
+      SELECT progress_percentage FROM user_course_progress
+      WHERE user_id = ? AND course_id = ?
+    `, [userId, courseId]);
+
+    const currentProgressPercentage = userProgress[0]?.progress_percentage || 0;
+
+    // 3. Tính trung bình điểm Quiz
+    // Giả sử: Quiz được lưu trong bảng quiz_results hoặc quiz_scores
+    // Nếu chưa có, set mặc định = NULL (chưa làm quiz)
+    const [quizScores] = await db.query(`
+      SELECT AVG(score) as avg_quiz_score
+      FROM quiz_results
+      WHERE user_id = ? AND course_id = ?
+    `, [userId, courseId]);
+
+    const rawQuizScore = quizScores[0]?.avg_quiz_score;
+    const quizScore = rawQuizScore ? parseFloat(rawQuizScore) : 0;
+
+    // 4. Tính điểm tổng thể theo công thức
+    // Điểm Tổng = (Quiz × 70%) + (Tiến Độ × 30%)
+    const overallScore = (quizScore * 0.7) + (currentProgressPercentage * 0.3);
+
+    // 5. Cập nhật hoặc tạo mới record user_course_progress
+    await db.query(`
+      INSERT INTO user_course_progress (user_id, course_id, progress_percentage, quiz_score, progress_percentage_value, overall_score, score_calculated_at)
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        quiz_score = VALUES(quiz_score),
+        progress_percentage_value = VALUES(progress_percentage_value),
+        overall_score = VALUES(overall_score),
+        score_calculated_at = NOW()
+    `, [userId, courseId, currentProgressPercentage, quizScore, currentProgressPercentage, overallScore]);
+
+    res.json({
+      message: "Tính điểm thành công",
+      courseId,
+      userId,
+      quiz_score: quizScore.toFixed(2),
+      progress_percentage: currentProgressPercentage,
+      overall_score: overallScore.toFixed(2),
+      formula: `(${quizScore.toFixed(2)} × 0.7) + (${currentProgressPercentage} × 0.3) = ${overallScore.toFixed(2)}`
+    });
+
+  } catch (error) {
+    console.error("Lỗi tính điểm:", error);
+    res.status(500).json({ error: "Lỗi server khi tính điểm" });
+  }
+});
+
+// --- GET: Lấy bảng xếp hạng học sinh trong khóa học ---
+router.get("/:courseId/leaderboard", verifyToken, async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { limit = 10, page = 1 } = req.query;
+
+    // Kiểm tra khóa học tồn tại
+    const [course] = await db.query(
+      "SELECT id FROM courses WHERE id = ?",
+      [courseId]
+    );
+
+    if (course.length === 0) {
+      return res.status(404).json({ error: "Khóa học không tồn tại" });
+    }
+
+    // Lấy tất cả bảng xếp hạng (không dùng RANK() vì có thể không support)
+    const [allLeaderboard] = await db.query(`
+      SELECT 
+        ucp.user_id,
+        u.full_name,
+        u.email,
+        ucp.quiz_score,
+        ucp.progress_percentage_value as progress_percentage,
+        ucp.overall_score,
+        ucp.score_calculated_at
+      FROM user_course_progress ucp
+      JOIN users u ON ucp.user_id = u.id
+      WHERE ucp.course_id = ?
+      ORDER BY ucp.overall_score DESC, ucp.user_id ASC
+    `, [courseId]);
+
+    // Tính rank thủ công
+    const leaderboardWithRank = allLeaderboard.map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
+
+    // Phân trang
+    const offset = (page - 1) * limit;
+    const paginatedLeaderboard = leaderboardWithRank.slice(offset, offset + parseInt(limit));
+
+    res.json({
+      message: "Lấy bảng xếp hạng thành công",
+      courseId,
+      total: leaderboardWithRank.length,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(leaderboardWithRank.length / limit),
+      leaderboard: paginatedLeaderboard
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy bảng xếp hạng:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy bảng xếp hạng" });
+  }
+});
+
 module.exports = router;

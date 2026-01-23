@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './CourseDetailPage.css'; // Đảm bảo import CSS mới
 import noVideoImage from "../assets/noVideoImage.png";
 import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
+import CourseScoreboard from './CourseScoreboard';
 
 import {
   Video, FileText, ChevronDown, ChevronUp,
   PenTool, PlayCircle, MessageSquare, CheckCircle, RefreshCw,
-  Circle, CheckCircle2, Star
+  Circle, CheckCircle2, Star, Award
 } from 'lucide-react';
 
 const API_BASE = "http://localhost:5000/api/courses";
@@ -51,11 +53,20 @@ function CourseDetailPage() {
 
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
+  const [editingRating, setEditingRating] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
+
+  const [scoreRefreshTrigger, setScoreRefreshTrigger] = useState(0);
+
+  // === VIDEO TRACKING STATE ===
+  const videoRef = useRef(null);
+  const videoTrackingTimeoutRef = useRef(null);
+  const [videoCumulativeTime, setVideoCumulativeTime] = useState(0);
 
   const handleEditComment = (comment) => {
     setEditingCommentId(comment.id);
     setEditingContent(comment.content);
+    setEditingRating(comment.rating || 0);
   };
 
   const handleUpdateComment = async (commentId) => {
@@ -72,7 +83,8 @@ function CourseDetailPage() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          content: editingContent.trim()
+          content: editingContent.trim(),
+          rating: editingRating
         })
       });
 
@@ -86,12 +98,13 @@ function CourseDetailPage() {
       // Cập nhật UI ngay
       setComments(prev => prev.map(c =>
         c.id === commentId
-          ? { ...c, content: editingContent.trim() }
+          ? { ...c, content: editingContent.trim(), rating: editingRating }
           : c
       ));
 
       setEditingCommentId(null);
       setEditingContent('');
+      setEditingRating(0);
       notifySuccess('Bình luận đã được cập nhật');
 
     } catch (err) {
@@ -102,6 +115,7 @@ function CourseDetailPage() {
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditingContent('');
+    setEditingRating(0);
   };
 
   const handleDeleteComment = async (commentId) => {
@@ -398,14 +412,75 @@ function CourseDetailPage() {
     return `${MEDIA_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
-  const handleLessonSelect = (lesson) => {
+  const handleLessonSelect = async (lesson) => {
     setActiveLesson(lesson);
     setQuizStarted(false);
     setQuizSubmitted(false);
     setUserAnswers({});
     setCurrentQuestionIdx(0);
     setScore(0);
+    setVideoCumulativeTime(0); // Reset video time
+
+    // Clear existing timeout
+    if (videoTrackingTimeoutRef.current) {
+      clearTimeout(videoTrackingTimeoutRef.current);
+    }
+
     if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth' });
+
+    // === Track lesson viewing để cập nhật progress ===
+    if (lesson && currentUser?.id) {
+      try {
+        const token = localStorage.getItem('user_token');
+
+        // YouTube videos: Track ngay (không thể track watched % do cross-origin)
+        // HTML5 videos: Track qua onTimeUpdate/onEnded events
+        // Documents/Quiz: Track ngay
+
+        const isYouTube = lesson.src?.includes('youtube.com/embed');
+
+        if (lesson.type === 'video' && !isYouTube) {
+          console.log(`🎥 HTML5 Video detected: ${lesson.title} - Tracking via timeupdate`);
+          // Cho HTML5 video, tracking sẽ được handle bởi onTimeUpdate event
+          // Không cần track ngay lúc này
+        } else if (lesson.type === 'video' && isYouTube) {
+          console.log(`▶️ YouTube Video detected: ${lesson.title} - Tracking immediately (can't track %)`);
+          // YouTube videos: Track ngay khi select
+          // Vì không thể access duration/currentTime do cross-origin restrictions
+          await axios.post(`${API_BASE}/${id}/track-lesson/${lesson.id}`, {}, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          console.log(`✅ Tracked YouTube lesson ${lesson.id}`);
+
+          // Recalculate score
+          await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          console.log(`📊 Score recalculated`);
+
+          setScoreRefreshTrigger(prev => prev + 1);
+
+          // Ghi chú: YouTube videos được tính vào progress ngay lúc xem
+          // Không cần tracking watched_percentage
+        } else {
+          // Documents/Quiz: track ngay
+          await axios.post(`${API_BASE}/${id}/track-lesson/${lesson.id}`, {}, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          console.log(`✅ Tracked lesson ${lesson.id} (${lesson.type})`);
+
+          // Recalculate score
+          await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          console.log(`📊 Score recalculated`);
+
+          setScoreRefreshTrigger(prev => prev + 1);
+        }
+      } catch (err) {
+        console.log('Progress tracking not critical, continue anyway', err);
+      }
+    }
   };
 
   const getLessonIcon = (type) => {
@@ -416,6 +491,84 @@ function CourseDetailPage() {
       case 'quiz': return <PenTool size={16} />;
       case 'document': return <FileText size={16} />;
       default: return <FileText size={16} />;
+    }
+  };
+
+  // === VIDEO TRACKING HANDLERS ===
+  const handleVideoTimeUpdate = async () => {
+    if (!videoRef.current || !activeLesson || activeLesson.type !== 'video') return;
+
+    const currentTime = videoRef.current.currentTime;
+    const duration = videoRef.current.duration;
+
+    // Update cumulative time (how much they've watched)
+    setVideoCumulativeTime(currentTime);
+
+    // Track when they've watched >= 80% and we haven't sent it yet
+    const watchedPercentage = (currentTime / duration) * 100;
+
+    if (watchedPercentage >= 80 && !videoTrackingTimeoutRef.current) {
+      console.log(`🎬 User watched ${watchedPercentage.toFixed(1)}% - tracking...`);
+
+      try {
+        const token = localStorage.getItem('user_token');
+
+        // 1. Track video watching
+        await axios.post(`${API_BASE}/${id}/track-video/${activeLesson.id}`, {
+          watchedSeconds: Math.round(currentTime),
+          totalSeconds: Math.round(duration)
+        }, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        console.log(`✅ Video tracked (${watchedPercentage.toFixed(1)}%)`);
+
+        // 2. Recalculate overall score
+        await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        console.log(`📊 Score recalculated`);
+
+        // 3. Refresh scoreboard
+        setScoreRefreshTrigger(prev => prev + 1);
+
+        // Mark so we don't track again
+        videoTrackingTimeoutRef.current = true;
+      } catch (err) {
+        console.log('Video tracking failed (non-critical):', err);
+      }
+    }
+  };
+
+  const handleVideoEnded = async () => {
+    if (!videoRef.current || !activeLesson || activeLesson.type !== 'video') return;
+
+    const duration = videoRef.current.duration;
+    console.log(`🎬 Video ended - tracking full completion...`);
+
+    try {
+      const token = localStorage.getItem('user_token');
+
+      // 1. Track video completion
+      await axios.post(`${API_BASE}/${id}/track-video/${activeLesson.id}`, {
+        watchedSeconds: Math.round(duration),
+        totalSeconds: Math.round(duration)
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      console.log(`✅ Video tracked (100% - completed)`);
+
+      // 2. Recalculate overall score
+      await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      console.log(`📊 Score recalculated after video ended`);
+
+      // 3. Refresh scoreboard
+      setScoreRefreshTrigger(prev => prev + 1);
+    } catch (err) {
+      console.log('Video tracking failed on end (non-critical):', err);
     }
   };
 
@@ -434,7 +587,7 @@ function CourseDetailPage() {
     setTotalTime(quizTimeInSeconds);
   };
   const handleSelectAnswer = (qIdx, optionIdx) => { if (quizSubmitted) return; setUserAnswers(prev => ({ ...prev, [qIdx]: optionIdx })); };
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     if (!activeLesson?.questions) return;
     let correctCount = 0;
     activeLesson.questions.forEach((q, idx) => {
@@ -442,6 +595,36 @@ function CourseDetailPage() {
     });
     setScore(correctCount);
     setQuizSubmitted(true);
+
+    // === TÍNH ĐIỂM QUIZ VÀ LƯU VÀO DATABASE ===
+    try {
+      const totalQuestions = activeLesson.questions.length;
+      const quizScorePercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+      const token = localStorage.getItem('user_token');
+
+      // 1. Lưu kết quả quiz
+      await axios.post(`${API_BASE}/${id}/quiz-result`, {
+        lessonId: activeLesson.id,
+        score: quizScorePercent,
+        correctAnswers: correctCount,
+        totalQuestions: totalQuestions
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      // 2. Tính lại điểm tổng thể
+      await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      notifySuccess(`Đã nộp bài! Điểm: ${quizScorePercent.toFixed(1)}/100`);
+
+      // 3. Trigger refresh scoreboard
+      setScoreRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error('Lỗi lưu điểm quiz:', error);
+      // Không hiển thị lỗi cho user vì quiz vẫn đã submit thành công locally
+    }
   };
   const handleRetryQuiz = () => {
     setQuizSubmitted(false);
@@ -617,7 +800,15 @@ function CourseDetailPage() {
                     style={{ border: 'none' }}
                   />
                 ) : (
-                  <video key={activeLesson.id} controls autoPlay className="main-video-player">
+                  <video
+                    ref={videoRef}
+                    key={activeLesson.id}
+                    controls
+                    autoPlay
+                    className="main-video-player"
+                    onTimeUpdate={handleVideoTimeUpdate}
+                    onEnded={handleVideoEnded}
+                  >
                     <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
                     Trình duyệt không hỗ trợ.
                   </video>
@@ -1089,6 +1280,10 @@ function CourseDetailPage() {
         <div className="intro-header-tabs">
           <div className="container">
             <button className={`intro-tab ${activeTab === 'intro' ? 'active' : ''}`} onClick={() => setActiveTab('intro')}>Giới thiệu</button>
+            <button className={`intro-tab ${activeTab === 'score' ? 'active' : ''}`} onClick={() => setActiveTab('score')}>
+              <Award size={16} style={{ marginRight: '6px' }} />
+              Điểm Số
+            </button>
             <button className={`intro-tab ${activeTab === 'comments' ? 'active' : ''}`} onClick={() => setActiveTab('comments')}>Bình luận</button>
           </div>
         </div>
@@ -1123,9 +1318,155 @@ function CourseDetailPage() {
                     </div>
                   </div>
                 </>
+              ) : activeTab === 'score' ? (
+                <CourseScoreboard courseId={id} userId={currentUser?.id} refreshTrigger={scoreRefreshTrigger} />
               ) : (
                 <div className="comments-section">
-                  {/* ...existing comments code... */}
+                  {/* Post Comment Form */}
+                  <div className="comment-form-wrapper">
+                    <h3>Viết bình luận</h3>
+                    <textarea
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder="Chia sẻ ý kiến của bạn..."
+                      className="comment-textarea"
+                      rows="4"
+                    />
+                    <div className="comment-form-footer">
+                      <div className="rating-input">
+                        <span>Đánh giá: </span>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star
+                            key={star}
+                            size={20}
+                            className="rating-star"
+                            fill={star <= (hoverRating || commentRating) ? '#ffc107' : 'none'}
+                            color={star <= (hoverRating || commentRating) ? '#ffc107' : '#ddd'}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            onClick={() => setCommentRating(star)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        ))}
+                      </div>
+                      <button onClick={handlePostComment} className="btn-post-comment">
+                        Đăng bình luận
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Comments List */}
+                  <div className="comments-list-wrapper">
+                    <h3>Bình luận ({comments.length})</h3>
+                    {loadingComments ? (
+                      <p>Đang tải bình luận...</p>
+                    ) : comments.length === 0 ? (
+                      <p className="no-comments">Chưa có bình luận nào</p>
+                    ) : (
+                      <div className="comments-list">
+                        {comments.map(comment => (
+                          <div key={comment.id} className="comment-item">
+                            <div className="comment-header">
+                              <div className="comment-author-info">
+                                <img
+                                  src={
+                                    comment.user_avatar
+                                      ? (comment.user_avatar.startsWith('http')
+                                        ? comment.user_avatar
+                                        : `${MEDIA_BASE}${comment.user_avatar.startsWith('/') ? '' : '/'}${comment.user_avatar}`)
+                                      : `https://i.pravatar.cc/40?u=${comment.user_id}`
+                                  }
+                                  alt={comment.user_name}
+                                  className="comment-avatar"
+                                  onError={(e) => e.target.src = `https://i.pravatar.cc/40?u=${comment.user_id}`}
+                                />
+                                <div className="comment-author-details">
+                                  <strong className="comment-author-name">{comment.user_name}</strong>
+                                  <small className="comment-date">
+                                    {new Date(comment.created_at).toLocaleDateString('vi-VN')}
+                                  </small>
+                                </div>
+                              </div>
+                            </div>
+
+                            {editingCommentId === comment.id ? (
+                              <div className="comment-edit-form">
+                                <textarea
+                                  value={editingContent}
+                                  onChange={(e) => setEditingContent(e.target.value)}
+                                  className="comment-textarea"
+                                  rows="3"
+                                />
+                                <div className="comment-edit-rating">
+                                  <span>Đánh giá: </span>
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <Star
+                                      key={star}
+                                      size={18}
+                                      className="edit-rating-star"
+                                      fill={star <= editingRating ? '#ffc107' : 'none'}
+                                      color={star <= editingRating ? '#ffc107' : '#ddd'}
+                                      onMouseEnter={() => setEditingRating(star)}
+                                      onClick={() => setEditingRating(star)}
+                                      style={{ cursor: 'pointer' }}
+                                    />
+                                  ))}
+                                </div>
+                                <div className="comment-edit-actions">
+                                  <button
+                                    onClick={() => handleUpdateComment(comment.id)}
+                                    className="btn-save"
+                                  >
+                                    Lưu
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="btn-cancel"
+                                  >
+                                    Hủy
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="comment-content">{comment.content}</p>
+                                {comment.rating > 0 && (
+                                  <div className="comment-rating">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star
+                                        key={i}
+                                        size={14}
+                                        fill={i < comment.rating ? '#ffc107' : 'none'}
+                                        color={i < comment.rating ? '#ffc107' : '#ddd'}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="comment-footer">
+                                  {currentUser?.id === comment.user_id && (
+                                    <div className="comment-actions">
+                                      <button
+                                        onClick={() => handleEditComment(comment)}
+                                        className="btn-edit"
+                                      >
+                                        Sửa
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteComment(comment.id)}
+                                        className="btn-delete"
+                                      >
+                                        Xóa
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
