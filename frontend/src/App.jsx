@@ -26,6 +26,7 @@ import UserProfile from "./components/user/UserProfile";
 import PersonalInfo from './components/user/PersonalInfo';
 import MyComments from "./components/user/Comments/MyComments.jsx";
 import ChangePassword from "./components/user/ChangePassword/changePassword.jsx";
+import ExamHistory from './components/user/ExamHistory';
 // Import Component 404 (Nếu có) hoặc dùng tạm div
 const NotFound = () => <div className="p-20 text-center">404 - Không tìm thấy trang</div>;
 
@@ -73,6 +74,7 @@ function App() {
                     <Route index element={<PersonalInfo />} />
                     {/* <Route path="learning-history" element={<LearningHistory />} /> */}
                     <Route path="comments" element={< MyComments />} />
+                    <Route path="exam-history" element={<ExamHistory />} />
                     <Route path="doi-mat-khau" element={<ChangePassword />} />
 
                   </Route>
