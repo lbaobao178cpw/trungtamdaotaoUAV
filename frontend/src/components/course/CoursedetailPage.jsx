@@ -261,6 +261,20 @@ function CourseDetailPage() {
       return;
     }
 
+    // === PAUSE VIDEO KHI TAB KHÔNG ACTIVE ===
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('📵 Tab ẩn - pause video');
+        if (videoRef.current && !videoRef.current.paused) {
+          videoRef.current.pause();
+        }
+      } else {
+        console.log('📱 Tab đã quay lại');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const fetchAllData = async () => {
       try {
         setLoading(true);
@@ -349,6 +363,10 @@ function CourseDetailPage() {
       }
     };
     if (id) fetchAllData();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [id, token, navigate]);
 
   // Kiểm tra URL có phải YouTube không
@@ -497,6 +515,12 @@ function CourseDetailPage() {
   // === VIDEO TRACKING HANDLERS ===
   const handleVideoTimeUpdate = async () => {
     if (!videoRef.current || !activeLesson || activeLesson.type !== 'video') return;
+
+    // ❌ KHÔNG TRACK nếu tab không active
+    if (document.hidden) {
+      console.log('⚠️ Tab không active, dừng tracking');
+      return;
+    }
 
     const currentTime = videoRef.current.currentTime;
     const duration = videoRef.current.duration;
