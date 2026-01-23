@@ -31,7 +31,6 @@ function CourseDetailPage() {
 
   // === PLAYER STATE ===
   const [activeLesson, setActiveLesson] = useState(null);
-  const videoRef = useRef(null);
 
   // === QUIZ STATE ===
   const [quizStarted, setQuizStarted] = useState(false);
@@ -409,39 +408,6 @@ function CourseDetailPage() {
     if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Auto-pause video when user leaves the tab/window or when lesson changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const vid = videoRef.current;
-      if (!vid) return;
-      if (document.hidden || document.visibilityState === 'hidden') {
-        if (!vid.paused) vid.pause();
-      }
-    };
-
-    const handleWindowBlur = () => {
-      const vid = videoRef.current;
-      if (!vid) return;
-      if (!vid.paused) vid.pause();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, []);
-
-  // Ensure video is paused when switching lessons or unmounting
-  useEffect(() => {
-    return () => {
-      const vid = videoRef.current;
-      if (vid && !vid.paused) vid.pause();
-    };
-  }, [activeLesson]);
-
   const getLessonIcon = (type) => {
     // Trả về icon màu vàng hoặc trắng
     const color = activeLesson?.id ? "#0050b8" : "#aaa";
@@ -639,16 +605,6 @@ function CourseDetailPage() {
             {/* 1. VIDEO PLAYER */}
             {activeLesson?.type === 'video' && (
               <div className="video-wrapper">
-                <video
-                  key={activeLesson.id}
-                  ref={videoRef}
-                  controls
-                  autoPlay
-                  className="main-video-player"
-                >
-                  <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
-                  Trình duyệt không hỗ trợ.
-                </video>
                 {activeLesson.src?.includes('youtube.com/embed') ? (
                   <iframe
                     key={activeLesson.id}
