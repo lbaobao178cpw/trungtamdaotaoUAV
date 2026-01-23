@@ -403,11 +403,13 @@ router.post("/", async (req, res) => {
             const contentData = l.type === 'quiz' ? JSON.stringify(l.quiz_data) : null;
             // Lấy video_url từ video_url hoặc content
             const videoUrl = l.video_url || l.content || '';
+            // Lấy display_name (tên file gốc)
+            const displayName = l.display_name || null;
 
             await connection.query(
-              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, duration, content_data, order_index, required_tier)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [newCourseId, newChapterId, l.title, l.type, videoUrl, l.duration || 0, contentData, j, 'A']
+              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [newCourseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A']
             );
           }
         }
@@ -470,11 +472,13 @@ router.put("/:id", async (req, res) => {
             const contentData = l.type === 'quiz' ? JSON.stringify(l.quiz_data) : null;
             // Lấy video_url từ video_url hoặc content
             const videoUrl = l.video_url || l.content || '';
+            // Lấy display_name (tên file gốc)
+            const displayName = l.display_name || null;
 
             await connection.query(
-              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, duration, content_data, order_index, required_tier)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [courseId, newChapterId, l.title, l.type, videoUrl, l.duration || 0, contentData, j, 'A']
+              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [courseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A']
             );
           }
         }
@@ -502,6 +506,87 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi xóa khóa học" });
+  }
+});
+
+// --- GET: Tải tài liệu (lesson document) ---
+router.get("/lessons/:lessonId/download-document", async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+
+    // Lấy thông tin lesson
+    const [rows] = await db.query(
+      "SELECT title, video_url, display_name FROM lessons WHERE id = ? AND type = 'document'",
+      [lessonId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tài liệu không tồn tại"
+      });
+    }
+
+    const lesson = rows[0];
+    const fileUrl = lesson.video_url;
+
+    if (!fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "File không tồn tại"
+      });
+    }
+
+    // Lấy file từ Cloudinary
+    const https = require('https');
+
+    // Ưu tiên display_name (tên file gốc), nếu không có thì dùng title
+    let filename = lesson.display_name || lesson.title || 'document';
+
+    // Fix UTF-8 encoding issue nếu có
+    try {
+      if (filename.match(/[Ã¡-ÿ]/g)) {
+        filename = Buffer.from(filename, 'latin1').toString('utf8');
+        console.log("🔧 Fixed display_name encoding:", filename);
+      }
+    } catch (e) {
+      console.log("⚠️ Display name encoding fix failed");
+    }
+
+    return new Promise((resolve, reject) => {
+      https.get(fileUrl, (cloudinaryRes) => {
+        // Set headers với tên file UTF-8
+        res.setHeader('Content-Type', cloudinaryRes.headers['content-type'] || 'application/octet-stream');
+
+        const filenameUTF8 = Buffer.from(filename, 'utf8').toString('utf8');
+        const filenameEncoded = encodeURIComponent(filenameUTF8);
+
+        // RFC 5987 format: filename*=UTF-8''<encoded-filename>
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${filenameEncoded}`);
+
+        if (cloudinaryRes.headers['content-length']) {
+          res.setHeader('Content-Length', cloudinaryRes.headers['content-length']);
+        }
+
+        cloudinaryRes.pipe(res);
+
+        cloudinaryRes.on('error', (err) => {
+          console.error("Lỗi Cloudinary:", err);
+          res.status(500).json({ success: false, message: "Lỗi tải file" });
+          reject(err);
+        });
+
+        res.on('finish', () => resolve());
+      }).on('error', (err) => {
+        console.error("Lỗi download:", err);
+        res.status(500).json({ success: false, message: "Lỗi tải file" });
+        reject(err);
+      });
+    });
+
+  } catch (error) {
+    console.error("Lỗi download document:", error);
+    res.status(500).json({ error: "Lỗi server" });
   }
 });
 

@@ -590,7 +590,6 @@ function CourseDetailPage() {
                           <div className="lesson-icon">{getLessonIcon(lesson.type)}</div>
                           <div className="lesson-info">
                             <div className="lesson-title">{lesson.title}</div>
-                            <div className="lesson-duration">{lesson.duration} phút</div>
                           </div>
                         </div>
                       ))
@@ -628,23 +627,32 @@ function CourseDetailPage() {
 
             {/* 2. DOCUMENT VIEWER */}
             {activeLesson?.type === 'document' && (
-              <div className="doc-wrapper">
-                <div className="doc-toolbar">
+              <div className="doc-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '24px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <FileText size={64} color="#0050b8" style={{ marginBottom: '16px' }} />
+                  <h3 style={{ marginBottom: '8px', color: '#333' }}>{activeLesson.title}</h3>
+                  <p style={{ color: '#666', marginBottom: '24px' }}>Nhấn nút dưới để tải về tài liệu</p>
                   <a
-                    href={getFullMediaPath(activeLesson.src)}
+                    href={`http://localhost:5000/api/courses/lessons/${activeLesson.id}/download-document`}
                     download
                     className="btn-download-doc"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      padding: '12px 32px',
+                      backgroundColor: '#0050b8',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      fontSize: '16px',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#003a82'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#0050b8'}
                   >
                     ⬇️ Tải tài liệu
                   </a>
                 </div>
-                {activeLesson.src?.toLowerCase().endsWith('.pdf') ? (
-                  <iframe src={getFullMediaPath(activeLesson.src)} className="pdf-viewer" title="Document Viewer"></iframe>
-                ) : (
-                  <img src={getFullMediaPath(activeLesson.src)} alt={activeLesson.title} style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain' }} />
-                )}
               </div>
             )}
 

@@ -73,6 +73,7 @@ export default function CourseManager() {
     questions: [],
     passScore: 0,
     documentUrl: "",
+    displayName: "",  // Tên file gốc
     youtubeUrl: "",
   });
 
@@ -310,6 +311,8 @@ export default function CourseManager() {
           title: l.title,
           type: l.type,
           content: l.video_url,
+          documentUrl: l.type === 'document' ? l.video_url : '',
+          displayName: l.display_name || '',  // Tên file gốc
           duration: l.duration,
           questions:
             (typeof l.quiz_data === "string"
@@ -354,9 +357,11 @@ export default function CourseManager() {
       lessons: chap.lessons.map((l) => ({
         title: l.title,
         type: l.type,
-        // Gửi content, backend sẽ xử lý lưu vào video_url hoặc content tùy loại
-        content: l.content || l.video_url || '',
-        video_url: l.content || l.video_url || '',
+        // Map content dựa trên loại bài học
+        content: l.type === 'document' ? (l.documentUrl || l.content || l.video_url || '') : (l.content || l.video_url || ''),
+        video_url: l.type === 'document' ? (l.documentUrl || l.content || l.video_url || '') : (l.content || l.video_url || ''),
+        // Lưu tên file gốc (display_name)
+        display_name: l.displayName || l.display_name || null,
         duration: l.duration,
         quiz_data: l.questions || [],
       })),
@@ -448,6 +453,9 @@ export default function CourseManager() {
       duration: "",
       questions: [],
       passScore: 0,
+      documentUrl: "",
+      displayName: "",
+      youtubeUrl: "",
     });
     resetTempQuestion();
     setIsLessonModalOpen(true);
@@ -457,6 +465,8 @@ export default function CourseManager() {
     setActiveChapterIdForLesson(chapterId);
     setLessonFormData({
       ...lesson,
+      documentUrl: lesson.documentUrl || (lesson.type === 'document' ? lesson.content : ''),
+      displayName: lesson.displayName || lesson.display_name || '',
       questions: lesson.questions || [],
       passScore: lesson.passScore || 0,
     });
@@ -473,8 +483,19 @@ export default function CourseManager() {
       return;
     }
 
-    if (lessonFormData.type !== "quiz" && !lessonFormData.content.trim()) {
-      notifyWarning("Vui lòng nhập URL nội dung hoặc upload video");
+    // Kiểm tra nội dung dựa trên loại bài học
+    if (lessonFormData.type === "video" && !lessonFormData.content.trim()) {
+      notifyWarning("Vui lòng nhập URL hoặc upload video");
+      return;
+    }
+
+    if (lessonFormData.type === "document" && !lessonFormData.documentUrl.trim()) {
+      notifyWarning("Vui lòng upload tài liệu");
+      return;
+    }
+
+    if (lessonFormData.type === "quiz" && lessonFormData.questions.length === 0) {
+      notifyWarning("Vui lòng thêm ít nhất một câu hỏi cho quiz");
       return;
     }
 
@@ -637,6 +658,9 @@ export default function CourseManager() {
       setIsDocumentUploading(true);
       setDocumentUploadProgress(0);
 
+      // Lưu tên file gốc (bao gồm extension)
+      const originalFileName = file.name;
+
       // Simulate progress
       const progressInterval = setInterval(() => {
         setDocumentUploadProgress((prev) => {
@@ -650,7 +674,12 @@ export default function CourseManager() {
 
       if (result.success) {
         setDocumentUploadProgress(100);
-        setLessonFormData((prev) => ({ ...prev, documentUrl: result.url }));
+        // Lưu cả URL và tên file gốc (display_name)
+        setLessonFormData((prev) => ({
+          ...prev,
+          documentUrl: result.url,
+          displayName: originalFileName  // Tên file gốc với extension
+        }));
         notifySuccess("Upload tài liệu thành công!");
         setTimeout(() => {
           setDocumentUploadProgress(0);
@@ -861,7 +890,7 @@ export default function CourseManager() {
                               {lesson.title}
                             </span>
                             <span className="cm-lesson-meta">
-                              {lesson.type} • {lesson.duration}
+                              {lesson.type === 'quiz' ? `${lesson.type} • ${lesson.duration}p` : lesson.type}
                             </span>
                           </div>
                           <div className="cm-lesson-actions">
@@ -1090,20 +1119,6 @@ export default function CourseManager() {
 
               {lessonFormData.type !== "quiz" ? (
                 <>
-                  <div className="cm-form-group">
-                    <label className="cm-form-label">Thời lượng</label>
-                    <input
-                      className="cm-form-input"
-                      value={lessonFormData.duration}
-                      onChange={(e) =>
-                        setLessonFormData({
-                          ...lessonFormData,
-                          duration: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
                   {/* VIDEO CONTENT */}
                   {lessonFormData.type === "video" && (
                     <>
@@ -1227,10 +1242,9 @@ export default function CourseManager() {
                       )}
                       {lessonFormData.documentUrl && (
                         <div style={{ marginTop: "10px", padding: "10px", background: "#f0f9ff", borderRadius: "6px" }}>
-                          <a href={lessonFormData.documentUrl} target="_blank" rel="noopener noreferrer"
-                            style={{ color: "#0066cc", textDecoration: "none", wordBreak: "break-all" }}>
-                            📄 Xem tài liệu đã upload
-                          </a>
+                          <span style={{ color: "#0066cc", wordBreak: "break-all" }}>
+                            📄 {lessonFormData.displayName || 'Tài liệu đã upload'}
+                          </span>
                         </div>
                       )}
                     </div>
