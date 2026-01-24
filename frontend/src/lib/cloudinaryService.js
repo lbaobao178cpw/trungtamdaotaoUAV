@@ -12,9 +12,19 @@ export const uploadToCloudinary = async (file, folder = "uav-training") => {
     console.log("Uploading to:", `${API_BASE}/cloudinary/upload`);
 
     // Dùng apiClient để có request interceptor tự động refresh token
+    // Ghi đè timeout mặc định để cho phép upload video lớn (mặc định axios timeout = 10000ms)
     const response = await apiClient.post('/cloudinary/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
+      },
+      // Timeout 5 phút (300000 ms). Tùy chỉnh nếu cần lớn hơn.
+      timeout: 300000,
+      // Cho phép theo dõi tiến trình upload khi apiClient hỗ trợ onUploadProgress
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.lengthComputable) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log('Upload progress:', percentCompleted + '%');
+        }
       }
     });
 
