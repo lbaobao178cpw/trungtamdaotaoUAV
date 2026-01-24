@@ -46,6 +46,8 @@ export default function SolutionManager() {
   const [form, setForm] = useState(initialSolutionState);
   const [isEditing, setIsEditing] = useState(false);
 
+  const [saving, setSaving] = useState(false);
+
   const [sections, setSections] = useState([]);
   const [clients, setClients] = useState([]);
 
@@ -163,7 +165,7 @@ export default function SolutionManager() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     // Lưu lại vị trí cuộn hiện tại nếu cần thiết (optional), nhưng React thường giữ nguyên nếu không có lệnh scroll
     try {
       const payload = {
@@ -173,9 +175,8 @@ export default function SolutionManager() {
       };
 
       const method = isEditing ? "PUT" : "POST";
-      const url = isEditing
-        ? `${API_SOLUTION_URL}/${form.id}`
-        : API_SOLUTION_URL;
+      const baseUrl = API_ENDPOINTS.SOLUTIONS;
+      const url = isEditing ? `${baseUrl}/${form.id}` : baseUrl;
 
       const response = await fetch(url, {
         method: method,
@@ -190,20 +191,20 @@ export default function SolutionManager() {
       if (!isEditing) {
         handleAddNew();
       }
-      fetchSolutions();
+      refreshSolutions();
     } catch (error) {
       notifyError(error.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm(`Bạn có chắc muốn xóa giải pháp ID: ${id}?`)) return;
     try {
-      await fetch(`${API_SOLUTION_URL}/${id}`, { method: "DELETE" });
+      await fetch(`${API_ENDPOINTS.SOLUTIONS}/${id}`, { method: "DELETE" });
       notifySuccess("Đã xóa thành công!");
-      fetchSolutions();
+      refreshSolutions();
       if (form.id === id) handleAddNew();
     } catch (error) {
       console.error(error);
