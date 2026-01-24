@@ -27,6 +27,8 @@ export const API_ENDPOINTS = {
 
     // Courses
     COURSES: `${API_BASE_URL}/courses`,
+    // Cloudinary (backend proxy)
+    CLOUDINARY: `${API_BASE_URL}/cloudinary`,
 
     // Exams
     EXAMS: `${API_BASE_URL}/exams`,
