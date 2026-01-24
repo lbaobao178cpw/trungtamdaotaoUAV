@@ -25,7 +25,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  height: 370px;
+  height: auto;
 }
 
 /* User Card */
@@ -33,7 +33,7 @@
   padding: 20px;
   text-align: center;
   border-bottom: 1px solid #f0f0f0;
-  height: 190px
+  height: auto
 }
 
 .user-avatar {
@@ -57,15 +57,12 @@
   color: #000;
 
   max-width: 14ch;
-  /* ~2 chữ / dòng */
   white-space: normal;
   word-break: break-word;
   line-height: 1.4;
 
   text-align: center;
-  /* 👉 CENTER CHỮ */
   margin-left: auto;
-  /* 👉 CENTER KHỐI */
   margin-right: auto;
 }
 
