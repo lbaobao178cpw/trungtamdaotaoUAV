@@ -22,7 +22,7 @@ import MediaSelector from "../mediaSelector/MediaSelector";
 import { uploadImage, uploadVideo, uploadDocument } from "../../lib/cloudinaryService";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
-import "./CourseManager.css";
+import "./Coursemanager.css";
 
 export default function CourseManager() {
   // --- 1. STATES ---
