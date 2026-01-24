@@ -25,19 +25,35 @@ router.post("/", verifyStudent, async (req, res) => {
     // Validate rating (1-5) - default 5 if not provided
     const validRating = rating ? Math.min(5, Math.max(1, parseInt(rating))) : 5;
 
-    // Kiểm tra khóa học có tồn tại không
-    const [courseExists] = await db.query("SELECT id FROM courses WHERE id = ?", [course_id]);
-    if (courseExists.length === 0) {
+    // Kiểm tra khóa học có tồn tại không và lấy level của khóa học
+    const [courseRows] = await db.query("SELECT id, level FROM courses WHERE id = ?", [course_id]);
+    if (courseRows.length === 0) {
       return res.status(404).json({ error: "Khóa học không tồn tại" });
     }
+    const courseLevel = (courseRows[0].level || '').toUpperCase(); // 'A' hoặc 'B' hoặc text
 
-    // Kiểm tra user đã đăng ký khóa học chưa (dùng bảng user_course_progress)
+    // Lấy tier của user (target_tier trong user_profiles)
+    const [profileRows] = await db.query("SELECT target_tier FROM user_profiles WHERE user_id = ?", [user_id]);
+    const userTier = (profileRows[0]?.target_tier || null) ? profileRows[0].target_tier.toString().toUpperCase() : null;
+
+    // Kiểm tra quyền bình luận theo tier hoặc enrollment
+    // Nếu user đã enroll trong bảng user_course_progress thì cho phép
     const [enrollRows] = await db.query(
       "SELECT id FROM user_course_progress WHERE user_id = ? AND course_id = ?",
       [user_id, course_id]
     );
-    if (enrollRows.length === 0) {
-      return res.status(403).json({ error: "Bạn chỉ có thể bình luận sau khi đã đăng ký khóa học" });
+
+    let hasAccessByTier = false;
+    // Nếu course là hạng B -> chỉ users có tier B được phép
+    if (courseLevel === 'B' || (courseRows[0].level || '').toLowerCase().includes('nâng cao')) {
+      if (userTier === 'B') hasAccessByTier = true;
+    } else {
+      // course A hoặc default: both A and B tiers can access
+      if (userTier === 'A' || userTier === 'B') hasAccessByTier = true;
+    }
+
+    if (enrollRows.length === 0 && !hasAccessByTier) {
+      return res.status(403).json({ error: "Bạn chỉ có thể bình luận sau khi đã đăng ký khóa học hoặc có quyền theo hạng" });
     }
 
     // Kiểm tra user đã bình luận cho khóa học này chưa (chỉ 1 lần)
