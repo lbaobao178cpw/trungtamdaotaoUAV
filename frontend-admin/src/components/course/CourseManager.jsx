@@ -168,7 +168,7 @@ export default function CourseManager() {
           reject(new Error("Upload error"));
         });
 
-        xhr.open("POST", "http://localhost:5000/api/cloudinary/upload");
+        xhr.open("POST", API_ENDPOINTS.CLOUDINARY + "/upload");
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         xhr.send(formData);
       });

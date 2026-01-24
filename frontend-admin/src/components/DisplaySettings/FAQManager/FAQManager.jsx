@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 
 import "../../admin/Admin/Admin.css";
+import { API_BASE_URL } from '../../../config/apiConfig';
 
-const API_BASE_URL = "http://localhost:5000";
-const API_FAQ_URL = `${API_BASE_URL}/api/faqs`;
+const API_FAQ_URL = `${API_BASE_URL}/faqs`;
 
 export default function FAQManager() {
     const [faqs, setFaqs] = useState([]);

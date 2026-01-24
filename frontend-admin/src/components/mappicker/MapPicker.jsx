@@ -4,10 +4,11 @@ import { CameraControls, Html, useGLTF, Environment, Bvh } from '@react-three/dr
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { MonitorX } from 'lucide-react';
 import "../admin/Admin/Admin.css";
+import { API_ENDPOINTS } from '../../config/apiConfig';
 
 const DRAG_THRESHOLD = 5;
-const API_SETTINGS = "http://localhost:5000/api/settings";
-const API_POINTS = "http://localhost:5000/api/points";
+const API_SETTINGS = API_ENDPOINTS.SETTINGS;
+const API_POINTS = API_ENDPOINTS.POINTS;
 const DRACO_URL = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
 
 // === WEBGL SUPPORT CHECK ===

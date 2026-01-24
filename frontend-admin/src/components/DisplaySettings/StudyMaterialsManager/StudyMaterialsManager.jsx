@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from "../../../lib/apiInterceptor";
 import { notifySuccess, notifyError } from '../../../lib/notifications';
 import "../LegalManagement/LegalManagement.css";
+import { API_ENDPOINTS } from '../../../config/apiConfig';
 
-const API_URL = "http://localhost:5000/api/study-materials";
+const API_URL = API_ENDPOINTS.STUDY_MATERIALS;
 
 export default function StudyMaterialsManager() {
     const [materials, setMaterials] = useState([]);

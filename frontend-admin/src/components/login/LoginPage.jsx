@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 import { Eye, EyeOff } from 'lucide-react';
 import { notifySuccess, notifyError } from '../../lib/notifications';
+import { API_ENDPOINTS } from '../../config/apiConfig';
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ function LoginPage() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://localhost:5000/api/auth/login-admin", {
+            const res = await fetch(API_ENDPOINTS.AUTH + "/login-admin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

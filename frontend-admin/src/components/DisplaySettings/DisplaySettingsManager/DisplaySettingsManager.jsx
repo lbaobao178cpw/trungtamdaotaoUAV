@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './DisplaySettingsManager.css';
 import '../LegalManagement/LegalManagement.css'; // Thêm CSS cho legal management
 import { notifyWarning, notifyError } from '../../../lib/notifications';
+import { API_ENDPOINTS } from '../../../config/apiConfig';
 
-const API_URL = "http://localhost:5000/api/display";
+const API_URL = API_ENDPOINTS.DISPLAY;
 
 // Import các component mới
 import LegalDocumentsManager from '../LegalManagement/LegalManagement';

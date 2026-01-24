@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from "../../../lib/apiInterceptor";
 import { notifySuccess, notifyError, notifyWarning } from '../../../lib/notifications';
 import "../LegalManagement/LegalManagement.css";
+import { API_ENDPOINTS } from '../../../config/apiConfig';
 
-const API_URL = "http://localhost:5000/api/display";
+const API_URL = API_ENDPOINTS.DISPLAY;
 
 // Helper function to sanitize Vietnamese filenames
 const sanitizeFileName = (filename) => {
