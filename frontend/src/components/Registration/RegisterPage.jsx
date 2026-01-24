@@ -245,18 +245,18 @@ function RegisterPage() {
         </div>
       )}
       <div className="info-box">
-  <h3 className="info-title">
-    <ClipboardList className="info-icon" size={24} />
-    Quy trình
-  </h3>
-  <ol className="info-list">
-    <li>
-      <strong>Quan trọng:</strong> Chuẩn bị ảnh chụp CCCD mặt trước và mặt sau rõ nét.
-    </li>
-    <li>Kê khai thông tin cư trú chính xác.</li>
-    <li>Cung cấp thông tin liên hệ khẩn cấp.</li>
-  </ol>
-</div>
+        <h3 className="info-title">
+          <ClipboardList className="info-icon" size={24} />
+          Quy trình
+        </h3>
+        <ol className="info-list">
+          <li>
+            <strong>Quan trọng:</strong> Chuẩn bị ảnh chụp CCCD mặt trước và mặt sau rõ nét.
+          </li>
+          <li>Kê khai thông tin cư trú chính xác.</li>
+          <li>Cung cấp thông tin liên hệ khẩn cấp.</li>
+        </ol>
+      </div>
 
       <div className="terms-section"><label className="checkbox-label required-checkbox"><input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} /><span>Tôi cam kết các thông tin khai báo là trung thực</span></label></div>
       <button type="button" onClick={handleNext} className={`btn btn-primary btn-full ${!agreedToTerms ? "btn-disabled" : ""}`}>Bắt đầu đăng ký <ArrowRight size={20} /></button>

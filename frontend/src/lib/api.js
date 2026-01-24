@@ -18,20 +18,20 @@ export const api = {
     update: (id, data) => axios.put(`${API_BASE_URL}/solutions/${id}`, data),
     delete: (id) => axios.delete(`${API_BASE_URL}/solutions/${id}`)
   },
-  
+
   // Media APIs (Quản lý file/ảnh)
   media: {
     // Lấy danh sách file trong thư mục (có hỗ trợ subfolder)
     getFiles: (folderPath = '') => axios.get(`${MEDIA_BASE_URL}/api/files`, { params: { folder: folderPath } }),
-    
+
     // Tạo thư mục mới
     createFolder: (folderName, currentPath = '') => axios.post(`${MEDIA_BASE_URL}/api/create-folder`, { folderName, currentPath }),
-    
+
     // Upload file
     upload: (formData) => axios.post(`${MEDIA_BASE_URL}/api/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-    
+
     // Xóa file/folder
     delete: (path) => axios.delete(`${MEDIA_BASE_URL}/api/files`, { params: { path } }),
 

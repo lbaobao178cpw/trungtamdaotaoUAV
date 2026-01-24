@@ -24,53 +24,53 @@ const SolutionDetail = () => {
       });
   }, [id]);
 
-  if (loading) return <div style={{padding: 100, textAlign: 'center'}}>Đang tải dữ liệu...</div>;
-  if (!data) return <div style={{padding: 100, textAlign: 'center'}}>Không tìm thấy trang này.</div>;
+  if (loading) return <div style={{ padding: 100, textAlign: 'center' }}>Đang tải dữ liệu...</div>;
+  if (!data) return <div style={{ padding: 100, textAlign: 'center' }}>Không tìm thấy trang này.</div>;
 
   const renderHeroMedia = () => {
     const videoUrl = data.hero_video;
     const imgUrl = data.image;
 
     if (videoUrl && videoUrl.trim() !== "") {
-        // Xử lý video YouTube
-        if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
-           return (
-             <div className="hero-video-embed" style={{borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', pointerEvents: 'none'}}> 
-                <iframe 
-                  width="100%" 
-                  height="400" 
-                  src={`${videoUrl}${videoUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${videoUrl.split('/').pop()}`} 
-                  title="Hero Video" 
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
-                ></iframe>
-             </div>
-           );
-        }
-
-        // Video MP4/Upload
+      // Xử lý video YouTube
+      if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
         return (
-          <video 
-            src={videoUrl} 
-            poster={imgUrl} 
-            className="w-full h-auto drop-shadow-2xl" 
-            style={{
-                borderRadius: 20,
-                pointerEvents: 'none', 
-                userSelect: 'none'
-            }} 
-            autoPlay 
-            loop 
-            muted 
-            playsInline
-          >
-            Trình duyệt không hỗ trợ thẻ video.
-          </video>
+          <div className="hero-video-embed" style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', pointerEvents: 'none' }}>
+            <iframe
+              width="100%"
+              height="400"
+              src={`${videoUrl}${videoUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${videoUrl.split('/').pop()}`}
+              title="Hero Video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
         );
+      }
+
+      // Video MP4/Upload
+      return (
+        <video
+          src={videoUrl}
+          poster={imgUrl}
+          className="w-full h-auto drop-shadow-2xl"
+          style={{
+            borderRadius: 20,
+            pointerEvents: 'none',
+            userSelect: 'none'
+          }}
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          Trình duyệt không hỗ trợ thẻ video.
+        </video>
+      );
     }
     return (
-      <img src={imgUrl} alt={data.title} className="w-full h-auto drop-shadow-2xl" onError={(e)=>{e.target.src='https://via.placeholder.com/600x400'}} />
+      <img src={imgUrl} alt={data.title} className="w-full h-auto drop-shadow-2xl" onError={(e) => { e.target.src = 'https://via.placeholder.com/600x400' }} />
     );
   };
 
@@ -91,7 +91,7 @@ const SolutionDetail = () => {
         {sections.map((section, index) => {
           // Logic: Hàng chẵn (0, 2...) => Hình Trái. Hàng lẻ (1, 3...) => Hình Phải
           const isReverse = index % 2 !== 0;
-          
+
           const listItems = section.items ? section.items.split('\n') : [];
           const validImages = Array.isArray(section.images)
             ? section.images.filter((img) => img && img.trim() !== "")
@@ -107,7 +107,7 @@ const SolutionDetail = () => {
                 validImages.length === 1 ? (
                   // Chỉ có 1 ảnh
                   <div className="service-single-image">
-                     <img src={validImages[0]} alt={section.title} />
+                    <img src={validImages[0]} alt={section.title} />
                   </div>
                 ) : (
                   // Có nhiều ảnh -> Grid 2x2 (tối đa hiển thị 4 ảnh đầu tiên)
@@ -139,22 +139,22 @@ const SolutionDetail = () => {
 
   const renderClients = () => {
     let clients = [];
-    try { clients = JSON.parse(data.client_images); } catch(e) { return null; }
+    try { clients = JSON.parse(data.client_images); } catch (e) { return null; }
     const validClients = Array.isArray(clients) ? clients.filter(c => c && c.trim() !== "") : [];
 
     if (validClients.length === 0) return null;
 
     return (
       <div className="clients-grid">
-         {validClients.map((imgUrl, index) => (
-            <div key={index} className="client-logo"><img src={imgUrl} alt={`Client ${index}`} /></div>
-         ))}
+        {validClients.map((imgUrl, index) => (
+          <div key={index} className="client-logo"><img src={imgUrl} alt={`Client ${index}`} /></div>
+        ))}
       </div>
     );
   }
 
   return (
-    <main className="mining-page"> 
+    <main className="mining-page">
       <section className="hero-section">
         <div className="container">
           <div className="hero-grid">
@@ -162,7 +162,7 @@ const SolutionDetail = () => {
               <h1 className="hero-title">{data.title}</h1>
               <p className="hero-description">{data.hero_description || data.description}</p>
               <button className="hero-btn">Liên Hệ Ngay
-                
+
               </button>
             </div>
             <div className="hero-image">{renderHeroMedia()}</div>
@@ -197,13 +197,13 @@ const SolutionDetail = () => {
             <div className="video-content">
               <h2 className="video-title">{data.video_title || "Video Introduction"}</h2>
               <div className="video-embed">
-                 <iframe width="100%" height="500" src={data.video_url} title="Intro Video" frameBorder="0" allowFullScreen style={{display: 'block'}}></iframe>
+                <iframe width="100%" height="500" src={data.video_url} title="Intro Video" frameBorder="0" allowFullScreen style={{ display: 'block' }}></iframe>
               </div>
             </div>
           </div>
         </section>
       )}
-      
+
       <section className="clients-section">
         <div className="container">
           <h2 className="clients-title">{data.client_title || "Clientele"}</h2>
