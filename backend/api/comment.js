@@ -31,6 +31,24 @@ router.post("/", verifyStudent, async (req, res) => {
       return res.status(404).json({ error: "Khóa học không tồn tại" });
     }
 
+    // Kiểm tra user đã đăng ký khóa học chưa (dùng bảng user_course_progress)
+    const [enrollRows] = await db.query(
+      "SELECT id FROM user_course_progress WHERE user_id = ? AND course_id = ?",
+      [user_id, course_id]
+    );
+    if (enrollRows.length === 0) {
+      return res.status(403).json({ error: "Bạn chỉ có thể bình luận sau khi đã đăng ký khóa học" });
+    }
+
+    // Kiểm tra user đã bình luận cho khóa học này chưa (chỉ 1 lần)
+    const [existingComment] = await db.query(
+      "SELECT id FROM comments WHERE user_id = ? AND course_id = ?",
+      [user_id, course_id]
+    );
+    if (existingComment.length > 0) {
+      return res.status(400).json({ error: "Bạn đã bình luận cho khóa học này rồi" });
+    }
+
     // Insert comment - Lưu theo múi giờ Việt Nam (UTC+7)
     const vietnamTime = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).replace(' ', 'T');
 
