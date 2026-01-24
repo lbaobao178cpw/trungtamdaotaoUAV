@@ -42,6 +42,11 @@ const getCorsOrigins = () => {
 
 const allowedOrigins = getCorsOrigins();
 
+console.log('📋 CORS Configuration:');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('CORS_ORIGINS:', process.env.CORS_ORIGINS);
+console.log('✅ Allowed Origins:', allowedOrigins);
+
 // --- CẤU HÌNH CORS ---
 app.use(cors({
   origin: function (origin, callback) {
