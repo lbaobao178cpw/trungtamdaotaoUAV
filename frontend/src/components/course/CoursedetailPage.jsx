@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './CourseDetailPage.css'; // Đảm bảo import CSS mới
+import './CoursedetailPage.css'; // Đảm bảo import CSS mới
 import noVideoImage from "../assets/noVideoImage.png";
 import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
 import CourseScoreboard from './CourseScoreboard';
