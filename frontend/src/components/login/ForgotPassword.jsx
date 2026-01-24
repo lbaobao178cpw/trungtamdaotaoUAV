@@ -87,9 +87,9 @@ export default function ForgotPassword() {
                 <input className="form-input" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
               </div>
 
-              <div style={{ marginTop: 12 }}>
-                <button className="btn btn-primary" type="submit" disabled={loading}>{loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
-                <button type="button" className="btn btn-secondary" style={{ marginLeft: 12 }} onClick={() => setStep(1)}>Gửi lại email</button>
+              <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
+                <button className="btn btn-primary" type="submit" disabled={loading} style={{ flex: 1 }}>{loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>Gửi lại email</button>
               </div>
             </form>
           )}
