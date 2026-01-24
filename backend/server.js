@@ -37,6 +37,12 @@ const getCorsOrigins = () => {
     origins.push(...customOrigins);
   }
   
+  // FALLBACK: If in production and no env vars set, allow *.vercel.app (wildcard pattern)
+  if (!process.env.FRONTEND_URL && !process.env.CORS_ORIGINS && process.env.NODE_ENV === 'production') {
+    origins.push('*.vercel.app');
+    origins.push('https://testdeploye.vercel.app');
+  }
+  
   return origins;
 };
 
