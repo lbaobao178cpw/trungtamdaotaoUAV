@@ -26,7 +26,7 @@ import TermsOfServicePage from './components/TermsOfServicePage/TermsOfServicePa
 import UserProfile from "./components/user/UserProfile";
 import PersonalInfo from './components/user/PersonalInfo';
 import MyComments from "./components/user/Comments/MyComments.jsx";
-import ChangePassword from "./components/user/ChangePassword/changePassword.jsx";
+import ChangePassword from "./components/user/ChangePassword/ChangePassword.jsx";
 import ExamHistory from './components/user/ExamHistory';
 import LearningHistory from './components/user/LearningHistory';
 // Import Component 404 (Nếu có) hoặc dùng tạm div
