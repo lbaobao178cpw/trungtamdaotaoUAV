@@ -29,6 +29,10 @@ export default function UserManager() {
   const [selectedWard, setSelectedWard] = useState('');
   const [street, setStreet] = useState('');
 
+  // === State cho điểm số ===
+  const [userScores, setUserScores] = useState({});
+  const [loadingScores, setLoadingScores] = useState({});
+
   // === FETCH USERS WITH CUSTOM HOOK ===
   const { data: usersData, loading, refetch: refreshUsers } = useApi(API_ENDPOINTS.USERS);
   const allUsers = useMemo(() => Array.isArray(usersData) ? usersData : [], [usersData]);
@@ -46,6 +50,27 @@ export default function UserManager() {
   }, [allUsers, searchTerm]);
 
   const { mutate: saveUser } = useApiMutation();
+
+  // === Fetch điểm số của user khi expand ===
+  const fetchUserScores = async (userId) => {
+    if (userScores[userId] || loadingScores[userId]) return;
+
+    setLoadingScores(prev => ({ ...prev, [userId]: true }));
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_ENDPOINTS.USERS}/${userId}/scores`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserScores(prev => ({ ...prev, [userId]: data }));
+      }
+    } catch (error) {
+      console.error('Lỗi lấy điểm số:', error);
+    } finally {
+      setLoadingScores(prev => ({ ...prev, [userId]: false }));
+    }
+  };
 
   const handleAddNew = useCallback(() => {
     setForm(initialUserState);
@@ -281,7 +306,21 @@ export default function UserManager() {
   };
 
   const toggleExpand = (id) => {
-    setExpandedUserId(expandedUserId === id ? null : id);
+    if (expandedUserId === id) {
+      setExpandedUserId(null);
+    } else {
+      setExpandedUserId(id);
+      // Fetch điểm số khi mở rộng
+      fetchUserScores(id);
+    }
+  };
+
+  // Helper function để lấy màu điểm
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#f59e0b';
+    if (score >= 40) return '#f97316';
+    return '#ef4444';
   };
 
   return (
@@ -457,6 +496,7 @@ export default function UserManager() {
                 {/* Phần chi tiết (chỉ hiện khi expand) */}
                 {expandedUserId === user.id && (
                   <div style={{ marginTop: '10px', background: '#f9fafb', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
+                    {/* Thông tin cá nhân */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><CreditCard size={14} color="#666" /> <strong>CCCD:</strong> {user.identity_number || "Chưa cập nhật"}</div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}><Calendar size={14} color="#666" /> <strong>Ngày sinh:</strong> {user.birth_date ? new Date(user.birth_date).toLocaleDateString('vi-VN') : "--"}</div>
@@ -466,6 +506,89 @@ export default function UserManager() {
                     <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
                       <MapPin size={14} color="#666" style={{ marginTop: '2px' }} />
                       <span><strong>Địa chỉ:</strong> {user.address || "Chưa cập nhật"}</span>
+                    </div>
+
+                    {/* Phần điểm số khóa học */}
+                    <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+                      <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📊 Điểm số khóa học
+                      </h4>
+
+                      {loadingScores[user.id] ? (
+                        <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                          <RefreshCw size={16} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
+                          <span style={{ marginLeft: '8px' }}>Đang tải...</span>
+                        </div>
+                      ) : userScores[user.id]?.courseScores?.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {userScores[user.id].courseScores.map((course, idx) => (
+                            <div key={idx} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '10px 12px',
+                              background: '#fff',
+                              borderRadius: '6px',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: '500', color: '#1f2937', marginBottom: '4px' }}>
+                                  {course.course_title}
+                                </div>
+                                <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280' }}>
+                                  <span>Tiến độ: <strong>{parseFloat(course.progress_percentage || 0).toFixed(0)}%</strong></span>
+                                  <span>Quiz: <strong style={{ color: getScoreColor(course.quiz_score || 0) }}>{parseFloat(course.quiz_score || 0).toFixed(1)}</strong></span>
+                                </div>
+                              </div>
+                              <div style={{
+                                minWidth: '60px',
+                                textAlign: 'center',
+                                padding: '6px 12px',
+                                background: getScoreColor(course.overall_score || 0),
+                                color: '#fff',
+                                borderRadius: '6px',
+                                fontWeight: '700',
+                                fontSize: '14px'
+                              }}>
+                                {parseFloat(course.overall_score || 0).toFixed(1)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '20px', color: '#9ca3af', fontSize: '13px' }}>
+                          Chưa có dữ liệu điểm số
+                        </div>
+                      )}
+
+                      {/* Lịch sử Quiz gần đây */}
+                      {userScores[user.id]?.quizResults?.length > 0 && (
+                        <div style={{ marginTop: '12px' }}>
+                          <h5 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '600', color: '#4b5563' }}>
+                            📝 Quiz gần đây
+                          </h5>
+                          <div style={{ fontSize: '12px' }}>
+                            {userScores[user.id].quizResults.slice(0, 5).map((quiz, idx) => (
+                              <div key={idx} style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                padding: '6px 0',
+                                borderBottom: idx < 4 ? '1px dashed #e5e7eb' : 'none'
+                              }}>
+                                <span style={{ color: '#6b7280' }}>
+                                  {quiz.lesson_title || quiz.course_title} - {new Date(quiz.created_at).toLocaleDateString('vi-VN')}
+                                </span>
+                                <span style={{
+                                  fontWeight: '600',
+                                  color: getScoreColor(quiz.score)
+                                }}>
+                                  {quiz.correct_answers}/{quiz.total_questions} ({parseFloat(quiz.score).toFixed(1)} điểm)
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

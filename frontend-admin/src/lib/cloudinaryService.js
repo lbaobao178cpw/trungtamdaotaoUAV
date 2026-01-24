@@ -8,8 +8,15 @@ export const uploadToCloudinary = async (file, folder = "uav-training") => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", folder);
+    formData.append("displayName", file.name); // Gửi tên file gốc
 
     console.log("Uploading to:", `${API_BASE}/cloudinary/upload`);
+    console.log("File info:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      folder: folder
+    });
 
     // Dùng apiClient để có request interceptor tự động refresh token
     const response = await apiClient.post('/cloudinary/upload', formData, {

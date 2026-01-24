@@ -52,7 +52,34 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
     }
 
     const folder = req.body.folder || 'uav-training';
-    const resourceType = req.file.mimetype.startsWith('video/') ? 'video' : 'auto';
+
+    // Xác định resource_type dựa trên mimetype
+    // - 'video' cho file video
+    // - 'raw' cho file document (PDF, Word, Excel, PowerPoint) - QUAN TRỌNG!
+    // - 'image' cho hình ảnh
+    // - 'auto' cho các loại khác
+    let resourceType = 'auto';
+    const mimetype = req.file.mimetype;
+
+    if (mimetype.startsWith('video/')) {
+      resourceType = 'video';
+    } else if (mimetype.startsWith('image/')) {
+      resourceType = 'image';
+    } else if (
+      mimetype === 'application/pdf' ||
+      mimetype === 'application/msword' ||
+      mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      mimetype === 'application/vnd.ms-excel' ||
+      mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      mimetype === 'application/vnd.ms-powerpoint' ||
+      mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ) {
+      // QUAN TRỌNG: Document files phải dùng 'raw' để Cloudinary không xử lý/transform file
+      resourceType = 'raw';
+    }
+
+    console.log("📎 File mimetype:", mimetype);
+    console.log("📎 Resource type:", resourceType);
 
     // Get filename from request body first (if sent by frontend), otherwise from multer
     let displayName = req.body.displayName || req.body.originalFilename || req.file.originalname;

@@ -75,6 +75,7 @@ export default function CourseManager() {
     documentUrl: "",
     displayName: "",  // Tên file gốc
     youtubeUrl: "",
+    maxAttempts: 0,   // 0 = không giới hạn số lần làm quiz
   });
 
   const [tempQuestion, setTempQuestion] = useState({
@@ -364,6 +365,8 @@ export default function CourseManager() {
         display_name: l.displayName || l.display_name || null,
         duration: l.duration,
         quiz_data: l.questions || [],
+        pass_score: l.passScore || 0,
+        max_attempts: l.maxAttempts || 0,
       })),
     }));
 
@@ -456,6 +459,7 @@ export default function CourseManager() {
       documentUrl: "",
       displayName: "",
       youtubeUrl: "",
+      maxAttempts: 0,
     });
     resetTempQuestion();
     setIsLessonModalOpen(true);
@@ -469,6 +473,7 @@ export default function CourseManager() {
       displayName: lesson.displayName || lesson.display_name || '',
       questions: lesson.questions || [],
       passScore: lesson.passScore || 0,
+      maxAttempts: lesson.maxAttempts || lesson.max_attempts || 0,
     });
     resetTempQuestion();
     setIsLessonModalOpen(true);
@@ -1252,21 +1257,43 @@ export default function CourseManager() {
                 </>
               ) : (
                 <div className="cm-quiz-builder">
-                  <div className="cm-form-group">
-                    <label className="cm-form-label">
-                      Thời gian làm bài (phút)
-                    </label>
-                    <input
-                      type="number"
-                      className="cm-form-input"
-                      value={lessonFormData.duration}
-                      onChange={(e) =>
-                        setLessonFormData({
-                          ...lessonFormData,
-                          duration: e.target.value,
-                        })
-                      }
-                    />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className="cm-form-group">
+                      <label className="cm-form-label">
+                        Thời gian làm bài (phút)
+                      </label>
+                      <input
+                        type="number"
+                        className="cm-form-input"
+                        value={lessonFormData.duration}
+                        onChange={(e) =>
+                          setLessonFormData({
+                            ...lessonFormData,
+                            duration: e.target.value,
+                          })
+                        }
+                        placeholder="VD: 30"
+                      />
+                    </div>
+                    <div className="cm-form-group">
+                      <label className="cm-form-label">
+                        Giới hạn số lần làm
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="cm-form-input"
+                        value={lessonFormData.maxAttempts}
+                        onChange={(e) =>
+                          setLessonFormData({
+                            ...lessonFormData,
+                            maxAttempts: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        placeholder="0 = Không giới hạn"
+                      />
+                      <small style={{ color: '#666', fontSize: '11px' }}>0 = Không giới hạn số lần</small>
+                    </div>
                   </div>
                   <div className="cm-add-question-section">
                     <input

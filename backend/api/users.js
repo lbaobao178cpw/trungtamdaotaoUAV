@@ -115,13 +115,13 @@ router.put("/change-password", verifyStudent, async (req, res) => {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      return res.status(400).json({ 
-        error: "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt" 
+      return res.status(400).json({
+        error: "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
       });
     }
 
     const [users] = await db.query("SELECT password_hash FROM users WHERE id = ?", [userId]);
-    
+
     if (users.length === 0) {
       return res.status(404).json({ error: "Không tìm thấy người dùng" });
     }
@@ -210,7 +210,7 @@ router.delete("/:id", verifyAdmin, async (req, res) => {
 router.post("/:id/avatar", verifyStudent, avatarUpload.single('avatar'), async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Chỉ chính chủ 
     if (req.user.id !== Number(id)) {
       return res.status(403).json({ error: "Bạn không có quyền cập nhật avatar này" });
@@ -240,13 +240,167 @@ router.post("/:id/avatar", verifyStudent, avatarUpload.single('avatar'), async (
     // Cập nhật avatar URL vào database
     await db.query("UPDATE users SET avatar = ? WHERE id = ?", [uploadResult.secure_url, id]);
 
-    res.json({ 
+    res.json({
       message: "Upload avatar thành công",
       avatar: uploadResult.secure_url
     });
   } catch (error) {
     console.error('Avatar upload error:', error);
     res.status(500).json({ error: "Lỗi khi upload avatar" });
+  }
+});
+
+// --- GET: Lấy lịch sử học tập của người dùng ---
+router.get("/:id/learning-history", verifyStudent, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Chỉ cho phép xem lịch sử của chính mình hoặc admin
+    if (req.user.id != userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Không có quyền xem lịch sử học tập" });
+    }
+
+    // 1. Lấy danh sách khóa học đã đăng ký và tiến độ
+    const [courses] = await db.query(`
+      SELECT 
+        c.id as course_id,
+        c.title as course_title,
+        c.image as course_image,
+        c.level as course_level,
+        ucp.progress_percentage,
+        ucp.quiz_score,
+        ucp.overall_score,
+        ucp.progress_percentage_value,
+        ucp.score_calculated_at,
+        ucp.score_calculated_at as last_activity,
+        (SELECT COUNT(*) FROM lessons l JOIN chapters ch ON l.chapter_id = ch.id WHERE ch.course_id = c.id) as total_lessons,
+        (SELECT COUNT(*) FROM lesson_completion lc 
+         JOIN lessons l ON lc.lesson_id = l.id 
+         JOIN chapters ch ON l.chapter_id = ch.id 
+         WHERE lc.user_id = ? AND ch.course_id = c.id) as completed_lessons
+      FROM user_course_progress ucp
+      JOIN courses c ON ucp.course_id = c.id
+      WHERE ucp.user_id = ?
+      ORDER BY ucp.score_calculated_at DESC
+    `, [userId, userId]);
+
+    // 2. Lấy lịch sử làm quiz
+    const [quizHistory] = await db.query(`
+      SELECT 
+        qr.id,
+        qr.course_id,
+        qr.lesson_id,
+        qr.score,
+        qr.correct_answers,
+        qr.total_questions,
+        qr.created_at,
+        c.title as course_title,
+        l.title as lesson_title
+      FROM quiz_results qr
+      JOIN courses c ON qr.course_id = c.id
+      LEFT JOIN lessons l ON qr.lesson_id = l.id
+      WHERE qr.user_id = ?
+      ORDER BY qr.created_at DESC
+      LIMIT 50
+    `, [userId]);
+
+    // 3. Tính tổng thống kê (chỉ tính khóa học còn tồn tại)
+    const [stats] = await db.query(`
+      SELECT 
+        COUNT(DISTINCT ucp.course_id) as total_courses,
+        COALESCE(AVG(ucp.overall_score), 0) as avg_overall_score,
+        COALESCE(AVG(ucp.quiz_score), 0) as avg_quiz_score,
+        COALESCE(AVG(ucp.progress_percentage), 0) as avg_progress
+      FROM user_course_progress ucp
+      INNER JOIN courses c ON ucp.course_id = c.id
+      WHERE ucp.user_id = ?
+    `, [userId]);
+
+    res.json({
+      courses,
+      quizHistory,
+      stats: stats[0] || {
+        total_courses: 0,
+        avg_overall_score: 0,
+        avg_quiz_score: 0,
+        avg_progress: 0
+      }
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy lịch sử học tập:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy lịch sử học tập" });
+  }
+});
+
+// --- GET: Lấy điểm số tất cả người dùng (Admin) ---
+router.get("/scores/all", verifyAdmin, async (req, res) => {
+  try {
+    const [users] = await db.query(`
+      SELECT 
+        u.id,
+        u.full_name,
+        u.email,
+        u.phone,
+        p.target_tier,
+        (SELECT COUNT(DISTINCT ucp.course_id) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as enrolled_courses,
+        (SELECT COALESCE(AVG(ucp.overall_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_overall_score,
+        (SELECT COALESCE(AVG(ucp.quiz_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_quiz_score,
+        (SELECT COALESCE(AVG(ucp.progress_percentage), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_progress
+      FROM users u
+      LEFT JOIN user_profiles p ON u.id = p.user_id
+      WHERE u.role = 'student'
+      ORDER BY avg_overall_score DESC
+    `);
+
+    res.json(users);
+  } catch (error) {
+    console.error("Lỗi lấy điểm số:", error);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+});
+
+// --- GET: Lấy chi tiết điểm số của một user (Admin) ---
+router.get("/:id/scores", verifyAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Lấy điểm theo từng khóa học
+    const [courseScores] = await db.query(`
+      SELECT 
+        c.id as course_id,
+        c.title as course_title,
+        ucp.progress_percentage,
+        ucp.quiz_score,
+        ucp.overall_score,
+        ucp.score_calculated_at
+      FROM user_course_progress ucp
+      JOIN courses c ON ucp.course_id = c.id
+      WHERE ucp.user_id = ?
+      ORDER BY ucp.overall_score DESC
+    `, [userId]);
+
+    // Lấy lịch sử quiz
+    const [quizResults] = await db.query(`
+      SELECT 
+        qr.*,
+        c.title as course_title,
+        l.title as lesson_title
+      FROM quiz_results qr
+      JOIN courses c ON qr.course_id = c.id
+      LEFT JOIN lessons l ON qr.lesson_id = l.id
+      WHERE qr.user_id = ?
+      ORDER BY qr.created_at DESC
+    `, [userId]);
+
+    res.json({
+      courseScores,
+      quizResults
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy điểm:", error);
+    res.status(500).json({ error: "Lỗi server" });
   }
 });
 

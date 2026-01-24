@@ -3,6 +3,31 @@ const router = express.Router();
 const db = require('../config/db');
 const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verifyToken');
 
+// === AUTO MIGRATION: Thêm cột max_attempts và pass_score nếu chưa có ===
+(async () => {
+  try {
+    // Kiểm tra và thêm cột max_attempts
+    const [columns1] = await db.query(
+      "SHOW COLUMNS FROM lessons LIKE 'max_attempts'"
+    );
+    if (columns1.length === 0) {
+      await db.query("ALTER TABLE lessons ADD COLUMN max_attempts INT DEFAULT 0");
+      console.log('✅ Added max_attempts column to lessons table');
+    }
+
+    // Kiểm tra và thêm cột pass_score
+    const [columns2] = await db.query(
+      "SHOW COLUMNS FROM lessons LIKE 'pass_score'"
+    );
+    if (columns2.length === 0) {
+      await db.query("ALTER TABLE lessons ADD COLUMN pass_score INT DEFAULT 0");
+      console.log('✅ Added pass_score column to lessons table');
+    }
+  } catch (error) {
+    console.error('Migration error:', error.message);
+  }
+})();
+
 // --- GET: Lấy tổng lượt xem khóa học ---
 router.get("/:id/view-stats", async (req, res) => {
   try {
@@ -405,11 +430,14 @@ router.post("/", async (req, res) => {
             const videoUrl = l.video_url || l.content || '';
             // Lấy display_name (tên file gốc)
             const displayName = l.display_name || null;
+            // Lấy max_attempts và pass_score cho quiz
+            const maxAttempts = l.max_attempts || 0;
+            const passScore = l.pass_score || 0;
 
             await connection.query(
-              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [newCourseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A']
+              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier, max_attempts, pass_score)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [newCourseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A', maxAttempts, passScore]
             );
           }
         }
@@ -474,11 +502,14 @@ router.put("/:id", async (req, res) => {
             const videoUrl = l.video_url || l.content || '';
             // Lấy display_name (tên file gốc)
             const displayName = l.display_name || null;
+            // Lấy max_attempts và pass_score cho quiz
+            const maxAttempts = l.max_attempts || 0;
+            const passScore = l.pass_score || 0;
 
             await connection.query(
-              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [courseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A']
+              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier, max_attempts, pass_score)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [courseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A', maxAttempts, passScore]
             );
           }
         }
@@ -499,13 +530,78 @@ router.put("/:id", async (req, res) => {
 
 // --- DELETE: Xóa khóa học ---
 router.delete("/:id", async (req, res) => {
+  const connection = await db.getConnection();
   try {
-    // Nhờ ON DELETE CASCADE ở DB, xóa courses sẽ tự xóa chapters và lessons liên quan
-    await db.query("DELETE FROM courses WHERE id = ?", [req.params.id]);
-    res.json({ message: "Đã xóa khóa học" });
+    await connection.beginTransaction();
+    const courseId = req.params.id;
+
+    // Xóa dữ liệu học tập liên quan trước
+    // 1. Xóa quiz_results
+    await connection.query("DELETE FROM quiz_results WHERE course_id = ?", [courseId]);
+
+    // 2. Xóa lesson_completion (dựa vào lessons của course)
+    await connection.query(
+      `DELETE lc FROM lesson_completion lc 
+       INNER JOIN lessons l ON lc.lesson_id = l.id 
+       WHERE l.course_id = ?`,
+      [courseId]
+    );
+
+    // 3. Xóa user_course_progress
+    await connection.query("DELETE FROM user_course_progress WHERE course_id = ?", [courseId]);
+
+    // 4. Xóa course_views
+    await connection.query("DELETE FROM course_views WHERE course_id = ?", [courseId]);
+
+    // 5. Cuối cùng xóa khóa học (CASCADE sẽ xóa chapters và lessons)
+    await connection.query("DELETE FROM courses WHERE id = ?", [courseId]);
+
+    await connection.commit();
+    res.json({ message: "Đã xóa khóa học và dữ liệu liên quan" });
   } catch (error) {
+    await connection.rollback();
     console.error(error);
     res.status(500).json({ error: "Lỗi khi xóa khóa học" });
+  } finally {
+    connection.release();
+  }
+});
+
+// --- GET: Debug document info (kiểm tra URL có đúng không) ---
+router.get("/lessons/:lessonId/debug-document", async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+
+    const [rows] = await db.query(
+      "SELECT id, title, video_url, display_name, type FROM lessons WHERE id = ?",
+      [lessonId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    const lesson = rows[0];
+    const fileUrl = lesson.video_url;
+
+    res.json({
+      success: true,
+      lesson: {
+        id: lesson.id,
+        title: lesson.title,
+        type: lesson.type,
+        display_name: lesson.display_name,
+        video_url: lesson.video_url,
+        video_url_length: fileUrl ? fileUrl.length : 0,
+        url_starts_with_https: fileUrl ? fileUrl.startsWith('https') : false,
+        url_starts_with_http: fileUrl ? fileUrl.startsWith('http') : false,
+        is_cloudinary_url: fileUrl ? fileUrl.includes('cloudinary') : false,
+        url_sample: fileUrl ? fileUrl.substring(0, 100) + '...' : null
+      }
+    });
+  } catch (error) {
+    console.error("Debug error:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -513,10 +609,11 @@ router.delete("/:id", async (req, res) => {
 router.get("/lessons/:lessonId/download-document", async (req, res) => {
   try {
     const { lessonId } = req.params;
+    console.log(`📥 Download document request for lesson: ${lessonId}`);
 
     // Lấy thông tin lesson
     const [rows] = await db.query(
-      "SELECT title, video_url, display_name FROM lessons WHERE id = ? AND type = 'document'",
+      "SELECT id, title, video_url, display_name, type FROM lessons WHERE id = ? AND type = 'document'",
       [lessonId]
     );
 
@@ -528,17 +625,22 @@ router.get("/lessons/:lessonId/download-document", async (req, res) => {
     }
 
     const lesson = rows[0];
+    console.log("Lesson data:", lesson);
+
+    // File URL nằm ở video_url
     const fileUrl = lesson.video_url;
+    console.log("File URL:", fileUrl);
 
     if (!fileUrl) {
       return res.status(404).json({
         success: false,
-        message: "File không tồn tại"
+        message: "File URL không tồn tại"
       });
     }
 
     // Lấy file từ Cloudinary
     const https = require('https');
+    const http = require('http');
 
     // Ưu tiên display_name (tên file gốc), nếu không có thì dùng title
     let filename = lesson.display_name || lesson.title || 'document';
@@ -554,7 +656,18 @@ router.get("/lessons/:lessonId/download-document", async (req, res) => {
     }
 
     return new Promise((resolve, reject) => {
-      https.get(fileUrl, (cloudinaryRes) => {
+      // Chọn protocol (http hoặc https)
+      const protocol = fileUrl.startsWith('https') ? https : http;
+
+      console.log(`Starting download from: ${fileUrl}`);
+
+      protocol.get(fileUrl, (cloudinaryRes) => {
+        console.log("Cloudinary response status:", cloudinaryRes.statusCode);
+        console.log("Cloudinary headers:", {
+          'content-type': cloudinaryRes.headers['content-type'],
+          'content-length': cloudinaryRes.headers['content-length']
+        });
+
         // Set headers với tên file UTF-8
         res.setHeader('Content-Type', cloudinaryRes.headers['content-type'] || 'application/octet-stream');
 
@@ -566,26 +679,194 @@ router.get("/lessons/:lessonId/download-document", async (req, res) => {
 
         if (cloudinaryRes.headers['content-length']) {
           res.setHeader('Content-Length', cloudinaryRes.headers['content-length']);
+          console.log("Content-Length set to:", cloudinaryRes.headers['content-length']);
         }
 
+        console.log("✅ Starting to pipe response...");
         cloudinaryRes.pipe(res);
 
-        cloudinaryRes.on('error', (err) => {
-          console.error("Lỗi Cloudinary:", err);
-          res.status(500).json({ success: false, message: "Lỗi tải file" });
-          reject(err);
+        cloudinaryRes.on('data', (chunk) => {
+          console.log("📦 Received chunk:", chunk.length, "bytes");
         });
 
-        res.on('finish', () => resolve());
+        cloudinaryRes.on('end', () => {
+          console.log("✅ Download complete");
+          resolve();
+        });
+
+        cloudinaryRes.on('error', (err) => {
+          console.error("❌ Cloudinary error:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ success: false, message: "Lỗi tải file" });
+          }
+          reject(err);
+        });
       }).on('error', (err) => {
-        console.error("Lỗi download:", err);
-        res.status(500).json({ success: false, message: "Lỗi tải file" });
+        console.error("❌ Download error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: "Lỗi tải file" });
+        }
         reject(err);
       });
     });
 
   } catch (error) {
-    console.error("Lỗi download document:", error);
+    console.error("❌ Lỗi download document:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Lỗi server" });
+    }
+  }
+});
+
+// --- GET: Xem trực tiếp tài liệu (Preview) - Không tải về ---
+router.get("/lessons/:lessonId/preview-document", async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+    console.log(`👁️ Preview document request for lesson: ${lessonId}`);
+
+    // Lấy thông tin lesson
+    const [rows] = await db.query(
+      "SELECT id, title, video_url, display_name, type FROM lessons WHERE id = ? AND type = 'document'",
+      [lessonId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tài liệu không tồn tại"
+      });
+    }
+
+    const lesson = rows[0];
+    console.log("Lesson data:", lesson);
+
+    // File URL nằm ở video_url
+    const fileUrl = lesson.video_url;
+    console.log("File URL:", fileUrl);
+
+    if (!fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: "File URL không tồn tại"
+      });
+    }
+
+    // Lấy file từ Cloudinary
+    const https = require('https');
+    const http = require('http');
+
+    return new Promise((resolve, reject) => {
+      // Chọn protocol (http hoặc https)
+      const protocol = fileUrl.startsWith('https') ? https : http;
+
+      console.log(`Starting preview from: ${fileUrl}`);
+
+      protocol.get(fileUrl, (cloudinaryRes) => {
+        console.log("Cloudinary response status:", cloudinaryRes.statusCode);
+        console.log("Cloudinary headers:", {
+          'content-type': cloudinaryRes.headers['content-type'],
+          'content-length': cloudinaryRes.headers['content-length']
+        });
+
+        // Lấy content-type từ Cloudinary
+        const contentType = cloudinaryRes.headers['content-type'] || 'application/octet-stream';
+
+        res.setHeader('Content-Type', contentType);
+
+        // QUAN TRỌNG: Luôn sử dụng 'inline' để xem trong trình duyệt
+        // Không set filename để tránh trigger download dialog
+        res.setHeader('Content-Disposition', 'inline');
+
+        // Disable cache busting để browser có thể cache
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+
+        if (cloudinaryRes.headers['content-length']) {
+          res.setHeader('Content-Length', cloudinaryRes.headers['content-length']);
+          console.log("Content-Length set to:", cloudinaryRes.headers['content-length']);
+        }
+
+        // Cho phép CORS
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        console.log("✅ Starting to pipe preview...");
+        cloudinaryRes.pipe(res);
+
+        cloudinaryRes.on('data', (chunk) => {
+          console.log("📦 Received preview chunk:", chunk.length, "bytes");
+        });
+
+        cloudinaryRes.on('end', () => {
+          console.log("✅ Preview complete");
+          resolve();
+        });
+
+        cloudinaryRes.on('error', (err) => {
+          console.error("❌ Cloudinary preview error:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ success: false, message: "Lỗi tải file" });
+          }
+          reject(err);
+        });
+      }).on('error', (err) => {
+        console.error("❌ Preview error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: "Lỗi tải file" });
+        }
+        reject(err);
+      });
+    });
+
+  } catch (error) {
+    console.error("❌ Lỗi preview document:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Lỗi server" });
+    }
+  }
+});
+
+// --- GET: Kiểm tra số lần đã làm quiz của user ---
+router.get("/:courseId/quiz-attempts/:lessonId", verifyToken, async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const userId = req.user.id;
+
+    // Lấy max_attempts từ lesson
+    const [lessonRows] = await db.query(
+      "SELECT max_attempts, pass_score FROM lessons WHERE id = ?",
+      [lessonId]
+    );
+
+    if (lessonRows.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy bài học" });
+    }
+
+    const maxAttempts = lessonRows[0].max_attempts || 0;
+    const passScore = lessonRows[0].pass_score || 0;
+
+    // Đếm số lần đã làm quiz
+    const [attemptRows] = await db.query(
+      `SELECT COUNT(*) as attemptCount, MAX(score) as bestScore 
+       FROM quiz_results 
+       WHERE user_id = ? AND lesson_id = ?`,
+      [userId, lessonId]
+    );
+
+    const attemptCount = attemptRows[0].attemptCount || 0;
+    const bestScore = attemptRows[0].bestScore || 0;
+    const remainingAttempts = maxAttempts === 0 ? -1 : Math.max(0, maxAttempts - attemptCount);
+    const canAttempt = maxAttempts === 0 || attemptCount < maxAttempts;
+
+    res.json({
+      attemptCount,
+      maxAttempts,
+      remainingAttempts,
+      canAttempt,
+      bestScore,
+      passScore
+    });
+
+  } catch (error) {
+    console.error("Lỗi kiểm tra số lần làm quiz:", error);
     res.status(500).json({ error: "Lỗi server" });
   }
 });

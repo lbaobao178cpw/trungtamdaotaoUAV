@@ -43,6 +43,10 @@ function CourseDetailPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
 
+  // === QUIZ ATTEMPTS STATE ===
+  const [quizAttemptsInfo, setQuizAttemptsInfo] = useState(null);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+
   // === COMMENT STATE ===
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -414,9 +418,15 @@ function CourseDetailPage() {
     // Lấy quiz_time: ưu tiên quiz_time, nếu không có thì dùng duration (admin lưu vào duration)
     const quizTime = l.quiz_time || (l.type === 'quiz' ? parseInt(l.duration) || 100 : null);
 
+    // Lấy URL tài liệu (dùng cho document type)
+    const documentUrl = l.type === 'document' ? (l.video_url || l.content || '') : '';
+    const displayName = l.display_name || l.title || 'Tài liệu';
+
     return {
       ...l,
       src: videoUrl,
+      documentUrl: documentUrl,
+      displayName: displayName,
       type: l.type || 'video',
       duration: l.duration || '00:00',
       questions: parsedQuestions,
@@ -438,6 +448,7 @@ function CourseDetailPage() {
     setCurrentQuestionIdx(0);
     setScore(0);
     setVideoCumulativeTime(0); // Reset video time
+    setQuizAttemptsInfo(null); // Reset quiz attempts info
 
     // Clear existing timeout
     if (videoTrackingTimeoutRef.current) {
@@ -445,6 +456,23 @@ function CourseDetailPage() {
     }
 
     if (topRef.current) topRef.current.scrollIntoView({ behavior: 'smooth' });
+
+    // === Kiểm tra số lần làm quiz nếu là bài quiz ===
+    if (lesson?.type === 'quiz' && lesson.id) {
+      try {
+        setLoadingAttempts(true);
+        const token = localStorage.getItem('user_token');
+        const response = await axios.get(`${API_BASE}/${id}/quiz-attempts/${lesson.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setQuizAttemptsInfo(response.data);
+      } catch (error) {
+        console.error('Lỗi kiểm tra số lần làm quiz:', error);
+        setQuizAttemptsInfo(null);
+      } finally {
+        setLoadingAttempts(false);
+      }
+    }
 
     // === Track lesson viewing để cập nhật progress ===
     if (lesson && currentUser?.id) {
@@ -598,6 +626,12 @@ function CourseDetailPage() {
 
   // Quiz Logic Handlers
   const handleStartQuiz = () => {
+    // Kiểm tra số lần làm quiz
+    if (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) {
+      notifyWarning(`Bạn đã hết lượt làm bài (${quizAttemptsInfo.maxAttempts}/${quizAttemptsInfo.maxAttempts})`);
+      return;
+    }
+
     // Lấy thời gian từ quiz_time của lesson (đã được format từ duration trong formatLessonData)
     // Nếu không có thì mặc định 60 phút
     const quizTimeInMinutes = activeLesson?.quiz_time || 60;
@@ -626,6 +660,25 @@ function CourseDetailPage() {
       const quizScorePercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
       const token = localStorage.getItem('user_token');
 
+      // Lấy userId từ currentUser hoặc từ localStorage
+      let userId = currentUser?.id;
+      if (!userId) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            userId = JSON.parse(storedUser).id;
+          } catch (e) {
+            console.error('Không thể parse user từ localStorage');
+          }
+        }
+      }
+
+      if (!userId) {
+        console.warn('Không tìm thấy userId, bỏ qua lưu điểm');
+        notifySuccess(`Đã nộp bài! Điểm: ${quizScorePercent.toFixed(1)}/100`);
+        return;
+      }
+
       // 1. Lưu kết quả quiz
       await axios.post(`${API_BASE}/${id}/quiz-result`, {
         lessonId: activeLesson.id,
@@ -637,7 +690,7 @@ function CourseDetailPage() {
       });
 
       // 2. Tính lại điểm tổng thể
-      await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
+      await axios.post(`${API_BASE}/${id}/calculate-score/${userId}`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -645,12 +698,32 @@ function CourseDetailPage() {
 
       // 3. Trigger refresh scoreboard
       setScoreRefreshTrigger(prev => prev + 1);
+
+      // 4. Refresh quiz attempts info
+      try {
+        const attemptsRes = await axios.get(`${API_BASE}/${id}/quiz-attempts/${activeLesson.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setQuizAttemptsInfo(attemptsRes.data);
+      } catch (e) {
+        console.error('Lỗi refresh quiz attempts:', e);
+      }
     } catch (error) {
       console.error('Lỗi lưu điểm quiz:', error);
-      // Không hiển thị lỗi cho user vì quiz vẫn đã submit thành công locally
+      // Vẫn hiển thị điểm cho user
+      const totalQuestions = activeLesson.questions.length;
+      const quizScorePercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+      notifySuccess(`Đã nộp bài! Điểm: ${quizScorePercent.toFixed(1)}/100`);
     }
   };
-  const handleRetryQuiz = () => {
+
+  const handleRetryQuiz = async () => {
+    // Kiểm tra lại số lần làm quiz trước khi cho retry
+    if (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) {
+      notifyWarning(`Bạn đã hết lượt làm bài (${quizAttemptsInfo.maxAttempts}/${quizAttemptsInfo.maxAttempts})`);
+      return;
+    }
+
     setQuizSubmitted(false);
     setUserAnswers({});
     setCurrentQuestionIdx(0);
@@ -840,34 +913,79 @@ function CourseDetailPage() {
               </div>
             )}
 
-            {/* 2. DOCUMENT VIEWER */}
+            {/* 2. DOCUMENT VIEWER - Auto display */}
             {activeLesson?.type === 'document' && (
-              <div className="doc-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '24px' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <FileText size={64} color="#0050b8" style={{ marginBottom: '16px' }} />
-                  <h3 style={{ marginBottom: '8px', color: '#333' }}>{activeLesson.title}</h3>
-                  <p style={{ color: '#666', marginBottom: '24px' }}>Nhấn nút dưới để tải về tài liệu</p>
-                  <a
-                    href={`http://localhost:5000/api/courses/lessons/${activeLesson.id}/download-document`}
-                    download
-                    className="btn-download-doc"
-                    style={{
-                      display: 'inline-block',
-                      padding: '12px 32px',
-                      backgroundColor: '#0050b8',
-                      color: '#fff',
-                      borderRadius: '8px',
-                      textDecoration: 'none',
-                      fontWeight: '600',
-                      fontSize: '16px',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => e.target.style.backgroundColor = '#003a82'}
-                    onMouseOut={(e) => e.target.style.backgroundColor = '#0050b8'}
-                  >
-                    ⬇️ Tải tài liệu
-                  </a>
+              <div className="document-preview-wrapper" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+                height: '700px',
+                background: '#fff',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div className="preview-header" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '16px 20px',
+                  backgroundColor: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0'
+                }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1a202c' }}>{activeLesson.title}</h3>
+                    {activeLesson.displayName && (
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>{activeLesson.displayName}</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {/* Nút tải về */}
+                    <a
+                      href={activeLesson.documentUrl || activeLesson.src || activeLesson.video_url}
+                      download={activeLesson.displayName || activeLesson.title}
+                      className="btn-download-header"
+                      style={{
+                        background: '#0050b8',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = '#003a82';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = '#0050b8';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      Tải về
+                    </a>
+                  </div>
                 </div>
+
+                {/* Iframe với Google Docs Viewer */}
+                <iframe
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(activeLesson.documentUrl || activeLesson.src || activeLesson.video_url)}&embedded=true`}
+                  className="document-preview-iframe"
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    border: 'none',
+                    background: '#fff'
+                  }}
+                  title={activeLesson.title}
+                />
               </div>
             )}
 
@@ -877,15 +995,61 @@ function CourseDetailPage() {
                 {!quizStarted && !quizSubmitted && (
                   <div className="quiz-card">
                     <h2 className="quiz-title">{activeLesson.title}</h2>
-                    <p className="quiz-desc" style={{ marginBottom: '24px', fontSize: '16px', lineHeight: '1.6' }}>
+                    <p className="quiz-desc" style={{ marginBottom: '16px', fontSize: '16px', lineHeight: '1.6' }}>
                       Bài kiểm tra trắc nghiệm gồm <strong>{activeLesson.questions?.length || 0} câu hỏi</strong>
                       <br />
                       <span style={{ fontSize: '14px', color: '#999', marginTop: '8px', display: 'block' }}>
                         Thời gian: <strong>{activeLesson?.quiz_time || 60} phút</strong>
                       </span>
                     </p>
-                    <button className="btn-start-learning" onClick={handleStartQuiz}>
-                      Bắt đầu làm bài
+
+                    {/* Hiển thị thông tin số lần làm quiz */}
+                    {loadingAttempts ? (
+                      <div style={{ padding: '12px', background: '#f5f5f5', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>
+                        Đang kiểm tra...
+                      </div>
+                    ) : quizAttemptsInfo && (
+                      <div style={{
+                        padding: '12px 16px',
+                        background: quizAttemptsInfo.canAttempt ? '#e8f5e9' : '#ffebee',
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                        border: `1px solid ${quizAttemptsInfo.canAttempt ? '#a5d6a7' : '#ef9a9a'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                          <div>
+                            <strong style={{ color: quizAttemptsInfo.canAttempt ? '#2e7d32' : '#c62828' }}>
+                              {quizAttemptsInfo.maxAttempts === 0
+                                ? '✓ Không giới hạn số lần'
+                                : quizAttemptsInfo.canAttempt
+                                  ? `✓ Còn ${quizAttemptsInfo.remainingAttempts} lượt làm bài`
+                                  : '✗ Đã hết lượt làm bài'}
+                            </strong>
+                            <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                              {quizAttemptsInfo.maxAttempts > 0 && (
+                                <>Đã làm: {quizAttemptsInfo.attemptCount}/{quizAttemptsInfo.maxAttempts} lần</>
+                              )}
+                              {quizAttemptsInfo.bestScore > 0 && (
+                                <span style={{ marginLeft: '12px' }}>
+                                  | Điểm cao nhất: <strong style={{ color: '#0050b8' }}>{quizAttemptsInfo.bestScore.toFixed(1)}</strong>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      className="btn-start-learning"
+                      onClick={handleStartQuiz}
+                      disabled={loadingAttempts || (quizAttemptsInfo && !quizAttemptsInfo.canAttempt)}
+                      style={{
+                        opacity: (loadingAttempts || (quizAttemptsInfo && !quizAttemptsInfo.canAttempt)) ? 0.5 : 1,
+                        cursor: (loadingAttempts || (quizAttemptsInfo && !quizAttemptsInfo.canAttempt)) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {quizAttemptsInfo && !quizAttemptsInfo.canAttempt ? 'Hết lượt làm bài' : 'Bắt đầu làm bài'}
                     </button>
                   </div>
                 )}
@@ -1256,33 +1420,57 @@ function CourseDetailPage() {
                     <div style={{
                       display: 'flex',
                       gap: '12px',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      alignItems: 'center'
                     }}>
+                      {/* Hiển thị thông tin số lần làm còn lại */}
+                      {quizAttemptsInfo && quizAttemptsInfo.maxAttempts > 0 && (
+                        <div style={{
+                          padding: '10px 16px',
+                          background: quizAttemptsInfo.canAttempt ? '#e8f5e9' : '#ffebee',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          color: quizAttemptsInfo.canAttempt ? '#2e7d32' : '#c62828',
+                          fontWeight: '500'
+                        }}>
+                          {quizAttemptsInfo.canAttempt
+                            ? `Còn ${quizAttemptsInfo.remainingAttempts} lượt làm bài`
+                            : 'Đã hết lượt làm bài'}
+                        </div>
+                      )}
+
                       <button
                         className="btn-start-learning"
                         onClick={handleRetryQuiz}
+                        disabled={quizAttemptsInfo && !quizAttemptsInfo.canAttempt}
                         style={{
                           padding: '14px 32px',
                           borderRadius: '8px',
                           border: 'none',
-                          background: '#0050b8',
+                          background: (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) ? '#9e9e9e' : '#0050b8',
                           color: '#fff',
                           fontSize: '16px',
                           fontWeight: '600',
-                          cursor: 'pointer',
+                          cursor: (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) ? 'not-allowed' : 'pointer',
                           transition: 'all 0.2s',
-                          boxShadow: '0 2px 8px rgba(0, 80, 184, 0.25)'
+                          boxShadow: (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) ? 'none' : '0 2px 8px rgba(0, 80, 184, 0.25)',
+                          opacity: (quizAttemptsInfo && !quizAttemptsInfo.canAttempt) ? 0.7 : 1
                         }}
                         onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#003a82';
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 80, 184, 0.4)';
+                          if (!(quizAttemptsInfo && !quizAttemptsInfo.canAttempt)) {
+                            e.currentTarget.style.background = '#003a82';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 80, 184, 0.4)';
+                          }
                         }}
                         onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#0050b8';
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 80, 184, 0.25)';
+                          if (!(quizAttemptsInfo && !quizAttemptsInfo.canAttempt)) {
+                            e.currentTarget.style.background = '#0050b8';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 80, 184, 0.25)';
+                          }
                         }}
                       >
-                        Làm lại bài thi
+                        {(quizAttemptsInfo && !quizAttemptsInfo.canAttempt) ? 'Hết lượt làm bài' : 'Làm lại bài thi'}
                       </button>
                     </div>
                   </div>
@@ -1305,7 +1493,6 @@ function CourseDetailPage() {
           <div className="container">
             <button className={`intro-tab ${activeTab === 'intro' ? 'active' : ''}`} onClick={() => setActiveTab('intro')}>Giới thiệu</button>
             <button className={`intro-tab ${activeTab === 'score' ? 'active' : ''}`} onClick={() => setActiveTab('score')}>
-              <Award size={16} style={{ marginRight: '6px' }} />
               Điểm Số
             </button>
             <button className={`intro-tab ${activeTab === 'comments' ? 'active' : ''}`} onClick={() => setActiveTab('comments')}>Bình luận</button>
