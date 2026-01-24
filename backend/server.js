@@ -12,21 +12,54 @@ const db = require("./config/db");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// === Parse CORS origins từ .env ===
+const getCorsOrigins = () => {
+  const origins = [];
+  
+  // Development origins
+  origins.push("http://localhost:5173");
+  origins.push("http://localhost:5174");
+  origins.push("http://localhost:3000");
+  origins.push("http://127.0.0.1:5173");
+  origins.push("http://127.0.0.1:5174");
+  
+  // Production origins từ .env
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
+  if (process.env.ADMIN_URL) {
+    origins.push(process.env.ADMIN_URL);
+  }
+  
+  // Additional origins từ CORS_ORIGINS env var (comma-separated)
+  if (process.env.CORS_ORIGINS) {
+    const customOrigins = process.env.CORS_ORIGINS.split(',').map(o => o.trim());
+    origins.push(...customOrigins);
+  }
+  
+  return origins;
+};
+
+const allowedOrigins = getCorsOrigins();
+
 // --- CẤU HÌNH CORS ---
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
+    
+    // Kiểm tra trong danh sách allowed origins
+    if (allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        // Wildcard support (VD: *.vercel.app)
+        const pattern = allowed.replace(/\*/g, '.*');
+        return new RegExp(`^${pattern}$`).test(origin);
+      }
+      return origin === allowed;
+    })) {
       return callback(null, true);
     }
-    const allowedOrigins = [
-      "https://trungtamdaotaouav.vn",
-      "https://www.trungtamdaotaouav.vn"
-    ];
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
-    console.log("Blocked CORS:", origin);
+    
+    console.log("⚠️ Blocked CORS from origin:", origin);
     return callback(new Error('CORS not allowed'), false);
   },
   credentials: true,
