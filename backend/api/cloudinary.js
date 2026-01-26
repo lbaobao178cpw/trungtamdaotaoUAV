@@ -167,11 +167,22 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
         uploadStream.end(req.file.buffer);
       });
     } catch (err) {
-      console.warn("Cloudinary failed, falling back to local storage:", err.message);
+      console.warn("❌ Cloudinary upload failed:", err.message);
       uploadError = err;
 
-      // Fallback: Save to local storage
+      // IMPORTANT: Chỉ allow fallback to local storage trên development environment
+      // Production (Render, Vercel, etc.) KHÔNG được dùng local storage vì ephemeral filesystem
+      const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL || process.env.RENDER;
+
+      if (isProduction && !process.env.ALLOW_LOCAL_UPLOAD) {
+        console.error("❌ PRODUCTION MODE: Cloudinary is required but failed. Refusing to use local storage (ephemeral filesystem)");
+        throw new Error(`Cloudinary upload failed and local storage is disabled in production: ${uploadError.message}`);
+      }
+
+      // Fallback: Save to local storage (DEV ONLY or if explicitly enabled)
       try {
+        console.warn("⚠️ FALLBACK: Saving to local storage (DEV mode or ALLOW_LOCAL_UPLOAD=true)");
+
         const uploadFolder = 'course-uploads'; // Local folder
         const { fullPath } = resolvePath(uploadFolder);
         const filename = `${Date.now()}-${sanitized}${fileExt}`;
@@ -185,7 +196,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
 
         const relPath = `${uploadFolder}/${filename}`;
 
-        console.log("Saved to local storage:", relPath);
+        console.log("✅ Saved to local storage:", relPath);
 
         // Xác định URL dựa vào environment
         // Trên production (Render, Vercel): dùng BACKEND_URL env var
@@ -209,7 +220,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
           display_name: displayName
         };
       } catch (localErr) {
-        console.error("Local fallback also failed:", localErr);
+        console.error("❌ Local fallback also failed:", localErr);
         throw new Error(`Both Cloudinary and local upload failed: ${uploadError.message}`);
       }
     }
