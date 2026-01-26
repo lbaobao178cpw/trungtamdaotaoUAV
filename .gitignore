@@ -58,10 +58,10 @@ media-server/uploads/
 frontend/public/course-video/
 frontend/public/models/
 frontend/public/document/
-# backend/uploads/* - Cho phép upload folder lên Git
-# !backend/uploads/.gitkeep
-# frontend/uploads/* - Cho phép upload folder lên Git
-# !frontend/uploads/.gitkeep
+backend/uploads/* - Cho phép upload folder lên Git
+!backend/uploads/.gitkeep
+frontend/uploads/* - Cho phép upload folder lên Git
+!frontend/uploads/.gitkeep
 
 # Duplicated in all places
 */node_modules/
