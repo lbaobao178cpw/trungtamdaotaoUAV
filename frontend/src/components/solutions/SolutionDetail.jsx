@@ -27,6 +27,26 @@ const SolutionDetail = () => {
   if (loading) return <div style={{ padding: 100, textAlign: 'center' }}>Đang tải dữ liệu...</div>;
   if (!data) return <div style={{ padding: 100, textAlign: 'center' }}>Không tìm thấy trang này.</div>;
 
+  // Extract YouTube video ID
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+    for (let pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  // Convert YouTube URL to embed URL
+  const getYouTubeEmbedUrl = (videoUrl) => {
+    const videoId = extractYouTubeId(videoUrl);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : videoUrl;
+  };
+
   const renderHeroMedia = () => {
     const videoUrl = data.hero_video;
     const imgUrl = data.image;
@@ -39,10 +59,11 @@ const SolutionDetail = () => {
             <iframe
               width="100%"
               height="400"
-              src={`${videoUrl}${videoUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${videoUrl.split('/').pop()}`}
+              src={getYouTubeEmbedUrl(videoUrl) + '?autoplay=1&mute=1&controls=0&loop=1'}
               title="Hero Video"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-same-origin allow-scripts allow-presentation allow-popups"
               allowFullScreen
             ></iframe>
           </div>
@@ -197,7 +218,29 @@ const SolutionDetail = () => {
             <div className="video-content">
               <h2 className="video-title">{data.video_title || "Video Introduction"}</h2>
               <div className="video-embed">
-                <iframe width="100%" height="500" src={data.video_url} title="Intro Video" frameBorder="0" allowFullScreen style={{ display: 'block' }}></iframe>
+                {data.video_url.includes("youtube.com") || data.video_url.includes("youtu.be") ? (
+                  <iframe
+                    width="100%"
+                    height="500"
+                    src={getYouTubeEmbedUrl(data.video_url) + '?modestbranding=1&rel=0&fs=1&autoplay=0'}
+                    title="Intro Video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    sandbox="allow-same-origin allow-scripts allow-presentation allow-popups"
+                    allowFullScreen
+                    style={{ display: 'block' }}
+                  ></iframe>
+                ) : (
+                  <video
+                    width="100%"
+                    height="500"
+                    controls
+                    style={{ display: 'block', backgroundColor: '#000' }}
+                  >
+                    <source src={data.video_url} type="video/mp4" />
+                    Trình duyệt không hỗ trợ thẻ video.
+                  </video>
+                )}
               </div>
             </div>
           </div>

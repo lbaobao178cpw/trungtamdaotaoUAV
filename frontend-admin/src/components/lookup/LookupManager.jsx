@@ -38,6 +38,7 @@ export default function LookupManager() {
     const [isEditing, setIsEditing] = useState(false);
     const [userSearchInput, setUserSearchInput] = useState("");
     const [showUserDropdown, setShowUserDropdown] = useState(false);
+    const [message, setMessage] = useState(null);
     const userSearchRef = useRef(null);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
@@ -95,6 +96,11 @@ export default function LookupManager() {
         });
         setUserSearchInput(user.full_name || String(user.id));
         setShowUserDropdown(false);
+
+        // Thông báo nếu user đã có giấy phép
+        if (existingLicense) {
+            notifyWarning(`Người dùng này đã có giấy phép: ${existingLicense.licenseNumber}`);
+        }
     };
 
     // === HANDLERS ===
@@ -121,6 +127,16 @@ export default function LookupManager() {
     const handleSave = async (e) => {
         e.preventDefault();
         try {
+            // Kiểm tra nếu tạo mới (không phải edit)
+            if (!isEditing) {
+                // Kiểm tra xem licenseNumber đã tồn tại chưa
+                const licenseExists = licenses.some(l => l.licenseNumber === form.licenseNumber);
+                if (licenseExists) {
+                    notifyError(`Số giấy phép "${form.licenseNumber}" đã tồn tại rồi`);
+                    return;
+                }
+            }
+
             const method = isEditing ? "PUT" : "POST";
             const url = isEditing
                 ? `${API_ENDPOINTS.LICENSES}/${form.licenseNumber}`

@@ -3,6 +3,17 @@ const router = express.Router();
 const db = require('../config/db');
 const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verifyToken');
 
+// Helper function to format date without timezone shift
+const formatDateForResponse = (dateObj) => {
+  if (!dateObj) return '';
+  // Create a date string in local timezone format (YYYY-MM-DD)
+  const d = new Date(dateObj);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // ============================================
 // PUBLIC LOOKUP ENDPOINTS (Không cần đăng nhập)
 // ============================================
@@ -389,8 +400,8 @@ router.get("/", verifyAdmin, async (req, res) => {
         category: license.target_tier || 'A',
         name: license.full_name || '',
         idNumber: license.identity_number || '',
-        issueDate: license.issue_date ? license.issue_date.toISOString().split('T')[0] : '',
-        expireDate: license.expiry_date ? license.expiry_date.toISOString().split('T')[0] : '',
+        issueDate: formatDateForResponse(license.issue_date),
+        expireDate: formatDateForResponse(license.expiry_date),
         status: license.license_status === 'Đang hoạt động' ? 'active' : 'expired',
         portraitImage: license.portrait_image,
         email: license.email,
@@ -523,6 +534,18 @@ router.post("/", verifyAdmin, async (req, res) => {
     // user_profiles uses user_id as PRIMARY KEY, so we INSERT... ON DUPLICATE KEY UPDATE
     if (finalUserId) {
       try {
+        // Kiểm tra xem license_number đã được sử dụng bởi user khác chưa
+        const [existingLicense] = await db.query(
+          "SELECT user_id FROM user_profiles WHERE license_number = ? AND user_id != ?",
+          [licenseNumber, finalUserId]
+        );
+
+        if (existingLicense.length > 0) {
+          return res.status(400).json({
+            error: "Số giấy phép này đã được sử dụng bởi người dùng khác"
+          });
+        }
+
         await db.query(
           `INSERT INTO user_profiles (user_id, license_number, identity_number, target_tier)
            VALUES (?, ?, ?, ?)
@@ -704,6 +727,20 @@ router.put("/:licenseNumber", verifyAdmin, async (req, res) => {
     // user_profiles uses user_id as PRIMARY KEY, so we INSERT... ON DUPLICATE KEY UPDATE
     if (finalUserIdForUpdate) {
       try {
+        // Kiểm tra nếu đổi license_number thì số mới không được sử dụng bởi user khác
+        if (newLicenseNumber && newLicenseNumber !== licenseNumber) {
+          const [existingNewLicense] = await db.query(
+            "SELECT user_id FROM user_profiles WHERE license_number = ? AND user_id != ?",
+            [newLicenseNumber, finalUserIdForUpdate]
+          );
+
+          if (existingNewLicense.length > 0) {
+            return res.status(400).json({
+              error: "Số giấy phép mới này đã được sử dụng bởi người dùng khác"
+            });
+          }
+        }
+
         await db.query(
           `INSERT INTO user_profiles (user_id, license_number, identity_number, target_tier)
            VALUES (?, ?, ?, ?)
@@ -747,6 +784,16 @@ router.put("/:licenseNumber", verifyAdmin, async (req, res) => {
     // Cập nhật giấy phép
     let updateFields = [];
     let updateValues = [];
+
+    // Cập nhật tên người dùng nếu có userId và name
+    if (finalUserIdForUpdate && name) {
+      try {
+        await db.query("UPDATE users SET full_name = ? WHERE id = ?", [name, finalUserIdForUpdate]);
+      } catch (err) {
+        console.error('Error updating user full_name:', err);
+        // Don't throw - this is non-critical
+      }
+    }
 
     if (issueDate !== undefined) {
       updateFields.push("issue_date = ?");

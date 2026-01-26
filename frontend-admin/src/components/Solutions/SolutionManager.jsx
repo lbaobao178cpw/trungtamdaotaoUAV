@@ -42,6 +42,25 @@ const getImageUrl = (path) => {
   return `${API_ENDPOINTS.SOLUTIONS.split('/api')[0]}/api/${cleanPath}`;
 };
 
+// === HÀM XỬ LÝ VIDEO URL (YOUTUBE & MP4) ===
+const extractYouTubeId = (url) => {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+  ];
+  for (let pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+const getYouTubeEmbedUrl = (videoUrl) => {
+  const videoId = extractYouTubeId(videoUrl);
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : videoUrl;
+};
+
 export default function SolutionManager() {
   const [form, setForm] = useState(initialSolutionState);
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +76,9 @@ export default function SolutionManager() {
     sectionIdx: null,
     imgIdx: null,
   });
+
+  // State để force refresh video preview
+  const [videoPreviewKey, setVideoPreviewKey] = useState(0);
 
   // === FETCH DATA WITH CUSTOM HOOK ===
   const { data: solutionsData, loading, refetch: refreshSolutions } = useApi(API_ENDPOINTS.SOLUTIONS);
@@ -153,8 +175,10 @@ export default function SolutionManager() {
       setForm((p) => ({ ...p, image: url }));
     } else if (targetContext.type === "hero_video") {
       setForm((p) => ({ ...p, hero_video: url }));
+      setVideoPreviewKey(prev => prev + 1); // Force video preview re-render
     } else if (targetContext.type === "footer_video") {
       setForm((p) => ({ ...p, video_url: url }));
+      setVideoPreviewKey(prev => prev + 1); // Force video preview re-render
     } else if (targetContext.type === "section") {
       updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, url);
     } else if (targetContext.type === "client") {
@@ -337,6 +361,28 @@ export default function SolutionManager() {
                   Chọn Video
                 </button>
               </div>
+
+              {form.hero_video && (
+                <div key={`hero-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
+                  {form.hero_video.includes("youtube.com") || form.hero_video.includes("youtu.be") ? (
+                    <iframe
+                      width="100%"
+                      height="200"
+                      src={getYouTubeEmbedUrl(form.hero_video)}
+                      title="Hero Video Preview"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ borderRadius: 4 }}
+                    ></iframe>
+                  ) : (
+                    <video key={`hero-video-player-${videoPreviewKey}`} width="100%" height="200" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
+                      <source src={form.hero_video} type="video/mp4" />
+                      Trình duyệt không hỗ trợ thẻ video.
+                    </video>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -630,6 +676,28 @@ export default function SolutionManager() {
                   Chọn Video
                 </button>
               </div>
+
+              {form.video_url && (
+                <div key={`footer-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
+                  {form.video_url.includes("youtube.com") || form.video_url.includes("youtu.be") ? (
+                    <iframe
+                      width="100%"
+                      height="250"
+                      src={getYouTubeEmbedUrl(form.video_url)}
+                      title="Footer Video Preview"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ borderRadius: 4 }}
+                    ></iframe>
+                  ) : (
+                    <video key={`footer-video-player-${videoPreviewKey}`} width="100%" height="250" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
+                      <source src={form.video_url} type="video/mp4" />
+                      Trình duyệt không hỗ trợ thẻ video.
+                    </video>
+                  )}
+                </div>
+              )}
             </div>
 
             <h3 className="section-title">4. Khách hàng</h3>
