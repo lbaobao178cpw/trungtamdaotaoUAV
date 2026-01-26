@@ -67,6 +67,11 @@ function CourseDetailPage() {
   const videoTrackingTimeoutRef = useRef(null);
   const [videoCumulativeTime, setVideoCumulativeTime] = useState(0);
 
+  // Watermark text: prefer a custom override stored in localStorage ('watermark_text'),
+  // otherwise prefer user's email, then displayName or username.
+  const watermarkBase = (localStorage.getItem('watermark_text') || (currentUser && (currentUser.email || currentUser.displayName || currentUser.username)) || 'Guest');
+  const watermarkText = `${watermarkBase} • ${new Date().toLocaleDateString()}${course ? ' • ' + (course.title || '') : ''}`;
+
   const handleEditComment = (comment) => {
     setEditingCommentId(comment.id);
     setEditingContent(comment.content);
@@ -893,6 +898,15 @@ function CourseDetailPage() {
           {/* MAIN SCREEN (KHUNG HIỂN THỊ) */}
           <div className="player-screen">
             {/* 1. VIDEO PLAYER */}
+            {/* Watermark text computed per render */}
+            {(() => {
+              try {
+                const _watermarkText = `${(currentUser && (currentUser.displayName || currentUser.username || currentUser.email)) || 'Guest'} • ${new Date().toLocaleDateString()}${course ? ' • ' + (course.title || '') : ''}`;
+                return null; // variable only - actual rendering below uses same expression to avoid scope issues in JSX
+              } catch (e) {
+                return null;
+              }
+            })()}
             {activeLesson?.type === 'video' && (
               <div className="video-wrapper">
                 {activeLesson.src?.includes('youtube.com/embed') ? (
@@ -920,6 +934,12 @@ function CourseDetailPage() {
                     Trình duyệt không hỗ trợ.
                   </video>
                 )}
+                {/* Watermark overlay (3 repeated marks: left, center, right) */}
+                <div className="video-watermark" aria-hidden="true">
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                </div>
               </div>
             )}
 
@@ -933,7 +953,8 @@ function CourseDetailPage() {
                 background: '#fff',
                 borderRadius: '12px',
                 overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                position: 'relative'
               }}>
                 <div className="preview-header" style={{
                   display: 'flex',
@@ -996,12 +1017,23 @@ function CourseDetailPage() {
                   }}
                   title={activeLesson.title}
                 />
+                {/* Watermark overlay for documents */}
+                <div className="video-watermark" aria-hidden="true">
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                </div>
               </div>
             )}
 
             {/* 3. QUIZ PLAYER */}
             {activeLesson?.type === 'quiz' && (
               <div className="quiz-wrapper">
+                <div className="video-watermark" aria-hidden="true">
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                  <span className="wm-text">{watermarkText}</span>
+                </div>
                 {!quizStarted && !quizSubmitted && (
                   <div className="quiz-card">
                     <h2 className="quiz-title">{activeLesson.title}</h2>
@@ -1039,9 +1071,9 @@ function CourseDetailPage() {
                               {quizAttemptsInfo.maxAttempts > 0 && (
                                 <>Đã làm: {quizAttemptsInfo.attemptCount}/{quizAttemptsInfo.maxAttempts} lần</>
                               )}
-                              {quizAttemptsInfo.bestScore > 0 && (
+                              {(quizAttemptsInfo.bestScore !== undefined && quizAttemptsInfo.bestScore !== null && isFinite(Number(quizAttemptsInfo.bestScore)) && Number(quizAttemptsInfo.bestScore) > 0) && (
                                 <span style={{ marginLeft: '12px' }}>
-                                  | Điểm cao nhất: <strong style={{ color: '#0050b8' }}>{quizAttemptsInfo.bestScore.toFixed(1)}</strong>
+                                  | Điểm cao nhất: <strong style={{ color: '#0050b8' }}>{Number(quizAttemptsInfo.bestScore).toFixed(1)}</strong>
                                 </span>
                               )}
                             </div>

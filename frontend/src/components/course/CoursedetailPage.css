@@ -206,6 +206,63 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
+}
+
+/* Watermark overlay shown over video/document previews */
+.video-watermark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  /* Opacity on the container kept at 1 so SVG alpha controls visibility */
+  opacity: 1;
+  /* Use tiled background image (set inline from JSX) */
+  background-repeat: repeat;
+  background-position: center;
+  background-size: 360px 180px; /* default; overridden inline if needed */
+  mix-blend-mode: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+.video-watermark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.video-watermark .wm-text {
+  position: absolute;
+  transform: rotate(-45deg);
+  transform-origin: center center;
+  font-size: 20px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.36);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.video-watermark .wm-text:nth-child(1) {
+  top: 15%;
+  left:0%;
+}
+
+.video-watermark .wm-text:nth-child(2) {
+  top: 45%;
+  left: 45%;
+  transform: translateX(-50%) rotate(-45deg);
+}
+
+.video-watermark .wm-text:nth-child(3) {
+  top:78%;
+  right: 7%;
+}
+
+@media (max-width: 900px) {
+  .video-watermark .wm-text { font-size: 20px; }
+  .video-watermark .wm-text:nth-child(2) { top: 12%; }
 }
 
 /* YouTube iframe - centered with max dimensions (giống video upload) */
