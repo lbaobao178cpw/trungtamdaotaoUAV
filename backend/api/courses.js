@@ -476,41 +476,46 @@ router.put("/:id", async (req, res) => {
       [title, image, description, level, priceA, priceB, courseId]
     );
 
-    // 2. Chiến lược cập nhật nội dung: XÓA ĐI LÀM LẠI (An toàn nhất cho cấu trúc lồng nhau)
-    // Xóa tất cả các CHƯƠNG của khóa học này. 
-    // Do đã set ON DELETE CASCADE ở database (giữa chapters và lessons), các bài học sẽ tự động bị xóa theo.
-    await connection.query("DELETE FROM chapters WHERE course_id = ?", [courseId]);
+    // 2. Nếu payload chứa `chapters` thì thay thế toàn bộ chapters/lessons.
+    // Nếu frontend chỉ cập nhật metadata (ví dụ: title, image, price) và không gửi
+    // trường `chapters`, thì không xóa dữ liệu hiện có (tránh mất bài học).
+    if (Array.isArray(chapters)) {
+      // Chiến lược cập nhật nội dung: XÓA ĐI LÀM LẠI (An toàn nhất cho cấu trúc lồng nhau)
+      // Xóa tất cả các CHƯƠNG của khóa học này.
+      // Do đã set ON DELETE CASCADE ở database (giữa chapters và lessons), các bài học sẽ tự động bị xóa theo.
+      await connection.query("DELETE FROM chapters WHERE course_id = ?", [courseId]);
 
-    // 3. Insert lại Chapters và Lessons mới
-    if (chapters && chapters.length > 0) {
-      for (let i = 0; i < chapters.length; i++) {
-        const chap = chapters[i];
+      // 3. Insert lại Chapters và Lessons mới (chỉ khi chapters được cung cấp)
+      if (chapters.length > 0) {
+        for (let i = 0; i < chapters.length; i++) {
+          const chap = chapters[i];
 
-        // Tạo chương mới
-        const [chapResult] = await connection.query(
-          `INSERT INTO chapters (course_id, title, order_index) VALUES (?, ?, ?)`,
-          [courseId, chap.title, i]
-        );
-        const newChapterId = chapResult.insertId;
+          // Tạo chương mới
+          const [chapResult] = await connection.query(
+            `INSERT INTO chapters (course_id, title, order_index) VALUES (?, ?, ?)`,
+            [courseId, chap.title, i]
+          );
+          const newChapterId = chapResult.insertId;
 
-        // Tạo bài học cho chương đó
-        if (chap.lessons && chap.lessons.length > 0) {
-          for (let j = 0; j < chap.lessons.length; j++) {
-            const l = chap.lessons[j];
-            const contentData = l.type === 'quiz' ? JSON.stringify(l.quiz_data) : null;
-            // Lấy video_url từ video_url hoặc content
-            const videoUrl = l.video_url || l.content || '';
-            // Lấy display_name (tên file gốc)
-            const displayName = l.display_name || null;
-            // Lấy max_attempts và pass_score cho quiz
-            const maxAttempts = l.max_attempts || 0;
-            const passScore = l.pass_score || 0;
+          // Tạo bài học cho chương đó
+          if (chap.lessons && chap.lessons.length > 0) {
+            for (let j = 0; j < chap.lessons.length; j++) {
+              const l = chap.lessons[j];
+              const contentData = l.type === 'quiz' ? JSON.stringify(l.quiz_data) : null;
+              // Lấy video_url từ video_url hoặc content
+              const videoUrl = l.video_url || l.content || '';
+              // Lấy display_name (tên file gốc)
+              const displayName = l.display_name || null;
+              // Lấy max_attempts và pass_score cho quiz
+              const maxAttempts = l.max_attempts || 0;
+              const passScore = l.pass_score || 0;
 
-            await connection.query(
-              `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier, max_attempts, pass_score)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [courseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A', maxAttempts, passScore]
-            );
+              await connection.query(
+                `INSERT INTO lessons (course_id, chapter_id, title, type, video_url, display_name, duration, content_data, order_index, required_tier, max_attempts, pass_score)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [courseId, newChapterId, l.title, l.type, videoUrl, displayName, l.duration || 0, contentData, j, 'A', maxAttempts, passScore]
+              );
+            }
           }
         }
       }

@@ -189,9 +189,26 @@ export default function CourseManager() {
       let thumbnailUrl = courseFormData.thumbnail;
       let courseDetail = null;
 
-      // Nếu đang sửa, lấy thông tin khóa học cũ từ server để giữ ảnh
+      // Nếu đang sửa, lấy thông tin khóa học cũ từ server để giữ ảnh và chapters đầy đủ
       if (courseFormData.id) {
-        courseDetail = courses.find(c => c.id === courseFormData.id);
+        try {
+          const token = localStorage.getItem("admin_token");
+          const resp = await fetch(`${API_ENDPOINTS.COURSES}/${courseFormData.id}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          if (resp.ok) {
+            courseDetail = await resp.json();
+          } else {
+            // fallback to local list if fetch fails
+            courseDetail = courses.find((c) => c.id === courseFormData.id);
+          }
+        } catch (err) {
+          console.warn("Could not fetch full course detail, falling back:", err);
+          courseDetail = courses.find((c) => c.id === courseFormData.id);
+        }
       }
 
       // Upload ảnh nếu là blob local
