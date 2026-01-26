@@ -1283,13 +1283,14 @@ export default function CourseManager() {
                         type="number"
                         min="0"
                         className="cm-form-input"
-                        value={lessonFormData.maxAttempts}
-                        onChange={(e) =>
+                        value={lessonFormData.maxAttempts === 0 ? "" : lessonFormData.maxAttempts}
+                        onChange={(e) => {
+                          const v = e.target.value;
                           setLessonFormData({
                             ...lessonFormData,
-                            maxAttempts: parseInt(e.target.value) || 0,
-                          })
-                        }
+                            maxAttempts: v === "" ? 0 : parseInt(v, 10) || 0,
+                          });
+                        }}
                         placeholder="0 = Không giới hạn"
                       />
                       <small style={{ color: '#666', fontSize: '11px' }}>0 = Không giới hạn số lần</small>
