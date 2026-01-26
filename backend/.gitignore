@@ -33,6 +33,6 @@ pnpm-lock.yaml
 # Project specific
 history
 nodemodel
-uploads/
+
 *.db
 *.sqlite
