@@ -128,71 +128,70 @@ function AboutPage() {
             {/* 3. Lý do nên chọn trung tâm */}
             <section className="section section-white">
                 <div className="container">
-                    <h2 className="section-title">Lý do nên chọn trung tâm</h2>
+                    <h2 className="section-title">Tại sao lựa chọn đào tạo tại trung tâm?</h2>
                     <div className="objectives-grid">
-                        {/* Card 1 */}
+                        {/* Card 1: ĐÀO TẠO */}
                         <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path d="M12 14v7" /></svg>
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture1.png" alt="Đào tạo" />
                             </div>
-                            <h3 className="objective-title">Đào tạo kiến thức</h3>
-                            <ul className="objective-list">
-                                <li>Cung cấp kiến thức cần thiết về pháp luật, kỹ thuật và an toàn bay cho người điều khiển UAV.</li>
-                            </ul>
+                            <h3 className="objective-title">ĐÀO TẠO</h3>
+                            <p className="objective-subtitle">Luôn ứng dụng Công nghệ Drone mới nhất. Ứng dụng chuyên ngành giải pháp toàn diện với nhiều chuyên gia Kinh Nghiệm Lĩnh Vực Chuyên Đề Đào Tạo.</p>
                         </div>
 
-                        {/* Card 2 */}
+                        {/* Card 2: CHỨNG NHẬN */}
                         <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture2.png" alt="Chứng nhận" />
                             </div>
-                            <h3 className="objective-title">Nâng cao ý thức</h3>
-                            <ul className="objective-list">
-                                <li>Nâng cao ý thức tuân thủ quy định về an toàn, bảo mật và pháp luật.</li>
-                            </ul>
+                            <h3 className="objective-title">CHỨNG NHẬN</h3>
+                            <p className="objective-subtitle">Chứng thực bởi Đơn Vị Sản Xuất Drone Định Hướng Tiêu Chuẩn Ngành. Giả Trị Pháp Lý và Xin Cấp Pháp Bay Drone tại Việt Nam.</p>
                         </div>
 
-                        {/* Card 3 */}
+                        {/* Card 3: NỀN TẢNG ELEARNING */}
                         <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture3.png" alt="Nền tảng eLearning" />
                             </div>
-                            <h3 className="objective-title">Quản lý hoạt động bay</h3>
-                            <ul className="objective-list">
-                                <li>Xây dựng hệ thống quản lý hoạt động bay UAV hiệu quả theo quy định.</li>
-
-                            </ul>
-                        </div>
-                        <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-                            </div>
-                            <h3 className="objective-title">Quản lý hoạt động bay</h3>
-                            <ul className="objective-list">
-                                <li>Xây dựng hệ thống quản lý hoạt động bay UAV hiệu quả theo quy định.</li>
-
-                            </ul>
-                        </div>
-                        <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-                            </div>
-                            <h3 className="objective-title">Quản lý hoạt động bay</h3>
-                            <ul className="objective-list">
-                                <li>Xây dựng hệ thống quản lý hoạt động bay UAV hiệu quả theo quy định.</li>
-
-                            </ul>
-                        </div>
-                        <div className="objective-card">
-                            <div className="objective-icon">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-                            </div>
-                            <h3 className="objective-title">Quản lý hoạt động bay</h3>
-                            <ul className="objective-list">
-                                <li>Xây dựng hệ thống quản lý hoạt động bay UAV hiệu quả theo quy định.</li>
-                            </ul>
+                            <h3 className="objective-title">NỀN TẢNG ELEARNING</h3>
+                            <p className="objective-subtitle">Với nền tảng đào tạo từ xa trực tuyến. Cung 02 Cơ Số Vật Chất Tại Chỗ Hội Đại, diện tích San Bài đào tạo bay trên 1.200 m²; Lái Máy bay Chuyên Đề giá lập.</p>
                         </div>
 
+                        {/* Card 4: ĐỘI NGŨ */}
+                        <div className="objective-card">
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture4.png" alt="Đội ngũ" />
+                            </div>
+                            <h3 className="objective-title">ĐỘI NGŨ</h3>
+                            <p className="objective-subtitle">Hệ sinh thái tích hợp kiến thức rộng, cung nhiều chuyên gia ngành Công Nông Nghiệp; Đa Phương Tiện, Phòng Lab và Phòng Sát hạch tiêu chuẩn quốc tế.</p>
+                        </div>
+
+                        {/* Card 5: CHƯƠNG TRÌNH */}
+                        <div className="objective-card">
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture5.png" alt="Chương trình" />
+                            </div>
+                            <h3 className="objective-title">CHƯƠNG TRÌNH</h3>
+                            <p className="objective-subtitle">02 cấp độ và 06 Chuyên đề đào tạo các lĩnh vực: Quay Chụp Thương Mại, Khảo Sát Địa Hình, Kiểm Tra Công Nghiệp – Làm Nghiệp; Giám sát công động & Cứu Hộ Khẩn Cấp.</p>
+                        </div>
+
+                        {/* Card 6: QUY TRÌNH */}
+                        <div className="objective-card">
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture6.png" alt="Quy trình" />
+                            </div>
+                            <h3 className="objective-title">QUY TRÌNH</h3>
+                            <p className="objective-subtitle">Cung cấp quy trình vận hành an toàn bay dần dứng đúng Pháp Luật, Quy trình vận hành & bảo tri thiết bị bay chuyên nghiệp, Quy trình giám sát trung tâm điều khiển bay tập trung.</p>
+                        </div>
+
+                        {/* Card 7: TỐI ƯU */}
+                        <div className="objective-card">
+                            <div className="objective-icon-image">
+                                <img src="/images/Picture7.png" alt="Tối ưu" />
+                            </div>
+                            <h3 className="objective-title">TỐI ƯU</h3>
+                            <p className="objective-subtitle">Cung cấp thiết kế chương trình đào tạo tùy chọn – phù hợp với hành động "May Do", theo Yêu Cầu Khách Hàng Cá Nhân; Cơ Số Doanh Nghiệp; Phát triển nền tảng giám sát Drone chuyên biệt.</p>
+                        </div>
                     </div>
                 </div>
             </section>

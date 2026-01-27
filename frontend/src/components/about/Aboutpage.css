@@ -114,6 +114,23 @@
   color: var(--about-primary);
 }
 
+.objective-icon-image {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.objective-icon-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
 .objective-title {
   font-size: 1.3rem;
   font-weight: 700;
@@ -140,6 +157,13 @@
   left: 0;
   color: var(--about-primary);
   font-weight: bold;
+}
+
+.objective-subtitle {
+  text-align: center;
+  color: var(--about-text-sub);
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 /* === 3. LEGAL TABS === */

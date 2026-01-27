@@ -38,7 +38,7 @@
 }
 
 .terms-header-content {
-    background-color:var(--primary-yellow);
+    background-color: #006eff !important;
     border-radius: 12px;
     padding: 40px;
     color: white;
@@ -67,7 +67,7 @@
     max-width: 800px;
     line-height: 1.7;
     margin-bottom: 25px;
-    color: #000 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
 .terms-meta {
@@ -301,7 +301,7 @@
 }
 
 .terms-contact-card {
-    background-color: var(--primary-yellow);
+    background-color: #0050b8 !important;
     border-radius: 12px;
     padding: 40px;
     color: white;
@@ -657,4 +657,26 @@
         flex-direction: column;
         gap: 10px;
     }
+}
+
+/* =========================================================
+   FORCE REMOVE ALL GRADIENTS & COLOR OVERRIDES (match PrivacyPolicy)
+   ========================================================= */
+.terms-contact-card,
+.terms-header-content,
+.contact-item {
+    background-image: none !important;
+    background: none !important;
+}
+
+.terms-contact-card {
+    background-color: #0050b8 !important;
+}
+
+.terms-header-content {
+    background-color: #006eff !important;
+}
+
+.contact-item {
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }
