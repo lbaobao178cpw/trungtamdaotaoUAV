@@ -56,7 +56,7 @@ const ExistingPointsLayer = memo(({ points }) => {
                 <Html key={point.id} position={[point.posX, point.posY, point.posZ]} center zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
                     <div style={{ opacity: 0.8, transform: 'scale(0.8)' }}>
                         <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.9)', borderRadius: '20%', border: '2px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-                            <img src={point.logoSrc} alt="" style={{ width: '60%', height: '60%', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
+                            <img src={point.logoSrc} alt={point.title || 'Point logo'} style={{ width: '60%', height: '60%', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
                         </div>
                     </div>
                 </Html>

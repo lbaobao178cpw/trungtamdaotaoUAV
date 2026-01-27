@@ -272,7 +272,7 @@ export default function PointManager() {
                         <input type="text" className="form-control" value={pointForm.logoSrc} readOnly style={{ fontSize: 12 }} />
                         <button type="button" className="btn btn-primary" onClick={() => { setMediaTarget("logoSrc"); setIsMediaModalOpen(true); }}>Logo</button>
                       </div>
-                      {pointForm.logoSrc && <img src={pointForm.logoSrc} alt="" className="media-thumb-preview" />}
+                      {pointForm.logoSrc && <img src={pointForm.logoSrc} alt={`${pointForm.title || 'Point'} logo`} className="media-thumb-preview" />}
                     </div>
                     {/* Image */}
                     <div className="media-col">
@@ -280,7 +280,7 @@ export default function PointManager() {
                         <input type="text" className="form-control" value={pointForm.imageSrc} readOnly style={{ fontSize: 12 }} />
                         <button type="button" className="btn btn-primary" onClick={() => { setMediaTarget("imageSrc"); setIsMediaModalOpen(true); }}>Ảnh</button>
                       </div>
-                      {pointForm.imageSrc && <img src={pointForm.imageSrc} alt="" className="media-thumb-preview" />}
+                      {pointForm.imageSrc && <img src={pointForm.imageSrc} alt={`${pointForm.title || 'Point'} image`} className="media-thumb-preview" />}
                     </div>
                   </div>
                 </div>
