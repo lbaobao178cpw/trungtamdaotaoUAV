@@ -6,6 +6,22 @@ const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verif
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
+// Normalize gender for storage: map common variants to 'Nam' or 'Nữ', else capitalize
+function normalizeGenderForStorage(g) {
+  if (!g) return null;
+  try {
+    const s = String(g).trim();
+    if (s === '') return null;
+    const lowered = s.toLowerCase();
+    const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
+    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  } catch (e) {
+    return g;
+  }
+}
+
 // Setup multer for avatar upload
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -169,7 +185,7 @@ router.put("/:id", verifyAdmin, async (req, res) => {
     // Chuyển đổi string rỗng thành NULL để tránh lỗi với các trường DATE
     const profileData = {
       identity_number: identity_number || null,
-      gender: gender || null,
+      gender: normalizeGenderForStorage(gender),
       birth_date: birth_date || null,
       address: address || null,
       target_tier: target_tier || null,
@@ -194,7 +210,7 @@ router.put("/:id", verifyAdmin, async (req, res) => {
       await db.query(
         `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, identity_number || null, gender || null, birth_date || null, address || null, target_tier || null, uav_type || null]
+        [id, identity_number || null, normalizeGenderForStorage(gender), birth_date || null, address || null, target_tier || null, uav_type || null]
       );
     }
 
