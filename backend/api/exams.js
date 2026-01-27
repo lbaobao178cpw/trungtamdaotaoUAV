@@ -31,15 +31,15 @@ router.get("/", async (req, res) => {
       ? "SELECT * FROM exam_schedules ORDER BY exam_date ASC"
       : "SELECT * FROM exam_schedules WHERE DATE(exam_date) >= CURDATE() ORDER BY exam_date ASC";
 
-    // Nếu có user_id, query level từ database
+    // Nếu có user_id, query target_tier từ database
     if (userId) {
       try {
         const [userRows] = await db.query(
-          "SELECT level FROM users WHERE id = ?",
+          "SELECT p.target_tier FROM user_profiles p JOIN users u ON p.user_id = u.id WHERE u.id = ?",
           [userId]
         );
         if (userRows.length > 0) {
-          userLevel = userRows[0].level;
+          userLevel = userRows[0].target_tier;
         }
       } catch (e) {
         // User không tồn tại, tiếp tục mà không filter
@@ -52,11 +52,11 @@ router.get("/", async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         if (decoded && decoded.id) {
           const [userRows] = await db.query(
-            "SELECT level FROM users WHERE id = ?",
+            "SELECT p.target_tier FROM user_profiles p JOIN users u ON p.user_id = u.id WHERE u.id = ?",
             [decoded.id]
           );
           if (userRows.length > 0) {
-            userLevel = userRows[0].level;
+            userLevel = userRows[0].target_tier;
           }
         }
       } catch (e) {
@@ -65,10 +65,10 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // Nếu có user_id, kiểm tra đăng ký + filter theo level
+    // Nếu có user_id, kiểm tra đăng ký + filter theo target_tier
     if (userId) {
       const dateCond = includePast ? '' : 'AND DATE(s.exam_date) >= CURDATE()';
-      if (userLevel === "Cơ bản") {
+      if (userLevel === "A") {
         // User hạng A chỉ xem lịch hạng A
         query = `
           SELECT s.*, 
@@ -78,7 +78,7 @@ router.get("/", async (req, res) => {
           WHERE s.type LIKE '%Hạng A%' ${dateCond}
           ORDER BY s.exam_date ASC
         `;
-      } else if (userLevel === "Nâng cao") {
+      } else if (userLevel === "B") {
         // User hạng B xem được cả hạng A và B
         query = `
           SELECT s.*, 
@@ -89,7 +89,7 @@ router.get("/", async (req, res) => {
           ORDER BY s.exam_date ASC
         `;
       } else {
-        // Không có level hoặc token không hợp lệ, show all (but still respect includePast)
+        // Không có target_tier hoặc token không hợp lệ, show all (but still respect includePast)
         query = `
           SELECT s.*, 
                  (SELECT COUNT(*) FROM exam_registrations r 
@@ -126,7 +126,7 @@ router.get("/month", async (req, res) => {
 
     console.log("🔍 DEBUG /month endpoint - Authorization:", authHeader ? "HAS TOKEN" : "NO TOKEN");
 
-    // Nếu có token, lấy user_id và level
+    // Nếu có token, lấy user_id và target_tier
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
       try {
@@ -134,12 +134,12 @@ router.get("/month", async (req, res) => {
 
         if (decoded && decoded.id) {
           const [userRows] = await db.query(
-            "SELECT id, email, level FROM users WHERE id = ?",
+            "SELECT u.id, u.email, p.target_tier FROM users u LEFT JOIN user_profiles p ON u.id = p.user_id WHERE u.id = ?",
             [decoded.id]
           );
 
           if (userRows.length > 0) {
-            userLevel = userRows[0].level;
+            userLevel = userRows[0].target_tier;
           }
         }
       } catch (e) {
@@ -151,13 +151,13 @@ router.get("/month", async (req, res) => {
     let query = `SELECT * FROM exam_schedules WHERE YEAR(exam_date) = ? AND MONTH(exam_date) = ? AND is_active = 1`;
     let params = [year, month];
 
-    // Filter theo level nếu có token
-    if (userLevel === "Cơ bản") {
+    // Filter theo target_tier nếu có token
+    if (userLevel === "A") {
       query += ` AND type LIKE '%Hạng A%'`;
-    } else if (userLevel === "Nâng cao") {
+    } else if (userLevel === "B") {
       query += ` AND (type LIKE '%Hạng A%' OR type LIKE '%Hạng B%')`;
     } else {
-      // Không có level, show all
+      // Không có target_tier, show all
     }
 
     query += ` ORDER BY exam_date ASC`;
