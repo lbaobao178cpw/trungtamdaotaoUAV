@@ -196,6 +196,7 @@ function RegisterPage() {
     if (!formData.uavPurpose?.trim()) newErrors.uavPurpose = "Vui lòng nhập mục đích sử dụng";
     if (!formData.activityArea) newErrors.activityArea = "Vui lòng chọn khu vực hoạt động";
     if (!formData.experience) newErrors.experience = "Vui lòng chọn kinh nghiệm bay";
+    if (!formData.uavTypes || formData.uavTypes.length === 0) newErrors.uavTypes = "Vui lòng chọn ít nhất một loại thiết bị";
 
     // --- SỬA LỖI Ở ĐÂY: BẮT BUỘC CHỌN ---
     if (!formData.certificateType) newErrors.certificateType = "Vui lòng chọn hạng chứng chỉ";
@@ -219,6 +220,52 @@ function RegisterPage() {
     setIsLoading(true);
 
     try {
+      // === VALIDATE TẤT CẢ CÁC STEPS TRƯỚC KHI SUBMIT ===
+      const allErrors = {};
+      
+      // Validate Step 2
+      if (!formData.phone?.trim() || !/^0\d{9}$/.test(formData.phone)) allErrors.phone = "SĐT không hợp lệ";
+      if (!formData.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) allErrors.email = "Email không hợp lệ";
+      if (!formData.password?.trim() || formData.password.length < 6) allErrors.password = "Mật khẩu phải >= 6 ký tự";
+      if (formData.password !== formData.confirmPassword) allErrors.confirmPassword = "Mật khẩu không trùng khớp";
+      if (!formData.fullName?.trim()) allErrors.fullName = "Họ tên không được bỏ trống";
+      
+      // Validate Step 3
+      if (!formData.birthDate) allErrors.birthDate = "Ngày sinh không được bỏ trống";
+      if (!formData.cccd?.trim()) allErrors.cccd = "CCCD/CMND không được bỏ trống";
+      if (!formData.gender) allErrors.gender = "Giới tính không được bỏ trống";
+      if (!formData.jobTitle?.trim()) allErrors.jobTitle = "Nghề nghiệp không được bỏ trống";
+      if (!formData.workPlace?.trim()) allErrors.workPlace = "Nơi làm việc không được bỏ trống";
+      if (!formData.permanentAddress?.trim()) allErrors.permanentAddress = "Địa chỉ hộ khẩu không được bỏ trống";
+      if (!formData.permanentCityId) allErrors.permanentCityId = "Tỉnh/TP hộ khẩu không được bỏ trống";
+      if (!formData.permanentWardId) allErrors.permanentWardId = "Xã/Phường hộ khẩu không được bỏ trống";
+      if (!formData.sameAsPermanent && !formData.currentAddress?.trim()) allErrors.currentAddress = "Địa chỉ hiện tại không được bỏ trống";
+      if (!formData.sameAsPermanent && !formData.currentCityId) allErrors.currentCityId = "Tỉnh/TP hiện tại không được bỏ trống";
+      if (!formData.sameAsPermanent && !formData.currentWardId) allErrors.currentWardId = "Xã/Phường hiện tại không được bỏ trống";
+      if (!formData.emergencyName?.trim()) allErrors.emergencyName = "Tên người liên hệ không được bỏ trống";
+      if (!formData.emergencyPhone?.trim() || !/^0\d{9}$/.test(formData.emergencyPhone)) allErrors.emergencyPhone = "SĐT người liên hệ không hợp lệ";
+      if (!formData.emergencyRelation?.trim()) allErrors.emergencyRelation = "Mối quan hệ không được bỏ trống";
+      
+      // Validate Step 4
+      if (!formData.uavTypes || formData.uavTypes.length === 0) allErrors.uavTypes = "Phải chọn ít nhất 1 loại UAV";
+      if (!formData.uavPurpose?.trim()) allErrors.uavPurpose = "Mục đích sử dụng không được bỏ trống";
+      if (!formData.activityArea) allErrors.activityArea = "Khu vực hoạt động không được bỏ trống";
+      if (!formData.experience) allErrors.experience = "Kinh nghiệm bay không được bỏ trống";
+      if (!formData.certificateType) allErrors.certificateType = "Hạng chứng chỉ không được bỏ trống";
+      
+      // Validate CCCD images
+      if (!formData.cccdFront) allErrors.cccdFront = "Ảnh CCCD mặt trước không được bỏ trống";
+      if (!formData.cccdBack) allErrors.cccdBack = "Ảnh CCCD mặt sau không được bỏ trống";
+      
+      // Nếu có lỗi, báo chi tiết
+      if (Object.keys(allErrors).length > 0) {
+        setErrors(allErrors);
+        const missingFields = Object.values(allErrors).join('\n');
+        toast.error(`❌ Vui lòng kiểm tra lại:\n\n${missingFields}`);
+        setIsLoading(false);
+        return;
+      }
+
       let cccdFrontUrl = null;
       let cccdBackUrl = null;
 
@@ -252,6 +299,12 @@ function RegisterPage() {
 
       const submitData = {
         ...formData,
+        // Auto-fill currentAddress nếu sameAsPermanent=true và currentAddress trống
+        currentAddress: formData.sameAsPermanent && !formData.currentAddress ? formData.permanentAddress : formData.currentAddress,
+        currentCityId: formData.sameAsPermanent && !formData.currentCityId ? formData.permanentCityId : formData.currentCityId,
+        currentCityName: formData.sameAsPermanent && !formData.currentCityName ? formData.permanentCityName : formData.currentCityName,
+        currentWardId: formData.sameAsPermanent && !formData.currentWardId ? formData.permanentWardId : formData.currentWardId,
+        currentWardName: formData.sameAsPermanent && !formData.currentWardName ? formData.permanentWardName : formData.currentWardName,
         finalPermanentAddress: `${formData.permanentAddress}, ${formData.permanentWardName}, ${formData.permanentCityName}`,
         finalCurrentAddress: formData.sameAsPermanent ? `${formData.permanentAddress}, ${formData.permanentWardName}, ${formData.permanentCityName}` : `${formData.currentAddress}, ${formData.currentWardName}, ${formData.currentCityName}`,
         cccdFront: cccdFrontUrl,
@@ -512,7 +565,7 @@ function RegisterPage() {
   const renderStep4 = () => (
     <div className="register-step">
       <h2 className="step-title">Kinh nghiệm & Thiết bị UAV</h2>
-      <div className="form-section"><h3>Thiết bị đang sử dụng</h3><div className="checkbox-grid">{["DJI Mini", "DJI Mavic", "DJI Phantom", "DJI Inspire", "Autel", "FPV", "Cánh bằng", "Khác"].map(t => (<label key={t} className="checkbox-label"><input type="checkbox" name="uavType" value={t} checked={formData.uavTypes.includes(t)} onChange={handleInputChange} /> <span>{t}</span></label>))}</div></div>
+      <div className="form-section"><h3>Thiết bị đang sử dụng</h3><div className="checkbox-grid" style={errors.uavTypes ? { border: '1px solid red', padding: '10px', borderRadius: '8px' } : {}}>{["DJI Mini", "DJI Mavic", "DJI Phantom", "DJI Inspire", "Autel", "FPV", "Cánh bằng", "Khác"].map(t => (<label key={t} className="checkbox-label"><input type="checkbox" name="uavType" value={t} checked={formData.uavTypes.includes(t)} onChange={handleInputChange} /> <span>{t}</span></label>))}</div>{errors.uavTypes && <p className="error-text">{errors.uavTypes}</p>}</div>
       <div className="form-section"><h3>Mục đích sử dụng</h3><div className="form-group"><label>Mô tả mục đích sử dụng UAV của bạn</label><textarea name="uavPurpose" value={formData.uavPurpose} onChange={handleInputChange} className={`form-input ${errors.uavPurpose ? "input-error" : ""}`} placeholder="VD: Quay phim sự kiện, Khảo sát công trình, Phun thuốc nông nghiệp..." style={{ height: '80px', resize: 'vertical' }} />{errors.uavPurpose && <p className="error-text">{errors.uavPurpose}</p>}</div></div>
       <div className="form-section"><h3>Khu vực hoạt động chính</h3><select name="activityArea" value={formData.activityArea} onChange={handleInputChange} className={`form-select ${errors.activityArea ? "input-error" : ""}`}><option value="">-- Chọn khu vực --</option><option value="hanoi">Hà Nội & Miền Bắc</option><option value="danang">Đà Nẵng & Miền Trung</option><option value="hcm">TP.HCM & Miền Nam</option></select>{errors.activityArea && <p className="error-text">{errors.activityArea}</p>}</div>
       <div className="form-section"><h3><Plane size={18} style={{ display: 'inline', marginBottom: '-3px' }} /> Kinh nghiệm bay</h3><div className="radio-list" style={{ border: errors.experience ? '1px solid red' : 'none', padding: errors.experience ? '10px' : '0', borderRadius: '8px' }}>{["Chưa có kinh nghiệm", "Dưới 6 tháng", "6-12 tháng", "1-3 năm", "Trên 3 năm"].map((exp) => (<label key={exp} className="radio-option" style={{ padding: '10px', border: 'none', borderBottom: '1px solid #444' }}><input type="radio" name="experience" value={exp} checked={formData.experience === exp} onChange={handleInputChange} /><span style={{ marginLeft: '10px' }}>{exp}</span></label>))}</div>{errors.experience && <p className="error-text">{errors.experience}</p>}</div>
