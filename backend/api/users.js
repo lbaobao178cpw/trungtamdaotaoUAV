@@ -247,7 +247,9 @@ router.post("/:id/avatar", verifyStudent, avatarUpload.single('avatar'), async (
       stream.end(req.file.buffer);
     });
 
-    // Cập nhật avatar URL vào database
+    //
+
+
     await db.query("UPDATE users SET avatar = ? WHERE id = ?", [uploadResult.secure_url, id]);
 
     res.json({
