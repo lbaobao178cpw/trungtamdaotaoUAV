@@ -750,7 +750,7 @@ export default function SolutionManager() {
                           maxWidth: "100%",
                           objectFit: "contain",
                         }}
-                        alt=""
+                        alt={`Client logo ${idx + 1}`}
                       />
                     ) : (
                       <span style={{ fontSize: 10 }}>No Img</span>
