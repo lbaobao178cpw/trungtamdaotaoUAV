@@ -49,7 +49,11 @@ export default function ExamManager() {
   const handleEditClick = (exam) => {
     let formattedDate = "";
     if (exam.exam_date) {
-      formattedDate = new Date(exam.exam_date).toISOString().split('T')[0];
+      const date = new Date(exam.exam_date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      formattedDate = `${year}-${month}-${day}`;
     }
 
     setForm({
