@@ -70,6 +70,17 @@ function PersonalInfo() {
     wardName: initialParsedAddress.wardName || ''
   });
 
+  const normalizeGenderForStorage = (g) => {
+    if (!g) return null;
+    const s = String(g).trim();
+    if (!s) return null;
+    const lowered = s.toLowerCase();
+    const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
+    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   // Fetch provinces khi component mount
   useEffect(() => {
     apiClient.get('/location/provinces')
@@ -198,7 +209,7 @@ function PersonalInfo() {
         email: form.email,
         phone: form.phone,
         birth_date: birthDateFormatted || null,
-        gender: form.gender,
+        gender: normalizeGenderForStorage(form.gender),
         address: fullAddress
       });
 

@@ -5,6 +5,22 @@ const bcrypt = require('bcryptjs');
 const { generateToken, verifyTokenData } = require('../middleware/verifyToken');
 const crypto = require('crypto');
 
+// Normalize gender for storage: map common variants to 'Nam' or 'Nữ', else capitalize
+function normalizeGenderForStorage(g) {
+  if (!g) return null;
+  try {
+    const s = String(g).trim();
+    if (s === '') return null;
+    const lowered = s.toLowerCase();
+    const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
+    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  } catch (e) {
+    return g;
+  }
+}
+
 // === AUTO MIGRATION: Tạo bảng user_sessions nếu chưa có ===
 (async () => {
   try {
@@ -142,7 +158,7 @@ router.post("/register", async (req, res) => {
     `;
 
     await connection.query(insertProfileSql, [
-      newUserId, dbCurrentAddress, dbPermanentAddress, cccd, birthDate || null, gender || null,
+      newUserId, dbCurrentAddress, dbPermanentAddress, cccd, birthDate || null, normalizeGenderForStorage(gender),
       emergencyName, emergencyPhone, emergencyRelation,
       uavTypeString, uavPurpose, activityArea, experience,
       certificateType || null, // Fix lỗi data truncated

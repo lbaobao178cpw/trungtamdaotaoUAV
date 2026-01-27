@@ -188,6 +188,18 @@ export default function UserManager() {
     return '--';
   };
 
+  // Normalize gender value to storage format ('Nam'/'Nữ')
+  const normalizeGenderForStorage = (g) => {
+    if (!g) return null;
+    const s = String(g).trim();
+    if (!s) return null;
+    const lowered = s.toLowerCase();
+    const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
+    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   // location helpers
   const fetchProvinces = async () => {
     try {
@@ -265,6 +277,8 @@ export default function UserManager() {
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `${API_ENDPOINTS.USERS}/${form.id}` : API_ENDPOINTS.USERS;
       const payload = { ...form, is_active: form.is_active };
+      // ensure gender is stored in canonical capitalized form
+      if (payload.gender) payload.gender = normalizeGenderForStorage(payload.gender);
       // ensure we don't send removed fields
       if (payload.hasOwnProperty('uav_type')) delete payload.uav_type;
 
