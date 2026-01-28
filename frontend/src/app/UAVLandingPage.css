@@ -1147,17 +1147,27 @@ h3.section-title {
    ========================================================= */
 
 @media (max-width: 992px) {
-
-  /* Tablet Mode: Layout linh hoạt, vẫn dùng 2 cột */
-  .uav-cert-grid {
-    grid-template-columns: 1fr 1fr;
+  .uav-cert-section {
+    width: 100%;
     max-width: 100%;
+    overflow-x: hidden;
   }
 
-  .courses-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .uav-cert-section .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;     /* CÂN GIỮA */
+    padding: 0 16px;    /* Không sát mép */
+    box-sizing: border-box;
+  }
+
+  .uav-cert-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
+
 
 @media (max-width: 768px) {
   /* MOBILE MINIATURE MODE: Giữ layout giống PC (2 cột) nhưng thu nhỏ */
@@ -1334,7 +1344,7 @@ h3.section-title {
     font-size: 0.7rem !important;
     line-height: 1.2;
     padding-left: 12px !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 8px !important;
   }
 
   .uav-cert-badge {
