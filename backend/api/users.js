@@ -440,9 +440,9 @@ router.get("/:id/learning-history", verifyStudent, async (req, res) => {
     const [stats] = await db.query(`
       SELECT 
         COUNT(DISTINCT ucp.course_id) as total_courses,
-        COALESCE(AVG(ucp.overall_score), 0) as avg_overall_score,
-        COALESCE(AVG(ucp.quiz_score), 0) as avg_quiz_score,
-        COALESCE(AVG(ucp.progress_percentage), 0) as avg_progress
+        COALESCE(MAX(ucp.overall_score), 0) as avg_overall_score,
+        COALESCE(MAX(ucp.quiz_score), 0) as avg_quiz_score,
+        COALESCE(MAX(ucp.progress_percentage), 0) as avg_progress
       FROM user_course_progress ucp
       INNER JOIN courses c ON ucp.course_id = c.id
       WHERE ucp.user_id = ?
@@ -476,9 +476,9 @@ router.get("/scores/all", verifyAdmin, async (req, res) => {
         u.phone,
         p.target_tier,
         (SELECT COUNT(DISTINCT ucp.course_id) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as enrolled_courses,
-        (SELECT COALESCE(AVG(ucp.overall_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_overall_score,
-        (SELECT COALESCE(AVG(ucp.quiz_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_quiz_score,
-        (SELECT COALESCE(AVG(ucp.progress_percentage), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_progress
+        (SELECT COALESCE(MAX(ucp.overall_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_overall_score,
+        (SELECT COALESCE(MAX(ucp.quiz_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_quiz_score,
+        (SELECT COALESCE(MAX(ucp.progress_percentage), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_progress
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       WHERE u.role = 'student'

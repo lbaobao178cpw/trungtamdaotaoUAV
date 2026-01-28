@@ -1185,12 +1185,12 @@ router.post("/:courseId/calculate-score/:userId", verifyToken, async (req, res) 
     // Giả sử: Quiz được lưu trong bảng quiz_results hoặc quiz_scores
     // Nếu chưa có, set mặc định = NULL (chưa làm quiz)
     const [quizScores] = await db.query(`
-      SELECT AVG(score) as avg_quiz_score
+      SELECT MAX(score) as max_quiz_score
       FROM quiz_results
       WHERE user_id = ? AND course_id = ?
     `, [userId, courseId]);
 
-    const rawQuizScore = quizScores[0]?.avg_quiz_score;
+    const rawQuizScore = quizScores[0]?.max_quiz_score;
     const quizScore = rawQuizScore ? parseFloat(rawQuizScore) : 0;
 
     // 4. Tính điểm tổng thể theo công thức
