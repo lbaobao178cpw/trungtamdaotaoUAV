@@ -12,6 +12,7 @@ const Header = () => {
   const [user, setUser] = useState(null);
 
   const [openMenu, setOpenMenu] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
 
 
@@ -64,30 +65,30 @@ const Header = () => {
         </div>
 
         {/* Menu chính */}
-        <nav className="nav">
+        <nav id="mobile-nav" className={`nav ${mobileOpen ? 'open fullwidth' : ''}`} data-full={mobileOpen}>
           <ul className="nav-menu">
             <li>
-              <NavLink to="/" end className="nav-link">
+              <NavLink to="/" end className="nav-link" onClick={() => setMobileOpen(false)}>
                 Trang chủ
               </NavLink>
             </li>
             <li>
-              <NavLink to="/gioi-thieu" className="nav-link">
+              <NavLink to="/gioi-thieu" className="nav-link" onClick={() => setMobileOpen(false)}>
                 Giới thiệu
               </NavLink>
             </li>
             <li>
-              <NavLink to="/khoa-hoc" className="nav-link">
+              <NavLink to="/khoa-hoc" className="nav-link" onClick={() => setMobileOpen(false)}>
                 Khóa học
               </NavLink>
             </li>
             <li>
-              <NavLink to="/thi-sat-hach" className="nav-link">
+              <NavLink to="/thi-sat-hach" className="nav-link" onClick={() => setMobileOpen(false)}>
                 Thi sát hạch
               </NavLink>
             </li>
             <li>
-              <NavLink to="/tra-cuu" className="nav-link">
+              <NavLink to="/tra-cuu" className="nav-link" onClick={() => setMobileOpen(false)}>
                 Tra cứu
               </NavLink>
             </li>
@@ -135,6 +136,20 @@ const Header = () => {
               <Link to="/dang-ky" className="btn-register">Đăng ký</Link>
             </>
           )}
+
+          {/* Hamburger (3 gạch) - appears on small screens */}
+          <button
+            className={`menu-toggle ${mobileOpen ? 'open' : ''}`}
+            aria-label="Toggle menu"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          
         </div>
 
 
