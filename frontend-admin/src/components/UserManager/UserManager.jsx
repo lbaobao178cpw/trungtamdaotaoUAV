@@ -15,7 +15,7 @@ const initialUserState = {
   job_title: "", work_place: "", current_address: "", permanent_address: "",
   permanent_city_id: "", permanent_ward_id: "", current_city_id: "", current_ward_id: "",
   emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_relation: "",
-  usage_purpose: "", operation_area: "", uav_experience: "", uav_type: "",
+  usage_purpose: "", operation_area: "", uav_experience: "", uav_types: [],
   identity_image_front: "", identity_image_back: "",
 };
 
@@ -28,6 +28,9 @@ export default function UserManager() {
   const [expandedUserId, setExpandedUserId] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [addressMode, setAddressMode] = useState('other'); // 'select' or 'other'
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageAlt, setSelectedImageAlt] = useState('');
   const [provinces, setProvinces] = useState([]);
   const [permanentWards, setPermanentWards] = useState([]);
   const [currentWards, setCurrentWards] = useState([]);
@@ -151,7 +154,7 @@ export default function UserManager() {
       usage_purpose: user.usage_purpose || '',
       operation_area: user.operation_area || '',
       uav_experience: user.uav_experience || '',
-      uav_type: user.uav_type || '',
+      uav_types: user.uav_type ? user.uav_type.split(',').map(s => s.trim()) : [],
       identity_image_front: user.identity_image_front || '',
       identity_image_back: user.identity_image_back || '',
       avatar: user.avatar || ''
@@ -385,8 +388,9 @@ export default function UserManager() {
       
       // ensure gender is stored in canonical capitalized form
       if (payload.gender) payload.gender = normalizeGenderForStorage(payload.gender);
-      // ensure we don't send removed fields
-      if (payload.hasOwnProperty('uav_type')) delete payload.uav_type;
+      // add uav_type as joined string
+      payload.uav_type = form.uav_types.join(', ');
+      delete payload.uav_types;
 
       await saveUser({
         url: url,
@@ -531,20 +535,52 @@ export default function UserManager() {
                   <div className="form-group"><label className="form-label">Mục đích sử dụng</label><input className="form-control" value={form.usage_purpose || ''} onChange={(e) => setForm({ ...form, usage_purpose: e.target.value })} placeholder="Mục đích" /></div>
                   <div className="form-group"><label className="form-label">Khu vực hoạt động</label><input className="form-control" value={form.operation_area || ''} onChange={(e) => setForm({ ...form, operation_area: e.target.value })} placeholder="Khu vực" /></div>
                   <div className="form-group"><label className="form-label">Kinh nghiệm</label><input className="form-control" value={form.uav_experience || ''} onChange={(e) => setForm({ ...form, uav_experience: e.target.value })} placeholder="Mô tả kinh nghiệm" /></div>
-                  <div className="form-group"><label className="form-label">Thiết bị UAV</label><input className="form-control" value={form.uav_type || ''} onChange={(e) => setForm({ ...form, uav_type: e.target.value })} placeholder="VD: DJI Mini, DJI Mavic..." /></div>
+                  <div className="form-group"><label className="form-label">Thiết bị UAV</label>
+                    <div className="checkbox-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
+                      {["DJI Mini", "DJI Mavic", "DJI Phantom", "DJI Inspire", "Autel", "FPV", "Cánh bằng", "Khác"].map(t => (
+                        <label key={t} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+                          <input
+                            type="checkbox"
+                            value={t}
+                            checked={form.uav_types.includes(t)}
+                            onChange={(e) => {
+                              const { checked, value } = e.target;
+                              setForm(prev => ({
+                                ...prev,
+                                uav_types: checked
+                                  ? [...prev.uav_types, value]
+                                  : prev.uav_types.filter(item => item !== value)
+                              }));
+                            }}
+                          />
+                          <span>{t}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
 
                   {(form.identity_image_front || form.identity_image_back) && (
                     <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       {form.identity_image_front && (
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label">CCCD Mặt Trước</label>
-                          <img src={form.identity_image_front} alt="CCCD Front" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '4px', border: '1px solid #e5e7eb' }} />
+                          <img 
+                            src={form.identity_image_front} 
+                            alt="CCCD Front" 
+                            style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '4px', border: '1px solid #e5e7eb', cursor: 'pointer' }} 
+                            onClick={() => { setSelectedImage(form.identity_image_front); setSelectedImageAlt('CCCD Mặt Trước'); setShowImageModal(true); }}
+                          />
                         </div>
                       )}
                       {form.identity_image_back && (
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label">CCCD Mặt Sau</label>
-                          <img src={form.identity_image_back} alt="CCCD Back" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '4px', border: '1px solid #e5e7eb' }} />
+                          <img 
+                            src={form.identity_image_back} 
+                            alt="CCCD Back" 
+                            style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '4px', border: '1px solid #e5e7eb', cursor: 'pointer' }} 
+                            onClick={() => { setSelectedImage(form.identity_image_back); setSelectedImageAlt('CCCD Mặt Sau'); setShowImageModal(true); }}
+                          />
                         </div>
                       )}
                     </div>
@@ -702,21 +738,21 @@ export default function UserManager() {
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                       <div className="item-title" style={{ fontSize: "15px", fontWeight: "bold" }}>{user.full_name}</div>
                       <div style={{ display: 'flex', gap: '5px' }}>
-                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: getRoleBadgeColor(user.role), fontWeight: "600", textTransform: "capitalize" }}>
+                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: getRoleBadgeColor(user.role), border: `1px solid ${getRoleBadgeColor(user.role)}`, backgroundColor: "transparent", fontWeight: "600", textTransform: "capitalize" }}>
                           {user.role}
                         </span>
                         {user.target_tier && (
-                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: "#f59e0b", fontWeight: "600" }}>
+                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#f59e0b", border: "1px solid #f59e0b", backgroundColor: "transparent", fontWeight: "600" }}>
                             Hạng {user.target_tier}
                           </span>
                         )}
-                        {user.is_approved ? (
-                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: "#10b981", fontWeight: "600" }}>
-                            ✓ Đã duyệt
+                        {String(user.is_approved) === '1' ? (
+                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#10b981", border: "1px solid #10b981", backgroundColor: "transparent", fontWeight: "600" }}>
+                            Đã duyệt
                           </span>
                         ) : (
-                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#fff", backgroundColor: "#f97316", fontWeight: "600" }}>
-                            ⏱ Chờ duyệt
+                          <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", color: "#f97316", border: "1px solid #f97316", backgroundColor: "transparent", fontWeight: "600" }}>
+                            Chờ duyệt
                           </span>
                         )}
                       </div>
@@ -736,14 +772,13 @@ export default function UserManager() {
                   </button>
 
                   <div className="item-actions" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    {!user.is_approved && (
-                      <button onClick={() => handleApprove(user.id, user.is_approved)} className="btn btn-sm" style={{ padding: '4px 8px', fontSize: '12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                        <CheckCircle2 size={12} /> Duyệt
-                      </button>
-                    )}
-                    {user.is_approved && (
+                    {(String(user.is_approved) === '1' || user.is_approved === true) ? (
                       <button onClick={() => handleApprove(user.id, user.is_approved)} className="btn btn-sm" style={{ padding: '4px 8px', fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                         <AlertCircle size={12} /> Hủy duyệt
+                      </button>
+                    ) : (
+                      <button onClick={() => handleApprove(user.id, user.is_approved)} className="btn btn-sm" style={{ padding: '4px 8px', fontSize: '12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                        <CheckCircle2 size={12} /> Duyệt
                       </button>
                     )}
                     <button onClick={() => handleEditClick(user)} className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: '12px' }}><Edit size={12} /> Sửa</button>
@@ -829,7 +864,7 @@ export default function UserManager() {
                           <span><strong>Trạng thái:</strong> {(user.is_active !== 0 && user.is_active !== '0' && user.is_active !== false) ? <span style={{ color: '#10b981' }}>✓ Hoạt động</span> : <span style={{ color: '#ef4444' }}>✗ Khóa</span>}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span><strong>Phê duyệt:</strong> {user.is_approved ? <span style={{ color: '#10b981' }}>✓ Đã duyệt</span> : <span style={{ color: '#f97316' }}>⏱ Chờ duyệt</span>}</span>
+                          <span><strong>Phê duyệt:</strong> {String(user.is_approved) === '1' ? <span style={{ color: '#10b981' }}>Đã duyệt</span> : <span style={{ color: '#f97316' }}>Chờ duyệt</span>}</span>
                         </div>
                         {user.failed_login_attempts !== undefined && user.failed_login_attempts > 0 && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px', background: user.failed_login_attempts >= 5 ? '#fee2e2' : '#fef3c7', borderRadius: '4px' }}>
@@ -846,13 +881,23 @@ export default function UserManager() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           {user.identity_image_front && (
                             <div>
-                              <img src={user.identity_image_front} alt="CCCD Front" style={{ maxWidth: '100%', maxHeight: '100px', borderRadius: '4px', border: '1px solid #e5e7eb' }} />
+                              <img 
+                                src={user.identity_image_front} 
+                                alt="CCCD Front" 
+                                style={{ maxWidth: '100%', maxHeight: '100px', borderRadius: '4px', border: '1px solid #e5e7eb', cursor: 'pointer' }} 
+                                onClick={() => { setSelectedImage(user.identity_image_front); setSelectedImageAlt('CCCD Mặt Trước'); setShowImageModal(true); }}
+                              />
                               <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Mặt trước</div>
                             </div>
                           )}
                           {user.identity_image_back && (
                             <div>
-                              <img src={user.identity_image_back} alt="CCCD Back" style={{ maxWidth: '100%', maxHeight: '100px', borderRadius: '4px', border: '1px solid #e5e7eb' }} />
+                              <img 
+                                src={user.identity_image_back} 
+                                alt="CCCD Back" 
+                                style={{ maxWidth: '100%', maxHeight: '100px', borderRadius: '4px', border: '1px solid #e5e7eb', cursor: 'pointer' }} 
+                                onClick={() => { setSelectedImage(user.identity_image_back); setSelectedImageAlt('CCCD Mặt Sau'); setShowImageModal(true); }}
+                              />
                               <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Mặt sau</div>
                             </div>
                           )}
@@ -950,6 +995,55 @@ export default function UserManager() {
           })}
         </div>
       </div>
+
+      {/* Image Modal */}
+      {showImageModal && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            background: 'rgba(0,0,0,0.8)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 1000 
+          }} 
+          onClick={() => setShowImageModal(false)}
+        >
+          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={selectedImage} 
+              alt={selectedImageAlt} 
+              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '8px' }} 
+            />
+            <button 
+              onClick={() => setShowImageModal(false)} 
+              style={{ 
+                position: 'absolute', 
+                top: 10, 
+                right: 10, 
+                background: 'rgba(0,0,0,0.5)', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '50%', 
+                width: 30, 
+                height: 30, 
+                cursor: 'pointer',
+                fontSize: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
