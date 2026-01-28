@@ -93,15 +93,22 @@ const getDeviceName = (userAgent) => {
 router.post("/check-existence", async (req, res) => {
   try {
     const { type, value } = req.body;
+    console.log(`[Check Existence] Received - type="${type}", value="${value}"`);
     if (!value) return res.json({ exists: false });
 
     let query = "";
     if (type === 'email') query = "SELECT id FROM users WHERE email = ?";
     else if (type === 'phone') query = "SELECT id FROM users WHERE phone = ?";
-    else return res.status(400).json({ error: "Invalid type" });
+    else if (type === 'cccd') query = "SELECT user_id FROM user_profiles WHERE identity_number = ?";
+    else {
+      console.log(`[Check Existence] Invalid type: ${type}`);
+      return res.status(400).json({ error: "Invalid type" });
+    }
 
     const [rows] = await db.query(query, [value]);
-    res.json({ exists: rows.length > 0 });
+    const exists = rows.length > 0;
+    console.log(`[Check Existence] Query result - exists: ${exists}`);
+    res.json({ exists });
   } catch (error) {
     console.error("Check existence error:", error);
     res.status(500).json({ error: "Server error" });

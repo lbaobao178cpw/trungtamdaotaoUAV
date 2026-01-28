@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./RegisterPage.css";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../../config/apiConfig";
 
 import {
@@ -76,31 +76,57 @@ function RegisterPage() {
     window.scrollTo(0, 0);
   }, [currentStep]);
 
-  // --- CHECK TRÙNG LẶP ---
-  const handleBlur = async (e) => {
-    const { name, value } = e.target;
-    if ((name === 'email' || name === 'phone') && value.trim() !== '') {
-      setErrors(prev => { const newErrs = { ...prev }; delete newErrs[name]; return newErrs; });
-      if (name === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
-      if (name === 'phone' && !/^0\d{9}$/.test(value)) return;
+  // Real-time email validation
+  useEffect(() => {
+    if (formData.email) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email)) {
+        setErrors(prev => ({ ...prev, email: 'Email không hợp lệ (chỉ cho phép ký tự ASCII)' }));
+      } else {
+        setErrors(prev => { const newErrs = { ...prev }; delete newErrs.email; return newErrs; });
+      }
+    } else {
+      setErrors(prev => { const newErrs = { ...prev }; delete newErrs.email; return newErrs; });
+    }
+  }, [formData.email]);
 
-      try {
-        const response = await fetch(CHECK_EXISTENCE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: name, value: value.trim() }),
-        });
-        const data = await response.json();
-        if (data.exists) {
-          setErrors(prev => ({ ...prev, [name]: `${name === 'email' ? 'Email' : 'Số điện thoại'} này đã được đăng ký!` }));
-        }
-      } catch (error) { console.error("Lỗi check existence:", error); }
+  // Prevent non-ASCII characters in email
+  const handleEmailKeyPress = (e) => {
+    const char = String.fromCharCode(e.charCode);
+    if (!/[a-zA-Z0-9@._%+-]/.test(char)) {
+      e.preventDefault();
+    }
+  };
+
+  // --- CHECK TRÙNG LẶP ---
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if ((name === 'email' || name === 'phone' || name === 'cccd') && value.trim() !== '') {
+      setErrors(prev => { const newErrs = { ...prev }; delete newErrs[name]; return newErrs; });
+      if (name === 'email' && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) return;
+      if (name === 'phone' && !/^0\d{9}$/.test(value)) return;
+      if (name === 'cccd' && !/^\d{12}$/.test(value)) return;
+
+      fetch(CHECK_EXISTENCE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: name, value: value.trim() }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log(`Check existence for ${name}:`, data);
+          if (data.exists) {
+            const fieldName = name === 'email' ? 'Email' : name === 'phone' ? 'Số điện thoại' : 'CCCD';
+            setErrors(prev => ({ ...prev, [name]: `${fieldName} này đã được đăng ký!` }));
+          }
+        })
+        .catch(error => console.error("Lỗi check existence:", error));
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    if (errors[name]) { setErrors(prev => { const newErrs = { ...prev }; delete newErrs[name]; return newErrs; }); }
+    if (errors[name] && name !== 'email') { setErrors(prev => { const newErrs = { ...prev }; delete newErrs[name]; return newErrs; }); }
 
     if (type === "checkbox") {
       if (name === "uavType") {
@@ -168,7 +194,7 @@ function RegisterPage() {
   const validateStep3 = () => {
     const newErrors = {};
     if (!formData.email?.trim()) newErrors.email = "Vui lòng nhập email";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Email không hợp lệ";
+    else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) newErrors.email = "Email không hợp lệ (chỉ cho phép ký tự ASCII)";
     if (errors.email) newErrors.email = errors.email; // Kế thừa lỗi từ API check
 
     if (!formData.phone?.trim()) newErrors.phone = "Vui lòng nhập SĐT";
@@ -318,8 +344,9 @@ function RegisterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại");
-      toast.success("Đăng ký thành công!");
-      navigate("/dang-nhap");
+      console.log("Đăng ký thành công, hiển thị toast");
+      toast.success("Đăng ký thành công! Tài khoản của bạn đang chờ kiểm duyệt từ quản trị viên.");
+      setTimeout(() => navigate("/dang-nhap"), 1000); // Delay 1s để toast hiện
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -427,7 +454,7 @@ function RegisterPage() {
         <div className="form-row">
           <div className="form-group">
             <label>Số CCCD/CMND</label>
-            <input type="text" name="cccd" value={formData.cccd} onChange={handleInputChange} className={`form-input ${errors.cccd ? "input-error" : ""}`} />
+            <input type="text" name="cccd" value={formData.cccd} onChange={handleInputChange} onBlur={handleBlur} className={`form-input ${errors.cccd ? "input-error" : ""}`} placeholder="Nhập 12 chữ số" maxLength="12" />
             {errors.cccd && <p className="error-text">{errors.cccd}</p>}
           </div>
           <div className="form-group">
@@ -539,7 +566,7 @@ function RegisterPage() {
       <div className="form-section">
         <h3>Tài khoản đăng nhập</h3>
         <div className="form-row">
-          <div className="form-group"><label>Email</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} onBlur={handleBlur} className={`form-input ${errors.email ? "input-error" : ""}`} />{errors.email && <p className="error-text">{errors.email}</p>}</div>
+          <div className="form-group"><label>Email</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} onBlur={handleBlur} onKeyPress={handleEmailKeyPress} className={`form-input ${errors.email ? "input-error" : ""}`} />{errors.email && <p className="error-text">{errors.email}</p>}</div>
           <div className="form-group"><label>Số điện thoại chính</label><input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} onBlur={handleBlur} className={`form-input ${errors.phone ? "input-error" : ""}`} />{errors.phone && <p className="error-text">{errors.phone}</p>}</div>
         </div>
         <div className="form-row">

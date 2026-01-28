@@ -61,6 +61,27 @@ function UserProfile() {
         setLoading(true);
         const res = await apiClient.get(`/users/${id}/profile`);
         const data = res.data;
+        
+        // Kiểm tra nếu bị khóa (is_active = 0/false)
+        const isActive = data.is_active == 1;
+        if (!isActive) {
+          notifyWarning('Tài khoản của bạn đã bị khóa');
+          localStorage.removeItem('user_token');
+          localStorage.removeItem('user');
+          navigate('/dang-nhap');
+          return;
+        }
+        
+        // Kiểm tra nếu hủy phê duyệt (is_approved = 0/false)
+        const isApproved = data.is_approved == 1;
+        if (!isApproved) {
+          notifyWarning('Tài khoản của bạn bị hủy phê duyệt');
+          localStorage.removeItem('user_token');
+          localStorage.removeItem('user');
+          navigate('/dang-nhap');
+          return;
+        }
+        
         setProfile(data);
       } catch (err) {
         if (err.response?.status === 401) {

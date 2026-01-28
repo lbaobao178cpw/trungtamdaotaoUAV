@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AliveScope, KeepAlive } from "react-activation";
 import { ToastContainer } from "react-toastify";
+import { Toaster } from "sonner";
 
 import "react-toastify/dist/ReactToastify.css";
 import MainLayout from "./components/MainLayout";
@@ -101,6 +102,7 @@ function App() {
         draggable
         pauseOnHover
       />
+      <Toaster />
     </>
   );
 }

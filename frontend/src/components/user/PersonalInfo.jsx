@@ -9,6 +9,52 @@ function PersonalInfo() {
   const params = useParams();
   const fileInputRef = useRef(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState(profile?.is_approved);
+
+  // Kiểm tra status phê duyệt từ localStorage hoặc fetch lại từ server
+  useEffect(() => {
+    const checkApprovalStatus = async () => {
+      try {
+        // Kiểm tra trước từ localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData.is_approved) {
+            setApprovalStatus(true);
+            if (setProfile) {
+              setProfile(prev => ({ ...prev, is_approved: true }));
+            }
+            return;
+          }
+        }
+
+        // Nếu chưa approved, fetch từ server để kiểm tra có được phê duyệt chưa
+        const res = await apiClient.get(`/users/${params.id}/profile`);
+        if (res.data?.is_approved) {
+          setApprovalStatus(true);
+          if (setProfile) {
+            setProfile(prev => ({ ...prev, is_approved: true }));
+          }
+          // Cập nhật localStorage nếu đã được phê duyệt
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            userData.is_approved = true;
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        }
+      } catch (err) {
+        // Ignore errors, use cached approval status
+      }
+    };
+
+    // Kiểm tra lần đầu khi component mount
+    if (!profile?.is_approved) {
+      checkApprovalStatus();
+    } else {
+      setApprovalStatus(true);
+    }
+  }, [params.id, profile?.is_approved, setProfile]);
 
   // Hàm helper để format ngày thành YYYY-MM-DD theo local timezone
   const formatDateToInput = (dateStr) => {
@@ -133,9 +179,39 @@ function PersonalInfo() {
     setWards([]);
   };
 
+  // Hàm riêng để kiểm tra trạng thái phê duyệt từ server
+  const refreshApprovalStatus = async () => {
+    try {
+      const res = await apiClient.get(`/users/${params.id}/profile`);
+      // Check nếu is_approved = 1 (number) hoặc true (boolean)
+      const isApproved = res.data?.is_approved == 1;
+      
+      if (isApproved) {
+        setApprovalStatus(true);
+        if (setProfile) {
+          setProfile(prev => ({ ...prev, is_approved: true }));
+        }
+        // Cập nhật localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          userData.is_approved = true;
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      }
+      return isApproved;
+    } catch (err) {
+      console.error('Error checking approval status:', err);
+      return approvalStatus || profile?.is_approved;
+    }
+  };
+
   // Handle avatar upload
-  const handleAvatarClick = () => {
-    if (!profile?.is_approved) {
+  const handleAvatarClick = async () => {
+    // Kiểm tra lại từ server trước
+    const isApproved = await refreshApprovalStatus();
+    
+    if (!isApproved) {
       notifyWarning('Tài khoản của bạn chưa được phê duyệt. Vui lòng chờ admin phê duyệt để sử dụng tính năng này.');
       return;
     }
@@ -146,8 +222,10 @@ function PersonalInfo() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check if user is approved
-    if (!profile?.is_approved) {
+    // Kiểm tra lại từ server trước khi upload
+    const isApproved = await refreshApprovalStatus();
+    
+    if (!isApproved) {
       notifyWarning('Tài khoản của bạn chưa được phê duyệt. Vui lòng chờ admin phê duyệt để sử dụng tính năng này.');
       return;
     }
@@ -443,12 +521,11 @@ function PersonalInfo() {
                 className="info-avatar-large"
                 onClick={handleAvatarClick}
                 style={{
-                  cursor: profile?.is_approved ? 'pointer' : 'not-allowed',
+                  cursor: 'pointer',
                   position: 'relative',
-                  overflow: 'hidden',
-                  opacity: profile?.is_approved ? 1 : 0.6
+                  overflow: 'hidden'
                 }}
-                title={profile?.is_approved ? "Nhấn để thay đổi ảnh đại diện" : "Tài khoản chưa được phê duyệt"}
+                title="Nhấn để thay đổi ảnh đại diện"
               >
                 {isUploadingAvatar ? (
                   <span style={{ fontSize: '14px' }}>...</span>

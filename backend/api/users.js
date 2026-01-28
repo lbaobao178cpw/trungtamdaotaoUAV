@@ -71,11 +71,14 @@ router.get("/:id/profile", verifyStudent, async (req, res) => {
 
     const [rows] = await db.query(`
       SELECT
+        u.id,
         u.full_name,
         u.email,
         u.phone,
         u.created_at,
         u.avatar,
+        u.is_active,
+        u.is_approved,
 
         p.gender,
         p.identity_number,
@@ -308,6 +311,11 @@ router.put("/:id", verifyAdmin, async (req, res) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, profileData.identity_number, profileData.gender, profileData.birth_date, profileData.address, profileData.target_tier, profileData.uav_type, profileData.job_title, profileData.work_place, profileData.current_address, profileData.permanent_address, profileData.permanent_city_id, profileData.permanent_ward_id, profileData.current_city_id, profileData.current_ward_id, profileData.emergency_contact_name, profileData.emergency_contact_phone, profileData.emergency_contact_relation, profileData.usage_purpose, profileData.operation_area, profileData.uav_experience, profileData.identity_image_front, profileData.identity_image_back]
       );
+    }
+
+    // Nếu khóa tài khoản (is_active = false), xóa tất cả sessions của user
+    if (isActiveParam === 0) {
+      await db.query("DELETE FROM user_sessions WHERE user_id = ?", [id]);
     }
 
     res.json({ message: "Cập nhật thành công" });
@@ -545,6 +553,11 @@ router.put("/:id/approve", verifyAdmin, async (req, res) => {
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Không tìm thấy người dùng" });
+    }
+
+    // Nếu hủy phê duyệt, xóa tất cả sessions của user để logout ngay
+    if (!is_approved) {
+      await db.query("DELETE FROM user_sessions WHERE user_id = ?", [id]);
     }
 
     res.json({

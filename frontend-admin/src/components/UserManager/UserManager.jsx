@@ -34,11 +34,14 @@ export default function UserManager() {
   const [provinces, setProvinces] = useState([]);
   const [permanentWards, setPermanentWards] = useState([]);
   const [currentWards, setCurrentWards] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
   const [selectedPermanentCity, setSelectedPermanentCity] = useState('');
   const [selectedPermanentWard, setSelectedPermanentWard] = useState('');
   const [selectedCurrentCity, setSelectedCurrentCity] = useState('');
   const [selectedCurrentWard, setSelectedCurrentWard] = useState('');
   const [street, setStreet] = useState('');
+  const [errors, setErrors] = useState({});
 
   // === State cho điểm số ===
   const [userScores, setUserScores] = useState({});
@@ -97,6 +100,7 @@ export default function UserManager() {
     setSelectedCurrentWard('');
     setPermanentWards([]);
     setCurrentWards([]);
+    setErrors({}); // Reset errors
   }, []);
 
   const handleEditClick = (user) => {
@@ -159,6 +163,12 @@ export default function UserManager() {
       identity_image_back: user.identity_image_back || '',
       avatar: user.avatar || ''
     });
+    // Validate fields on load
+    setErrors(prev => ({
+      ...prev,
+      identity_number: form.identity_number && form.identity_number.length !== 12 ? 'CCCD phải có đúng 12 số' : '',
+      phone: form.phone && form.phone.length !== 10 ? 'Số điện thoại phải có đúng 10 số' : ''
+    }));
     // Immediately populate street and form.address so user sees existing address right away
     setStreet(user.address || '');
     setForm(prev => ({ ...prev, address: user.address || '' }));
@@ -373,6 +383,11 @@ export default function UserManager() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    // Check for validation errors
+    if (errors.identity_number || errors.phone) {
+      notifyError('Vui lòng sửa các lỗi trong form trước khi lưu.');
+      return;
+    }
     try {
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `${API_ENDPOINTS.USERS}/${form.id}` : API_ENDPOINTS.USERS;
@@ -488,7 +503,16 @@ export default function UserManager() {
           <form onSubmit={handleSave}>
             <div className="form-group"><label className="form-label">Họ và tên</label><input className="form-control" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>
             <div className="form-group"><label className="form-label">Email</label><input type="email" className="form-control" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div className="form-group"><label className="form-label">SĐT (Tài khoản)</label><input type="tel" className="form-control" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">SĐT (Tài khoản)</label><input type="tel" className="form-control" value={form.phone} onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, '');
+              setForm({ ...form, phone: value });
+              if (value.length !== 10) {
+                setErrors(prev => ({ ...prev, phone: 'Số điện thoại phải có đúng 10 số' }));
+              } else {
+                setErrors(prev => ({ ...prev, phone: '' }));
+              }
+            }} required />
+            {errors.phone && <small style={{ color: 'red', fontSize: '12px' }}>{errors.phone}</small>}</div>
             {!isEditing && <div className="form-group"><label className="form-label">Mật khẩu</label><input className="form-control" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mặc định: 123456" /></div>}
 
             <div style={{ display: "flex", gap: "10px" }}>
@@ -506,7 +530,16 @@ export default function UserManager() {
             {showDetails && (
               <div style={{ marginTop: 12, padding: 12, background: '#fbfbfc', border: '1px solid #eee', borderRadius: 6 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div className="form-group"><label className="form-label">CCCD</label><input className="form-control" value={form.identity_number || ''} onChange={(e) => setForm({ ...form, identity_number: e.target.value })} placeholder="Số định danh" /></div>
+                  <div className="form-group"><label className="form-label">CCCD</label><input className="form-control" value={form.identity_number || ''} onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setForm({ ...form, identity_number: value });
+                    if (value.length !== 12) {
+                      setErrors(prev => ({ ...prev, identity_number: 'CCCD phải có đúng 12 số' }));
+                    } else {
+                      setErrors(prev => ({ ...prev, identity_number: '' }));
+                    }
+                  }} placeholder="Số định danh (12 số)" />
+                  {errors.identity_number && <small style={{ color: 'red', fontSize: '12px' }}>{errors.identity_number}</small>}</div>
                   <div className="form-group"><label className="form-label">Ngày sinh</label><input type="date" className="form-control" value={form.birth_date || ''} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
 
                   <div className="form-group"><label className="form-label">Giới tính</label>
