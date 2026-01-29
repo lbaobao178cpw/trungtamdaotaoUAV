@@ -4,17 +4,12 @@ import { LogOut, User } from 'lucide-react';
 import { NavLink } from "react-router-dom";
 import './Heder.css';
 
-
-
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
-
   const [openMenu, setOpenMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-
 
   useEffect(() => {
     const checkLoginStatus = () => {
@@ -149,11 +144,7 @@ const Header = () => {
             <span></span>
             <span></span>
           </button>
-          
         </div>
-
-
-
       </div>
     </header>
   );

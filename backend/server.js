@@ -95,6 +95,7 @@ const studyMaterialsRoute = require("./api/studyMaterials");
 const faqsRoute = require("./api/faqs");
 const licensesRoute = require("./api/licenses");
 const otpRoute = require("./api/otp");
+const nghiepVuHangBRoute = require("./api/nghiepVuHangB");
 
 app.use("/api/users", usersRouter);
 app.use("/api", filesRoute);
@@ -113,6 +114,7 @@ app.use("/api/study-materials", studyMaterialsRoute);
 app.use("/api/faqs", faqsRoute);
 app.use("/api/licenses", licensesRoute);
 app.use("/api/otp", otpRoute);
+app.use("/api/nghiep-vu-hang-b", nghiepVuHangBRoute);
 
 // --- KHỞI ĐỘNG SERVER & KIỂM TRA DB ---
 const startServer = async () => {
@@ -121,186 +123,8 @@ const startServer = async () => {
     const [result] = await db.execute("SELECT 1");
     console.log("✅ Database connected successfully via Aiven!");
 
-    // === FIX STATUS COLUMN ===
-    try {
-      console.log("🔧 Checking and fixing legal_documents.status column...");
-      await db.execute(`
-        ALTER TABLE legal_documents 
-        MODIFY COLUMN status VARCHAR(20) 
-        DEFAULT 'a' 
-        NOT NULL
-      `);
-      console.log("✅ Status column is now VARCHAR(20)");
-    } catch (alterErr) {
-      if (alterErr.message.includes("Syntax error")) {
-        console.log("⚠️  Could not modify status column, it might already be correct");
-      } else {
-        console.log("⚠️  Error modifying status:", alterErr.message);
-      }
-    }
-
-    // === FIX FILE_URL COLUMN ===
-    try {
-      console.log("🔧 Checking and fixing forms.file_url column...");
-      await db.execute(`
-        ALTER TABLE forms 
-        MODIFY COLUMN file_url LONGTEXT 
-        NULL
-      `);
-      console.log("✅ file_url column is now NULLABLE");
-    } catch (alterErr) {
-      if (alterErr.message.includes("Syntax error")) {
-        console.log("⚠️  Could not modify file_url column, it might already be correct");
-      } else {
-        console.log("⚠️  Error modifying file_url:", alterErr.message);
-      }
-    }
-
-    // === FIX FORM_CODE COLUMN SIZE ===
-    try {
-      console.log("🔧 Checking and fixing forms.form_code column size...");
-      await db.execute(`
-        ALTER TABLE forms 
-        MODIFY COLUMN form_code VARCHAR(255) 
-        NOT NULL UNIQUE
-      `);
-      console.log("✅ form_code column is now VARCHAR(255)");
-    } catch (alterErr) {
-      if (alterErr.message.includes("Syntax error")) {
-        console.log("⚠️  Could not modify form_code column, it might already be correct");
-      } else {
-        console.log("⚠️  Error modifying form_code:", alterErr.message);
-      }
-    }
-
-    // === ADD DISPLAY_NAME COLUMN ===
-    try {
-      console.log("🔧 Checking and adding forms.display_name column...");
-      await db.execute(`
-        ALTER TABLE forms 
-        ADD COLUMN display_name VARCHAR(500)
-      `);
-      console.log("✅ display_name column added");
-    } catch (alterErr) {
-      if (alterErr.message.includes("Duplicate")) {
-        console.log("ℹ️  display_name column already exists");
-      } else if (alterErr.message.includes("Syntax error")) {
-        console.log("⚠️  Could not add display_name column");
-      } else {
-        console.log("⚠️  Error adding display_name:", alterErr.message);
-      }
-    }
-
-    // === CREATE MISSING TABLES ===
-    // Create footer_config table if not exists
-    try {
-      console.log("🔧 Creating footer_config table if not exists...");
-      await db.execute(`
-        CREATE TABLE IF NOT EXISTS footer_config (
-          id INT PRIMARY KEY,
-          company_name VARCHAR(255),
-          branch_name VARCHAR(255),
-          address TEXT,
-          email VARCHAR(255),
-          working_hours VARCHAR(255),
-          copyright_text TEXT,
-          legal_documents LONGTEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-      `);
-      console.log("✅ footer_config table ready");
-    } catch (err) {
-      console.error("⚠️  Error creating footer_config:", err.message);
-    }
-
-    // Create notifications table if not exists
-    try {
-      console.log("🔧 Creating notifications table if not exists...");
-      await db.execute(`
-        CREATE TABLE IF NOT EXISTS notifications (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          title VARCHAR(255) NOT NULL,
-          date DATE,
-          description TEXT,
-          link VARCHAR(500),
-          is_new TINYINT DEFAULT 1,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-      `);
-      console.log("✅ notifications table ready");
-    } catch (err) {
-      console.error("⚠️  Error creating notifications:", err.message);
-    }
-
-    // Create privacy_policy table if not exists
-    try {
-      console.log("🔧 Creating privacy_policy table if not exists...");
-      await db.execute(`
-        CREATE TABLE IF NOT EXISTS privacy_policy (
-          id INT PRIMARY KEY,
-          content LONGTEXT,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-      `);
-      console.log("✅ privacy_policy table ready");
-    } catch (err) {
-      console.error("⚠️  Error creating privacy_policy:", err.message);
-    }
-
-    // === ADD MISSING COLUMNS TO user_profiles ===
-    try {
-      console.log("🔧 Checking and adding missing columns to user_profiles...");
-      
-      // Danh sách các cột cần thêm
-      const columnsToAdd = [
-        { name: 'job_title', type: 'VARCHAR(255)' },
-        { name: 'work_place', type: 'VARCHAR(255)' },
-        { name: 'current_address', type: 'TEXT' },
-        { name: 'permanent_city_id', type: 'INT' },
-        { name: 'permanent_ward_id', type: 'INT' },
-        { name: 'current_city_id', type: 'INT' },
-        { name: 'current_ward_id', type: 'INT' },
-        { name: 'identity_image_front', type: 'LONGTEXT' },
-        { name: 'identity_image_back', type: 'LONGTEXT' }
-      ];
-
-      for (const col of columnsToAdd) {
-        try {
-          await db.execute(`
-            ALTER TABLE user_profiles 
-            ADD COLUMN ${col.name} ${col.type}
-          `);
-          console.log(`✅ Added column: ${col.name}`);
-        } catch (e) {
-          if (e.message.includes('Duplicate')) {
-            console.log(`ℹ️  Column ${col.name} already exists`);
-          } else {
-            throw e;
-          }
-        }
-      }
-      
-      console.log("✅ user_profiles migration completed");
-    } catch (err) {
-      console.error("⚠️  Error migrating user_profiles:", err.message);
-    }
-
-    // Create terms_of_service table if not exists
-    try {
-      console.log("🔧 Creating terms_of_service table if not exists...");
-      await db.execute(`
-        CREATE TABLE IF NOT EXISTS terms_of_service (
-          id INT PRIMARY KEY,
-          content LONGTEXT,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-      `);
-      console.log("✅ terms_of_service table ready");
-    } catch (err) {
-      console.error("⚠️  Error creating terms_of_service:", err.message);
-    }
+    // NOTE: Automatic DB alteration/migration code removed per request.
+    // Server will only test DB connection and start; it will not modify schema or seed data.
 
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on PORT: ${PORT}`);

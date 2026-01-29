@@ -298,6 +298,48 @@ function UAVLandingPage() {
     art: ["Trình diễn nghệ thuật UAV", "Biểu Diễn Mô Hình R/C", "Tổ hợp sáng tạo nội dung số UAV"],
   };
 
+  // Dynamic Hạng B groups (fetched from backend). Each group: { label, items }
+  const [hangBGroups, setHangBGroups] = useState({});
+  const [expandedItemId, setExpandedItemId] = useState(null);
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [modalGroup, setModalGroup] = useState(null);
+
+  // tab keys come from API-driven groups (no static fallback)
+  const tabKeys = Object.keys(hangBGroups);
+
+  useEffect(() => {
+    let mounted = true;
+    apiClient.get('/nghiep-vu-hang-b')
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        const grouped = {};
+
+        const defaultLabelFor = (key) => {
+          if (key === 'map') return 'Khảo sát bản đồ';
+          if (key === 'check') return 'Kiểm tra công nghiệp';
+          if (key === 'agro') return 'Nông Lâm Vận Tải';
+          if (key === 'art') return 'Trình diễn nghệ thuật';
+          return key;
+        };
+
+        data.forEach((item) => {
+          const rawCat = (item.category || '').toLowerCase();
+          let key = 'other';
+          if (rawCat.includes('map') || rawCat.includes('khảo')) key = 'map';
+          else if (rawCat.includes('check') || rawCat.includes('kiểm')) key = 'check';
+          else if (rawCat.includes('agro') || rawCat.includes('nông') || rawCat.includes('lâm')) key = 'agro';
+          else if (rawCat.includes('art') || rawCat.includes('trình') || rawCat.includes('biểu')) key = 'art';
+
+          if (!grouped[key]) grouped[key] = { label: item.category || defaultLabelFor(key), items: [] };
+          grouped[key].items.push(item);
+        });
+
+        if (mounted) setHangBGroups(grouped);
+      })
+      .catch((err) => console.error('Lỗi fetch nghiep vu hang B:', err));
+    return () => { mounted = false; };
+  }, []);
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -834,33 +876,56 @@ function UAVLandingPage() {
                 <span className="cert-tabs-label">Các nghiệp vụ bao gồm:</span>
 
                 <div className="cert-tabs-header scroll-x">
-                  {Object.keys(certTabsData).map((key) => (
+                  {tabKeys.map((key) => (
                     <button
                       key={key}
                       className={`cert-tab-btn ${activeCertTab === key ? "active" : ""}`}
                       onClick={() => setActiveCertTab(key)}
                     >
-                      {key === 'map'
-                        ? 'Khảo sát bản đồ'
-                        : key === 'check'
-                          ? 'Kiểm tra công nghiệp'
-                          : key === 'agro'
-                            ? 'Nông Lâm Vận Tải'
-                            : 'Trình diễn nghệ thuật'}
+                      {hangBGroups[key] && hangBGroups[key].label ? hangBGroups[key].label : key}
                     </button>
                   ))}
                 </div>
 
                 <div className="cert-tab-content">
                   <ul className="sub-list-arrow">
-                    {certTabsData[activeCertTab].map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
+                    {(hangBGroups[activeCertTab] && hangBGroups[activeCertTab].items && hangBGroups[activeCertTab].items.length > 0)
+                      ? hangBGroups[activeCertTab].items.map((item) => (
+                          <li
+                            key={item.id || item.code || item.title}
+                            className="hangb-item"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => {
+                              const key = item.id ?? item.code ?? item.title;
+                              setExpandedItemId(expandedItemId === key ? null : key);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const key = item.id ?? item.code ?? item.title;
+                                setExpandedItemId(expandedItemId === key ? null : key);
+                              }
+                            }}
+                            style={{cursor: 'pointer', outline: 'none'}}
+                          >
+                            <div className="hangb-item-row" style={{display: 'flex', alignItems: 'center'}}>
+                              <span style={{fontWeight: 600}}>{item.title || item.code || 'Nghiệp vụ'}</span>
+                            </div>
+                            {expandedItemId === (item.id ?? item.code ?? item.title) && (
+                              <div className="hangb-item-desc" style={{marginLeft: '16px', marginTop: '8px', color: '#333'}}>
+                                {item.description || 'Không có mô tả.'}
+                              </div>
+                            )}
+                          </li>
+                        ))
+                      : null
+                    }
                   </ul>
                 </div>
               </div>
 
-              <button className="uav-cert-btn-detail">Xem chi tiết</button>
+              <button className="uav-cert-btn-detail" onClick={() => { setModalGroup(hangBGroups[activeCertTab]); setShowCertModal(true); }}>Xem chi tiết</button>
             </div>
           </div>
         </div>
@@ -982,6 +1047,28 @@ function UAVLandingPage() {
           )}
         </div>
       </section>
+      {/* Certificate Details Modal */}
+      {showCertModal && modalGroup && (
+        <div className="modal-overlay" style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',justifyContent:'center',alignItems:'center',zIndex:9999}}>
+          <div className="modal-content" style={{width:'90%',maxWidth:'900px',background:'#fff',borderRadius:8,padding:20,boxShadow:'0 8px 40px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+              <h3 style={{margin:0}}>{modalGroup.label || 'Chi tiết nghiệp vụ'}</h3>
+              <button onClick={() => setShowCertModal(false)} style={{border:'none',background:'transparent',fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{maxHeight:'60vh',overflow:'auto'}}>
+              {modalGroup.items.map((it) => (
+                <div key={it.id || it.code} style={{marginBottom:18}}>
+                  <h4 style={{margin:'0 0 6px 0'}}>{it.title}</h4>
+                  <div style={{color:'#444',lineHeight:1.5}}>{it.description || 'Không có mô tả.'}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{textAlign:'right',marginTop:12}}>
+              <button className="btn" onClick={() => setShowCertModal(false)} style={{padding:'8px 16px',borderRadius:6}}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
