@@ -48,7 +48,7 @@ router.get("/", verifyAdmin, async (req, res) => {
         prov_curr.name as current_city_name, ward_curr.name as current_ward_name,
         p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relation,
         p.uav_type, p.usage_purpose, p.operation_area, p.uav_experience,
-        p.identity_image_front, p.identity_image_back
+        p.identity_image_front, p.identity_image_back, p.tier_b_services
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       LEFT JOIN provinces prov_perm ON p.permanent_city_id = prov_perm.id
@@ -105,7 +105,8 @@ router.get("/:id/profile", verifyStudent, async (req, res) => {
         p.operation_area,
         p.uav_experience,
         p.identity_image_front,
-        p.identity_image_back
+        p.identity_image_back,
+        p.tier_b_services
         
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
@@ -261,7 +262,8 @@ router.put("/:id", verifyAdmin, async (req, res) => {
       operation_area: operation_area || null,
       uav_experience: uav_experience || null,
       identity_image_front: identity_image_front || null,
-      identity_image_back: identity_image_back || null
+      identity_image_back: identity_image_back || null,
+      tier_b_services: tier_b_services ? JSON.stringify(tier_b_services) : null
     };
 
     // Cập nhật/tao profile trong bảng user_profiles
@@ -288,7 +290,8 @@ router.put("/:id", verifyAdmin, async (req, res) => {
            operation_area = COALESCE(?, operation_area),
            uav_experience = COALESCE(?, uav_experience),
            identity_image_front = COALESCE(?, identity_image_front),
-           identity_image_back = COALESCE(?, identity_image_back)
+           identity_image_back = COALESCE(?, identity_image_back),
+           tier_b_services = COALESCE(?, tier_b_services)
        WHERE user_id = ?`,
       [
         profileData.identity_number, 
@@ -313,6 +316,7 @@ router.put("/:id", verifyAdmin, async (req, res) => {
         profileData.uav_experience,
         profileData.identity_image_front,
         profileData.identity_image_back,
+        profileData.tier_b_services,
         id
       ]
     );
@@ -320,9 +324,9 @@ router.put("/:id", verifyAdmin, async (req, res) => {
     // Nếu chưa có profile (affectedRows === 0), tạo mới
     if (profileUpdateResult && profileUpdateResult.affectedRows === 0) {
       await db.query(
-        `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type, job_title, work_place, current_address, permanent_address, permanent_city_id, permanent_ward_id, current_city_id, current_ward_id, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, usage_purpose, operation_area, uav_experience, identity_image_front, identity_image_back)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, profileData.identity_number, profileData.gender, profileData.birth_date, profileData.address, profileData.target_tier, profileData.uav_type, profileData.job_title, profileData.work_place, profileData.current_address, profileData.permanent_address, profileData.permanent_city_id, profileData.permanent_ward_id, profileData.current_city_id, profileData.current_ward_id, profileData.emergency_contact_name, profileData.emergency_contact_phone, profileData.emergency_contact_relation, profileData.usage_purpose, profileData.operation_area, profileData.uav_experience, profileData.identity_image_front, profileData.identity_image_back]
+        `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type, job_title, work_place, current_address, permanent_address, permanent_city_id, permanent_ward_id, current_city_id, current_ward_id, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, usage_purpose, operation_area, uav_experience, identity_image_front, identity_image_back, tier_b_services)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, profileData.identity_number, profileData.gender, profileData.birth_date, profileData.address, profileData.target_tier, profileData.uav_type, profileData.job_title, profileData.work_place, profileData.current_address, profileData.permanent_address, profileData.permanent_city_id, profileData.permanent_ward_id, profileData.current_city_id, profileData.current_ward_id, profileData.emergency_contact_name, profileData.emergency_contact_phone, profileData.emergency_contact_relation, profileData.usage_purpose, profileData.operation_area, profileData.uav_experience, profileData.identity_image_front, profileData.identity_image_back, profileData.tier_b_services]
       );
     }
 

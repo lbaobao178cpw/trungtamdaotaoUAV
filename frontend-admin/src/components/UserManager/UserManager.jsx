@@ -48,6 +48,9 @@ export default function UserManager() {
   const [userScores, setUserScores] = useState({});
   const [loadingScores, setLoadingScores] = useState({});
 
+  // === State cho Tier B Services ===
+  const [tierBServices, setTierBServices] = useState([]);
+
   // === FETCH USERS WITH CUSTOM HOOK ===
   const { data: usersData, loading, refetch: refreshUsers } = useApi(API_ENDPOINTS.USERS);
   const allUsers = useMemo(() => Array.isArray(usersData) ? usersData : [], [usersData]);
@@ -349,6 +352,22 @@ export default function UserManager() {
   // Load provinces on component mount
   useEffect(() => {
     fetchProvinces();
+    // Fetch tier B services
+    const fetchTierBServices = async () => {
+      try {
+        const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
+          ? import.meta.env.VITE_API_BASE
+          : `${window.location.protocol}//${window.location.hostname}:5000`;
+        const res = await fetch(`${base}/api/nghiep-vu-hang-b`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTierBServices(data);
+        }
+      } catch (error) {
+        console.error('Error loading Tier B services:', error);
+      }
+    };
+    fetchTierBServices();
   }, []);
 
   // Load wards when permanent city changes
@@ -873,7 +892,7 @@ export default function UserManager() {
                     )}
 
                     {/* Kinh nghiệm bay */}
-                    {(user.usage_purpose || user.operation_area || user.uav_experience) && (
+                    {(user.usage_purpose || user.operation_area || user.uav_experience || user.tier_b_services) && (
                       <div style={{ marginTop: '12px', padding: '10px', background: '#fff', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                         <strong style={{ fontSize: '13px', color: '#1f2937', display: 'block', marginBottom: '6px' }}>Kinh nghiệm bay</strong>
                         <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -889,6 +908,27 @@ export default function UserManager() {
                             </div>
                           )}
                           {user.uav_experience && <div>Kinh nghiệm: {user.uav_experience}</div>}
+                          {user.tier_b_services && (
+                            <div>
+                              Nghiệp vụ đăng kí: {
+                                (() => {
+                                  try {
+                                    const serviceIds = Array.isArray(user.tier_b_services) 
+                                      ? user.tier_b_services 
+                                      : typeof user.tier_b_services === 'string'
+                                      ? JSON.parse(user.tier_b_services)
+                                      : [];
+                                    const serviceNames = serviceIds
+                                      .map(id => tierBServices.find(s => s.id === id)?.title || `ID: ${id}`)
+                                      .join(', ');
+                                    return serviceNames || '---';
+                                  } catch {
+                                    return '---';
+                                  }
+                                })()
+                              }
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

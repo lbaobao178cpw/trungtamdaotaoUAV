@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { apiClient } from '../../lib/apiInterceptor';
 import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
+import { API_ENDPOINTS } from '../../config/apiConfig';
 
 function PersonalInfo() {
 
@@ -10,6 +11,20 @@ function PersonalInfo() {
   const fileInputRef = useRef(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState(profile?.is_approved);
+  const [tierBServices, setTierBServices] = useState([]);
+
+  // Fetch tier B services
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await apiClient.get(`${API_ENDPOINTS.BASE_URL}/nghiep-vu-hang-b`);
+        setTierBServices(res.data || []);
+      } catch (err) {
+        console.error('Error fetching tier B services:', err);
+      }
+    };
+    fetchServices();
+  }, []);
 
   // Kiểm tra status phê duyệt từ localStorage hoặc fetch lại từ server
   useEffect(() => {
@@ -380,6 +395,33 @@ function PersonalInfo() {
                     {profile.created_at ? formatDate(profile.created_at) : '--'}
                   </span>
                 </div>
+
+                {profile.tier_b_services && (
+                  <div className="info-row">
+                    <span className="info-label">Nghiệp vụ đã đăng kí</span>
+                    <span className="info-value">
+                      {(() => {
+                        try {
+                          const serviceIds = typeof profile.tier_b_services === 'string'
+                            ? JSON.parse(profile.tier_b_services)
+                            : Array.isArray(profile.tier_b_services)
+                              ? profile.tier_b_services
+                              : [];
+                          
+                          if (!serviceIds.length) return '--';
+                          
+                          const serviceNames = serviceIds
+                            .map(id => tierBServices.find(s => s.id === id)?.title || `ID: ${id}`)
+                            .join(', ');
+                          
+                          return serviceNames || '--';
+                        } catch (err) {
+                          return '--';
+                        }
+                      })()}
+                    </span>
+                  </div>
+                )}
               </div>
 
             </div>
