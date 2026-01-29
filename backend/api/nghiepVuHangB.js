@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { verifyAdmin } = require('../middleware/verifyToken');
 
 // GET /api/nghiep-vu-hang-b - list (optionally filter by category)
 // Note: duration_minutes and price are intentionally excluded from responses
@@ -41,7 +42,7 @@ router.get('/:id', async (req, res) => {
 
 // POST create (admin)
 // duration_minutes and price are ignored/omitted
-router.post('/', async (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   try {
     const { code, title, description, category, is_active = 1, sort_order = 0 } = req.body;
     const sql = `INSERT INTO nghiep_vu_hang_b (code, title, description, category, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -59,7 +60,7 @@ router.post('/', async (req, res) => {
 
 // PUT update
 // duration_minutes and price are ignored/omitted
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { code, title, description, category, is_active, sort_order } = req.body;
@@ -78,7 +79,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const [result] = await pool.execute('DELETE FROM nghiep_vu_hang_b WHERE id = ?', [id]);
