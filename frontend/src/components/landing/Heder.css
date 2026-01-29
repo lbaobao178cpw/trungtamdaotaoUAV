@@ -358,15 +358,31 @@
         padding: 8px 12px !important;
         display: block !important;
     }
-    
-        .header .nav-container .user-menu {
+    /* Default: keep hamburger in normal flow for logged-out state so it won't overlap login/register */
+    .header .nav-container .menu-toggle {
+        position: static !important;
+        right: auto !important;
+        top: auto !important;
+        transform: none !important;
+    }
+
+    /* When user-menu exists (logged-in), position user icon at right */
+    .header .nav-container .user-menu {
         position: absolute !important;
         right: 8px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         z-index: 1300 !important;
     }
-    .header .nav-container .menu-toggle { right: 88px; position: absolute; }
+
+    /* If user-menu is present immediately before the toggle, position the hamburger to the left of user icon */
+    .header .nav-container .user-menu + .menu-toggle {
+        position: absolute !important;
+        right: 88px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 1300 !important;
+    }
 }
 
 /* Strong mobile layout: hamburger at left, logo centered, user icon at right */
