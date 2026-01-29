@@ -378,21 +378,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       connection.release();
     }
 
-    // Fetch user profile to get certificate_type (target_tier)
-    const [profileRows] = await db.query(
-      "SELECT target_tier FROM user_profiles WHERE user_id = ? LIMIT 1",
-      [user.id]
-    );
-
-    let responseData = { 
-      id: user.id, 
-      full_name: user.full_name, 
-      email: user.email, 
-      phone: user.phone, 
-      role: user.role, 
-      avatar: user.avatar,
-      certificate_type: profileRows.length > 0 ? profileRows[0].target_tier : null
-    };
+    let responseData = { id: user.id, full_name: user.full_name, email: user.email, phone: user.phone, role: user.role, avatar: user.avatar };
     if (user.role === 'admin') responseData.permissions = ['manage_users', 'manage_courses', 'manage_exams', 'manage_settings'];
 
     res.json({ 
