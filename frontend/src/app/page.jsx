@@ -206,6 +206,44 @@ function UAVLandingPage() {
     setWebglSupported(checkWebGLSupport());
   }, []);
 
+  // Lắng nghe sự kiện userLoggedIn để cập nhật user state
+  useEffect(() => {
+    const handleUserLoggedIn = () => {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    };
+
+    window.addEventListener('userLoggedIn', handleUserLoggedIn);
+    return () => window.removeEventListener('userLoggedIn', handleUserLoggedIn);
+  }, []);
+
+  // Polling để cập nhật certificate_type khi admin thay đổi
+  useEffect(() => {
+    if (!user || !user.id) return; // Chỉ poll khi user đã login
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await apiClient.get(`/users/${user.id}/profile`);
+        const profileData = response.data;
+        
+        // Cập nhật certificate_type nếu khác
+        if (profileData.target_tier && profileData.target_tier !== user.certificate_type) {
+          const updatedUser = { ...user, certificate_type: profileData.target_tier };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log('✅ Certificate type updated:', profileData.target_tier);
+        }
+      } catch (error) {
+        // Lỗi polling không cần báo, tiếp tục
+        console.debug('Polling update error:', error.message);
+      }
+    }, 5000); // Poll mỗi 5 giây
+
+    return () => clearInterval(pollInterval);
+  }, [user]);
+
   useActivate(() => {
     window.dispatchEvent(new Event("resize"));
   });
@@ -792,57 +830,59 @@ function UAVLandingPage() {
                   </ul>
                 </div>
               </div> */}
-              <div className="cert-tabs-container">
-                <span className="cert-tabs-label">Các nghiệp vụ bao gồm:</span>
+              {user && user.certificate_type === 'B' && (
+                <div className="cert-tabs-container">
+                  <span className="cert-tabs-label">Các nghiệp vụ bao gồm:</span>
 
-                <div className="cert-tabs-header scroll-x">
-                  {tabKeys.map((key) => (
-                    <button
-                      key={key}
-                      className={`cert-tab-btn ${activeCertTab === key ? "active" : ""}`}
-                      onClick={() => setActiveCertTab(key)}
-                    >
-                      {hangBGroups[key] && hangBGroups[key].label ? hangBGroups[key].label : key}
-                    </button>
-                  ))}
-                </div>
+                  <div className="cert-tabs-header scroll-x">
+                    {tabKeys.map((key) => (
+                      <button
+                        key={key}
+                        className={`cert-tab-btn ${activeCertTab === key ? "active" : ""}`}
+                        onClick={() => setActiveCertTab(key)}
+                      >
+                        {hangBGroups[key] && hangBGroups[key].label ? hangBGroups[key].label : key}
+                      </button>
+                    ))}
+                  </div>
 
-                <div className="cert-tab-content">
-                  <ul className="sub-list-arrow">
-                    {(hangBGroups[activeCertTab] && hangBGroups[activeCertTab].items && hangBGroups[activeCertTab].items.length > 0)
-                      ? hangBGroups[activeCertTab].items.map((item) => (
-                          <li
-                            key={item.id || item.code || item.title}
-                            className="hangb-item"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              const key = item.id ?? item.code ?? item.title;
-                              setExpandedItemId(expandedItemId === key ? null : key);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
+                  <div className="cert-tab-content">
+                    <ul className="sub-list-arrow">
+                      {(hangBGroups[activeCertTab] && hangBGroups[activeCertTab].items && hangBGroups[activeCertTab].items.length > 0)
+                        ? hangBGroups[activeCertTab].items.map((item) => (
+                            <li
+                              key={item.id || item.code || item.title}
+                              className="hangb-item"
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
                                 const key = item.id ?? item.code ?? item.title;
                                 setExpandedItemId(expandedItemId === key ? null : key);
-                              }
-                            }}
-                          >
-                            <div className="hangb-item-row">
-                              <span className="hangb-item-title">{item.title || item.code || 'Nghiệp vụ'}</span>
-                            </div>
-                            {expandedItemId === (item.id ?? item.code ?? item.title) && (
-                              <div className="hangb-item-desc">
-                                {item.description || 'Không có mô tả.'}
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  const key = item.id ?? item.code ?? item.title;
+                                  setExpandedItemId(expandedItemId === key ? null : key);
+                                }
+                              }}
+                            >
+                              <div className="hangb-item-row">
+                                <span className="hangb-item-title">{item.title || item.code || 'Nghiệp vụ'}</span>
                               </div>
-                            )}
-                          </li>
-                        ))
-                      : null
-                    }
-                  </ul>
+                              {expandedItemId === (item.id ?? item.code ?? item.title) && (
+                                <div className="hangb-item-desc">
+                                  {item.description || 'Không có mô tả.'}
+                                </div>
+                              )}
+                            </li>
+                          ))
+                        : null
+                      }
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* detail button removed */}
             </div>
