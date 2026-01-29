@@ -165,7 +165,7 @@ router.post("/register", registerLimiter, async (req, res) => {
       currentCityId, currentWardId,
       emergencyName, emergencyPhone, emergencyRelation,
       uavTypes, uavPurpose, activityArea, experience, certificateType,
-      cccdFront, cccdBack
+      cccdFront, cccdBack, tierBServices
     } = req.body;
 
     // === VALIDATION: TẤT CẢ CÁC TRƯỜNG BẮT BUỘC ===
@@ -234,9 +234,13 @@ router.post("/register", registerLimiter, async (req, res) => {
         permanent_city_id, permanent_ward_id, current_city_id, current_ward_id,
         emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
         uav_type, usage_purpose, operation_area, uav_experience, target_tier,
-        identity_image_front, identity_image_back)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        identity_image_front, identity_image_back, tier_b_services)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
+    const tierBServicesJson = tierBServices && tierBServices.length > 0 
+      ? JSON.stringify(tierBServices) 
+      : null;
 
     await connection.query(insertProfileSql, [
       newUserId, 
@@ -261,8 +265,8 @@ router.post("/register", registerLimiter, async (req, res) => {
       experience,
       certificateType || null,
       cccdFront || null,
-      cccdBack || null
-
+      cccdBack || null,
+      tierBServicesJson
     ]);
 
     await connection.commit();

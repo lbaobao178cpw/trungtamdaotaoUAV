@@ -361,6 +361,78 @@
 }
 
 /* =========================================
+   TIER B SERVICES
+   ========================================= */
+.tier-b-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+}
+
+.tier-b-section h4 {
+    margin: 0 0 12px 0;
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.tier-b-category {
+    margin-bottom: 12px;
+}
+
+.tier-b-category-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #075985;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e0f2fe;
+}
+
+.tier-b-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding-left: 6px;
+}
+
+.tier-b-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #c7e0fb;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.tier-b-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(2, 6, 23, 0.06);
+}
+
+.tier-b-option.selected {
+    background: #e6f2ff;
+    border-color: #0369a1;
+}
+
+.tier-b-option input[type="radio"]{
+    width: 18px;
+    height: 18px;
+    accent-color: #0369a1;
+}
+
+.tier-b-option span {
+    font-size: 0.95rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* =========================================
    SUMMARY SECTION
    ========================================= */
 .summary-section {

@@ -28,6 +28,7 @@ function RegisterPage() {
   const [provinces, setProvinces] = useState([]);
   const [permanentWards, setPermanentWards] = useState([]);
   const [currentWards, setCurrentWards] = useState([]);
+  const [tierBServices, setTierBServices] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -49,6 +50,7 @@ function RegisterPage() {
     email: "", phone: "", password: "", confirmPassword: "",
     emergencyName: "", emergencyRelation: "", emergencyPhone: "",
     uavPurpose: "", activityArea: "", experience: "", certificateType: preSelectedTier,
+    tierBServices: [],
     confirmations: [],
   });
 
@@ -69,7 +71,21 @@ function RegisterPage() {
         console.error('Error loading provinces:', error);
       }
     };
+
+    const fetchTierBServices = async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.BASE_URL}/nghiep-vu-hang-b`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTierBServices(data);
+        }
+      } catch (error) {
+        console.error('Error loading Tier B services:', error);
+      }
+    };
+
     fetchProvinces();
+    fetchTierBServices();
   }, []);
 
   useEffect(() => {
@@ -142,6 +158,12 @@ function RegisterPage() {
           currentWardName: checked ? prev.permanentWardName : "",
         }));
       }
+    } else if (type === "radio" && name === "tierBService") {
+      const serviceId = Number(value);
+      setFormData((prev) => ({
+        ...prev,
+        tierBServices: [serviceId]
+      }));
     } else if (type === "file") {
       const file = files[0];
       if (file) {
@@ -607,6 +629,42 @@ function RegisterPage() {
           </label>
         </div>
         {errors.certificateType && <p className="error-text">{errors.certificateType}</p>}
+
+        {formData.certificateType === "B" && (
+          <div className="tier-b-section">
+            <h4>Các nghiệp vụ Hạng B (Tùy chọn)</h4>
+            {tierBServices.length > 0 ? (
+              Object.entries(
+                tierBServices.reduce((acc, service) => {
+                  const category = service.category || 'Khác';
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(service);
+                  return acc;
+                }, {})
+              ).map(([category, services]) => (
+                <div key={category} className="tier-b-category">
+                  <h5 className="tier-b-category-title">{category}</h5>
+                  <div className="tier-b-grid">
+                    {services.map((service) => (
+                      <label key={service.id} className={`tier-b-option ${formData.tierBServices[0] === service.id ? 'selected' : ''}`}>
+                        <input
+                          type="radio"
+                          name="tierBService"
+                          value={service.id}
+                          checked={formData.tierBServices[0] === service.id}
+                          onChange={handleInputChange}
+                        />
+                        <span>{service.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: '#999', fontSize: '0.9rem' }}>Đang tải danh sách...</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="form-section">
