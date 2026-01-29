@@ -1,0 +1,32 @@
+.nvhb-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.nvhb-table th,
+.nvhb-table td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.nvhb-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.nvhb-btn-small {
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1;
+  min-width: 36px;
+  border-radius: 4px;
+}
+
+.nvhb-panel-header .nvhb-btn-small {
+  padding: 4px 10px;
+}

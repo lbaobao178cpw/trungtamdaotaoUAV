@@ -6,7 +6,7 @@ const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verif
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
-// Normalize gender for storage: map common variants to 'Nam' or 'Nữ', else capitalize
+// Normalize gender for storage: accept only 'Nam' or 'Nữ' (case/diacritics-insensitive)
 function normalizeGenderForStorage(g) {
   if (!g) return null;
   try {
@@ -14,11 +14,11 @@ function normalizeGenderForStorage(g) {
     if (s === '') return null;
     const lowered = s.toLowerCase();
     const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
-    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    if (stripped === 'nam') return 'Nam';
+    if (stripped === 'nu') return 'Nữ';
+    return null;
   } catch (e) {
-    return g;
+    return null;
   }
 }
 
