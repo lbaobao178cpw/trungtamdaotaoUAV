@@ -812,26 +812,26 @@ function UAVLandingPage() {
                     {(hangBGroups[activeCertTab] && hangBGroups[activeCertTab].items && hangBGroups[activeCertTab].items.length > 0)
                       ? hangBGroups[activeCertTab].items.map((item) => (
                           <li
-                            key={item.id || item.code || item.title}
+                            key={item.id || item.title}
                             className="hangb-item"
                             role="button"
                             tabIndex={0}
                             onClick={() => {
-                              const key = item.id ?? item.code ?? item.title;
+                              const key = item.id ?? item.title;
                               setExpandedItemId(expandedItemId === key ? null : key);
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                const key = item.id ?? item.code ?? item.title;
+                                const key = item.id ?? item.title;
                                 setExpandedItemId(expandedItemId === key ? null : key);
                               }
                             }}
                           >
                             <div className="hangb-item-row">
-                              <span className="hangb-item-title">{item.title || item.code || 'Nghiệp vụ'}</span>
+                              <span className="hangb-item-title">{item.title || 'Nghiệp vụ'}</span>
                             </div>
-                            {expandedItemId === (item.id ?? item.code ?? item.title) && (
+                            {expandedItemId === (item.id ?? item.title) && (
                               <div className="hangb-item-desc">
                                 {item.description || 'Không có mô tả.'}
                               </div>
@@ -975,7 +975,7 @@ function UAVLandingPage() {
             </div>
             <div className="cert-modal-body">
               {modalGroup.items.map((it) => (
-                <div key={it.id || it.code} className="cert-modal-item">
+                <div key={it.id} className="cert-modal-item">
                   <h4 className="cert-modal-item-title">{it.title}</h4>
                   <div className="cert-modal-item-desc">{it.description || 'Không có mô tả.'}</div>
                 </div>

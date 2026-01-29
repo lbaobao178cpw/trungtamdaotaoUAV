@@ -8,7 +8,7 @@ const { verifyAdmin } = require('../middleware/verifyToken');
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
-    let sql = `SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+    let sql = `SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
                FROM nghiep_vu_hang_b WHERE is_active = 1`;
     const params = [];
     if (category) {
@@ -29,7 +29,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
@@ -44,11 +44,11 @@ router.get('/:id', async (req, res) => {
 // duration_minutes and price are ignored/omitted
 router.post('/', verifyAdmin, async (req, res) => {
   try {
-    const { code, title, description, category, is_active = 1, sort_order = 0 } = req.body;
-    const sql = `INSERT INTO nghiep_vu_hang_b (code, title, description, category, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.execute(sql, [code, title, description, category, is_active ? 1 : 0, sort_order]);
+    const { title, description, category, is_active = 1, sort_order = 0 } = req.body;
+    const sql = `INSERT INTO nghiep_vu_hang_b (title, description, category, is_active, sort_order) VALUES (?, ?, ?, ?, ?)`;
+    const [result] = await pool.execute(sql, [title, description, category, is_active ? 1 : 0, sort_order]);
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [result.insertId]);
     res.status(201).json(rows[0]);
@@ -63,12 +63,12 @@ router.post('/', verifyAdmin, async (req, res) => {
 router.put('/:id', verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, title, description, category, is_active, sort_order } = req.body;
-    const sql = `UPDATE nghiep_vu_hang_b SET code = ?, title = ?, description = ?, category = ?, is_active = ?, sort_order = ?, updated_at = NOW() WHERE id = ?`;
-    const [result] = await pool.execute(sql, [code, title, description, category, is_active ? 1 : 0, sort_order, id]);
+    const { title, description, category, is_active, sort_order } = req.body;
+    const sql = `UPDATE nghiep_vu_hang_b SET title = ?, description = ?, category = ?, is_active = ?, sort_order = ?, updated_at = NOW() WHERE id = ?`;
+    const [result] = await pool.execute(sql, [ title, description, category, is_active ? 1 : 0, sort_order, id]);
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Not found' });
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [id]);
     res.json(rows[0]);

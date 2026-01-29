@@ -10,7 +10,7 @@ const API_URL = `${API_BASE_URL}/nghiep-vu-hang-b`;
 export default function NghiepVuHangBManager() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ id: '', code: '', title: '', description: '', category: 'map', is_active: true, sort_order: 0 });
+  const [form, setForm] = useState({ id: '', title: '', description: '', category: 'map', is_active: true, sort_order: 0 });
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => { fetchItems(); }, []);
@@ -31,7 +31,7 @@ export default function NghiepVuHangBManager() {
   };
 
   const handleNew = () => {
-    setForm({ id: '', code: '', title: '', description: '', category: 'map', duration_minutes: 0, price: 0, is_active: true, sort_order: 0 });
+    setForm({ id: '', title: '', description: '', category: 'map', duration_minutes: 0, price: 0, is_active: true, sort_order: 0 });
     setIsEditing(false);
   };
 
@@ -71,10 +71,6 @@ export default function NghiepVuHangBManager() {
             </div>
         <form className="form-section" onSubmit={handleSave}>
           <div className="form-group">
-            <label className="form-label">Mã</label>
-            <input className="form-control" value={form.code} onChange={e => setForm({...form, code: e.target.value})} />
-          </div>
-          <div className="form-group">
             <label className="form-label">Tiêu đề</label>
             <input className="form-control" value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
           </div>
@@ -109,7 +105,6 @@ export default function NghiepVuHangBManager() {
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', verticalAlign: 'middle' }}>ID</th>
-                  <th style={{ textAlign: 'center', verticalAlign: 'middle' }}>Code</th>
                   <th style={{ textAlign: 'center', verticalAlign: 'middle' }}>Title</th>
                   <th style={{ textAlign: 'center', verticalAlign: 'middle' }}>Category</th>
                   
@@ -121,7 +116,6 @@ export default function NghiepVuHangBManager() {
                 {items.map(it => (
                   <tr key={it.id}>
                     <td>{it.id}</td>
-                    <td>{it.code}</td>
                     <td>{it.title}</td>
                     <td>{it.category}</td>
                     <td>{it.is_active ? 'Yes' : 'No'}</td>
