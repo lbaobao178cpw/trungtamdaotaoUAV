@@ -1,32 +1,239 @@
-.nvhb-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
+/* Layout chính */
+.nvhb-container {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  align-items: flex-start;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
-.nvhb-table th,
-.nvhb-table td {
-  text-align: center;
-  vertical-align: middle;
-  padding: 8px 6px;
+.nvhb-panel-form {
+  flex: 1;
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nvhb-panel-list {
+  flex: 1.5;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+.nvhb-list-scroll {
+  overflow-y: auto;
+  padding: 15px;
+  flex: 1;
+  position: relative; /* Cần cho hiệu ứng kéo */
+}
+
+/* --- DRAG & DROP GROUP --- */
+.nvhb-group {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  background: #fff;
+  overflow: hidden;
+  /* THÊM transition để nhảy vị trí mượt hơn */
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Khi đang kéo nhóm */
+.nvhb-group.dragging-group {
+  opacity: 0.5;
+  border: 2px dashed #0050b8;
+  background: #f8fbff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nvhb-group-header {
+  background: #f8f9fa;
+  padding: 12px 16px;
+  cursor: grab;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #2c3e50;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+}
+
+.nvhb-group-header:active {
+  cursor: grabbing;
+}
+
+.nvhb-group-header.expanded {
   border-bottom: 1px solid #eee;
+  background: #f1f3f5;
 }
 
+.nvhb-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nvhb-drag-handle-group {
+  color: #0050b8;
+  font-size: 18px;
+  cursor: grab;
+  padding-right: 5px;
+}
+
+.nvhb-group-icon {
+  font-size: 12px;
+  color: #666;
+  transition: transform 0.2s;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.nvhb-group-icon.open {
+  transform: rotate(180deg);
+}
+
+/* --- DRAG & DROP ITEM --- */
+.nvhb-group-body {
+  background: #fff;
+}
+
+.nvhb-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: grab;
+  background: #fff;
+  /* THÊM transition */
+  transition: all 0.15s ease-in-out;
+}
+
+.nvhb-item:last-child {
+  border-bottom: none;
+}
+
+/* Khi đang kéo item con */
+.nvhb-item.dragging-item {
+  background: #e3f2fd;
+  opacity: 0.3; /* Làm mờ item gốc đang bị kéo đi */
+  border: 1px dashed #2196f3;
+}
+
+/* Class giả để tạo vùng trống (placeholder) - tuỳ chọn nâng cao */
+.nvhb-item.drag-placeholder {
+  height: 60px;
+  background: #f0f0f0;
+  border: 2px dashed #ccc;
+}
+
+.nvhb-item-content {
+  flex: 1;
+  margin-right: 15px;
+}
+
+.nvhb-item-title {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nvhb-drag-handle-item {
+  color: #adb5bd;
+  font-size: 16px;
+  cursor: grab;
+}
+
+.nvhb-item-desc {
+  font-size: 13px;
+  color: #7f8c8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.nvhb-status-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #eee;
+  color: #666;
+}
+
+.nvhb-status-badge.active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Các phần form và button giữ nguyên... */
+.form-group {
+  margin-bottom: 15px;
+}
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #444;
+  font-size: 13px;
+}
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+.form-control:focus {
+  border-color: #0050b8;
+  outline: none;
+}
+.nvhb-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primary {
+  background: #0050b8;
+  color: #fff;
+}
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+.btn:hover {
+  opacity: 0.9;
+}
 .nvhb-actions {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
+  gap: 6px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
-
-.nvhb-btn-small {
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1;
-  min-width: 36px;
-  border-radius: 4px;
-}
-
-.nvhb-panel-header .nvhb-btn-small {
-  padding: 4px 10px;
+.nvhb-item:hover .nvhb-actions {
+  opacity: 1;
 }
