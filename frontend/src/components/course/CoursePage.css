@@ -396,6 +396,21 @@
   .courses-grid {
     grid-template-columns: 1fr;
   }
+  /* Force rating text below stars on small screens */
+  .course-rating {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .course-rating .stars {
+    margin-bottom: 6px !important;
+  }
+  .course-rating .rating-text,
+  .course-rating span {
+    display: block !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    font-size: 13px !important;
+  }
 }
 /* --- STYLE MỚI CHO BADGE GIỐNG TRANG CHỦ --- */
 
