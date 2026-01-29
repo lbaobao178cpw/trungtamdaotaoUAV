@@ -141,6 +141,42 @@ a:hover {
   border-color: var(--primary-color); /* Hover viền vàng */
 }
 
+/* Course rating: make rating text appear under stars on small screens */
+.course-rating {
+  display: flex;
+  align-items: center;
+}
+.course-rating .stars {
+  display: flex;
+}
+.course-rating .rating-text,
+.course-rating span {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #b0b0b0;
+}
+
+@media (max-width: 768px) {
+  .course-rating {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .course-rating .stars {
+    margin-bottom: 6px !important;
+    order: 1;
+  }
+  .course-rating .rating-text,
+  .course-rating span {
+    display: block !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    font-size: 13px !important;
+    color: #9aa3ad !important;
+    order: 2;
+  }
+  .course-rating .rating-text { text-align: left !important; }
+}
+
 /* Xử lý các tiêu đề bên trong card */
 .common-card h3,
 .objective-card h3, 
