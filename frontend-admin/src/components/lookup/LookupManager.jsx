@@ -41,6 +41,8 @@ export default function LookupManager() {
     const [userSearchInput, setUserSearchInput] = useState("");
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [message, setMessage] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
     const userSearchRef = useRef(null);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
@@ -74,16 +76,43 @@ export default function LookupManager() {
         return licenses.find(l => l.userId === userId);
     };
 
-    // === CLOSE DROPDOWN ON OUTSIDE CLICK ===
+    // === CHECK AND UPDATE EXPIRED LICENSES ===
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (userSearchRef.current && !userSearchRef.current.contains(e.target)) {
-                setShowUserDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        if (licenses.length > 0 && users.length > 0) {
+            const today = new Date();
+            const userIds = new Set(users.map(u => u.id));
+            licenses.forEach(license => {
+                if (!license.expireDate || !userIds.has(license.userId)) return;
+
+                const expireDate = new Date(license.expireDate);
+                const isExpired = expireDate < today;
+
+                if (isExpired && license.status !== 'expired') {
+                    // Update status to expired
+                    saveLicense({
+                        url: `${API_ENDPOINTS.LICENSES}/${license.licenseNumber}`,
+                        method: 'PUT',
+                        data: { ...license, status: 'expired' }
+                    }).then(() => {
+                        refreshLicenses();
+                    }).catch(error => {
+                        console.error('Error updating expired license:', error);
+                    });
+                } else if (!isExpired && license.status === 'expired') {
+                    // Update status to active if previously expired but now valid
+                    saveLicense({
+                        url: `${API_ENDPOINTS.LICENSES}/${license.licenseNumber}`,
+                        method: 'PUT',
+                        data: { ...license, status: 'active' }
+                    }).then(() => {
+                        refreshLicenses();
+                    }).catch(error => {
+                        console.error('Error updating active license:', error);
+                    });
+                }
+            });
+        }
+    }, [licenses, users, saveLicense, refreshLicenses]);
 
     // === SELECT USER HANDLER ===
     const handleSelectUser = (user) => {
@@ -119,6 +148,7 @@ export default function LookupManager() {
         setForm({
             ...license,
             status: license.status || "active",
+            licenseImage: license.portraitImage || null,
         });
         setUserSearchInput(selectedUser?.full_name || String(license.userId) || "");
         setShowUserDropdown(false);
@@ -149,6 +179,10 @@ export default function LookupManager() {
                 ? `${API_ENDPOINTS.LICENSES}/${form.licenseNumber}`
                 : API_ENDPOINTS.LICENSES;
 
+            const today = new Date();
+            const isExpired = new Date(form.expireDate) < today;
+            const autoStatus = isExpired ? 'expired' : 'active';
+
             const payload = {
                 licenseNumber: form.licenseNumber,
                 userId: form.userId || null,
@@ -157,7 +191,7 @@ export default function LookupManager() {
                 idNumber: form.idNumber,
                 issueDate: form.issueDate,
                 expireDate: form.expireDate,
-                status: form.status,
+                status: autoStatus, // Auto-set based on expire date
                 drones: form.drones || [],
                 portraitImage: form.licenseImage || null, // backend expects portraitImage
             };
@@ -254,6 +288,11 @@ export default function LookupManager() {
         });
     };
 
+    const handleImageClick = (imageUrl) => {
+        setSelectedImage(imageUrl);
+        setIsModalOpen(true);
+    };
+
     const handleUpdateDrone = (index, field, value) => {
         const updatedDrones = [...form.drones];
         updatedDrones[index] = { ...updatedDrones[index], [field]: value };
@@ -306,15 +345,16 @@ export default function LookupManager() {
 
 
     return (
-        <div
-            className="solution-manager-container"
-            style={{
-                display: "flex",
-                gap: "24px",
-                marginTop: "20px",
-                flexDirection: "row-reverse",
-            }}
-        >
+        <>
+            <div
+                className="solution-manager-container"
+                style={{
+                    display: "flex",
+                    gap: "24px",
+                    marginTop: "20px",
+                    flexDirection: "row-reverse",
+                }}
+            >
             {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
             <div className="panel" style={{ flex: 1 }}>
                 <div className="panel-header" style={{ justifyContent: "space-between" }}>
@@ -551,25 +591,7 @@ export default function LookupManager() {
                         {/* --- IMAGE SECTION --- */}
                         <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
                             <label className="form-label" style={{ marginBottom: "12px" }}>Hình ảnh Giấy phép</label>
-                            <div style={{
-                                border: "2px dashed #ccc",
-                                borderRadius: "8px",
-                                padding: "24px",
-                                textAlign: "center",
-                                backgroundColor: "#fafafa",
-                                cursor: "pointer",
-                                transition: "all 0.3s",
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = "#0066cc";
-                                    e.currentTarget.style.backgroundColor = "#f0f7ff";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = "#ccc";
-                                    e.currentTarget.style.backgroundColor = "#fafafa";
-                                }}
-                                onClick={() => document.getElementById("licenseImageInput")?.click()}
-                            >
+                            <div style={{ textAlign: "center" }}>
                                 { uploadingImage ? (
                                     <div>
                                         <div style={{ fontSize: "20px", marginBottom: "8px" }}>⏳</div>
@@ -579,12 +601,17 @@ export default function LookupManager() {
                                     </div>
                                 ) : !form.licenseImage ? (
                                     <div>
-                                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "6px" }}>
-                                            Nhấp để chọn hình ảnh
+                                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
+                                            Chưa có hình ảnh giấy phép
                                         </div>
-                                        <div style={{ fontSize: "12px", color: "#999" }}>
-                                            PNG, JPG, GIF (Tối đa 5MB)
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                            className="btn btn-primary btn-sm"
+                                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                        >
+                                            <FileCheck size={14} /> Upload Hình Ảnh
+                                        </button>
                                     </div>
                                 ) : (
                                     <div>
@@ -595,20 +622,43 @@ export default function LookupManager() {
                                                 maxWidth: "100%",
                                                 maxHeight: "250px",
                                                 borderRadius: "6px",
-                                                marginBottom: "12px"
+                                                marginBottom: "12px",
+                                                cursor: "pointer",
                                             }}
+                                            onClick={() => handleImageClick(form.licenseImage)}
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRemoveImage();
-                                            }}
-                                            className="btn btn-danger btn-sm"
-                                            style={{ display: "flex", alignItems: "center", gap: "4px", margin: "0 auto" }}
-                                        >
-                                            <Trash2 size={14} /> Xóa hình ảnh
-                                        </button>
+                                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                                className="btn btn-sm"
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    backgroundColor: "#007bff",
+                                                    color: "white",
+                                                    border: "none",
+                                                    borderRadius: "6px",
+                                                    padding: "6px 12px",
+                                                    cursor: "pointer",
+                                                    fontSize: "14px",
+                                                    transition: "background-color 0.2s",
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
+                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                                            >
+                                                <FileCheck size={14} /> Thay đổi hình ảnh
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveImage}
+                                                className="btn btn-danger btn-sm"
+                                                style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                            >
+                                                <Trash2 size={14} /> Xóa hình ảnh
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -804,7 +854,9 @@ export default function LookupManager() {
                                             objectFit: "cover",
                                             marginRight: "15px",
                                             flexShrink: 0,
+                                            cursor: "pointer",
                                         }}
+                                        onClick={() => handleImageClick(license.portraitImage)}
                                     />
                                 ) : (
                                     <div
@@ -953,5 +1005,59 @@ export default function LookupManager() {
                 </div>
             </div>
         </div>
+
+        {/* Modal for viewing full image */}
+        {isModalOpen && (
+            <div
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10000,
+                    cursor: 'pointer',
+                }}
+                onClick={() => setIsModalOpen(false)}
+            >
+                <img
+                    src={selectedImage}
+                    alt="Giấy phép điều khiển - Xem đầy đủ"
+                    style={{
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        background: 'rgba(0,0,0,0.7)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    ×
+                </button>
+            </div>
+        )}
+        </>
     );
 }
