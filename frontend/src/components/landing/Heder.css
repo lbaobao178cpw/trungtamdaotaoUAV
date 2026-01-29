@@ -358,4 +358,16 @@
         padding: 8px 12px !important;
         display: block !important;
     }
+    
+        .header .nav-container .user-menu {
+        position: absolute !important;
+        right: 8px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 1300 !important;
+    }
+    .header .nav-container .menu-toggle { right: 88px; position: absolute; }
 }
+
+/* Strong mobile layout: hamburger at left, logo centered, user icon at right */
+
