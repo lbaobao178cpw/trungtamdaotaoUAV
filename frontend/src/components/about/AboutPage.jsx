@@ -67,6 +67,40 @@ function AboutPage() {
         }
     };
 
+    // Handle form download with proper PDF MIME type
+    const handleFormDownload = async (form) => {
+        try {
+            const response = await fetch(`${API_URL}/forms/${form.id}/download`);
+            if (!response.ok) {
+                throw new Error('Download failed');
+            }
+            
+            const blob = await response.blob();
+            // Create a new blob with explicit PDF MIME type
+            const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+            const url = URL.createObjectURL(pdfBlob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${form.title}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download error:', error);
+            // Fallback to direct link
+            const a = document.createElement('a');
+            a.href = `${API_URL}/forms/${form.id}/download`;
+            a.download = `${form.title}.pdf`;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    };
+
     return (
         <div className="about-page">
             {/* 1. Hero Section */}
@@ -260,13 +294,23 @@ function AboutPage() {
                                         <div key={form.id} className="legal-card">
                                             <h4 className="legal-card-title">{form.title}</h4>
                                             {form.file_url && (
-                                                <a
-                                                    href={`${API_URL}/forms/${form.id}/download`}
+                                                <button
+                                                    onClick={() => handleFormDownload(form)}
                                                     className="legal-card-link"
                                                     title="Tải xuống"
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        padding: '8px',
+                                                        borderRadius: '4px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
                                                 >
                                                     <Download size={20} />
-                                                </a>
+                                                </button>
                                             )}
                                         </div>
                                     ))
