@@ -615,7 +615,8 @@ export default function SolutionManager() {
               style={{
                 marginTop: "10px",
                 borderColor: "#0066cc",
-                color: "#0066cc",
+                background: "#0066cc",
+                color: "#ffffff",
               }}
             >
               + Thêm khối dịch vụ mới
