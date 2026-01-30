@@ -17,7 +17,7 @@ import {
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
-import { uploadImage } from "../../lib/cloudinaryService";
+import { uploadLicenseImage, listImages } from "../../lib/cloudinaryService";
 import "../admin/Admin/Admin.css";
 
 const initialLicenseState = {
@@ -43,6 +43,9 @@ export default function LookupManager() {
     const [message, setMessage] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
+    const [showLibrary, setShowLibrary] = useState(false);
+    const [libraryImages, setLibraryImages] = useState([]);
+    const [loadingLibrary, setLoadingLibrary] = useState(false);
     const userSearchRef = useRef(null);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
@@ -262,7 +265,7 @@ export default function LookupManager() {
 
         try {
             setUploadingImage(true);
-            const res = await uploadImage(file);
+            const res = await uploadLicenseImage(file);
             if (!res.success) {
                 notifyError(res.error || 'Upload ảnh thất bại');
                 return;
@@ -291,6 +294,31 @@ export default function LookupManager() {
     const handleImageClick = (imageUrl) => {
         setSelectedImage(imageUrl);
         setIsModalOpen(true);
+    };
+
+    const handleShowLibrary = async () => {
+        setShowLibrary(true);
+        setLoadingLibrary(true);
+        try {
+            const result = await listImages("uav-training/licenses");
+            if (result.success) {
+                setLibraryImages(result.images);
+            } else {
+                alert('Failed to load images: ' + result.error);
+            }
+        } catch (err) {
+            alert('Error loading images: ' + err.message);
+        } finally {
+            setLoadingLibrary(false);
+        }
+    };
+
+    const handleSelectFromLibrary = (image) => {
+        setForm({
+            ...form,
+            licenseImage: image.url
+        });
+        setShowLibrary(false);
     };
 
     const handleUpdateDrone = (index, field, value) => {
@@ -592,73 +620,256 @@ export default function LookupManager() {
                         <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
                             <label className="form-label" style={{ marginBottom: "12px" }}>Hình ảnh Giấy phép</label>
                             <div style={{ textAlign: "center" }}>
-                                { uploadingImage ? (
-                                    <div>
-                                        <div style={{ fontSize: "20px", marginBottom: "8px" }}>⏳</div>
-                                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "4px" }}>
-                                            Đang tải ảnh lên...
-                                        </div>
-                                    </div>
-                                ) : !form.licenseImage ? (
-                                    <div>
-                                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
-                                            Chưa có hình ảnh giấy phép
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => document.getElementById("licenseImageInput")?.click()}
-                                            className="btn btn-primary btn-sm"
-                                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
-                                        >
-                                            <FileCheck size={14} /> Upload Hình Ảnh
-                                        </button>
-                                    </div>
+                                {!showLibrary ? (
+                                    <>
+                                        {uploadingImage ? (
+                                            <div>
+                                                <div style={{ fontSize: "20px", marginBottom: "8px" }}>⏳</div>
+                                                <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "4px" }}>
+                                                    Đang tải ảnh lên...
+                                                </div>
+                                            </div>
+                                        ) : !form.licenseImage ? (
+                                            <div>
+                                                <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
+                                                    Chưa có hình ảnh giấy phép
+                                                </div>
+                                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                                        className="btn btn-primary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        <FileCheck size={14} /> Upload từ máy tính
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleShowLibrary}
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        Chọn từ thư viện
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <img
+                                                    src={form.licenseImage}
+                                                    alt="Giấy phép điều khiển"
+                                                    style={{
+                                                        maxWidth: "100%",
+                                                        maxHeight: "250px",
+                                                        borderRadius: "6px",
+                                                        marginBottom: "12px",
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={() => handleImageClick(form.licenseImage)}
+                                                />
+                                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                                        className="btn btn-sm"
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "4px",
+                                                            backgroundColor: "#007bff",
+                                                            color: "white",
+                                                            border: "none",
+                                                            borderRadius: "6px",
+                                                            padding: "6px 12px",
+                                                            cursor: "pointer",
+                                                            fontSize: "14px",
+                                                            transition: "background-color 0.2s",
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
+                                                        onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                                                    >
+                                                        <FileCheck size={14} /> Thay đổi hình ảnh
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleShowLibrary}
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        Chọn từ thư viện
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveImage}
+                                                        className="btn btn-danger btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        <Trash2 size={14} /> Xóa hình ảnh
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
-                                    <div>
-                                        <img
-                                            src={form.licenseImage}
-                                            alt="Giấy phép điều khiển"
-                                            style={{
-                                                maxWidth: "100%",
-                                                maxHeight: "250px",
-                                                borderRadius: "6px",
-                                                marginBottom: "12px",
-                                                cursor: "pointer",
-                                            }}
-                                            onClick={() => handleImageClick(form.licenseImage)}
-                                        />
-                                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                    <div className="library-view" style={{
+                                        border: "1px solid #e0e0e0",
+                                        borderRadius: "12px",
+                                        padding: "24px",
+                                        background: "#ffffff",
+                                        maxHeight: "500px",
+                                        overflowY: "auto",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
+                                    }}>
+                                        <div className="library-header" style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            marginBottom: "24px",
+                                            position: "sticky",
+                                            top: 0,
+                                            background: "#ffffff",
+                                            padding: "12px",
+                                            borderBottom: "1px solid #f0f0f0",
+                                            margin: "-12px -12px 24px -12px",
+                                            borderRadius: "12px 12px 0 0"
+                                        }}>
+                                            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>Chọn từ thư viện hình ảnh</h3>
                                             <button
-                                                type="button"
-                                                onClick={() => document.getElementById("licenseImageInput")?.click()}
-                                                className="btn btn-sm"
+                                                onClick={() => setShowLibrary(false)}
                                                 style={{
+                                                    padding: "8px",
+                                                    background: "#f8f9fa",
+                                                    color: "#6c757d",
+                                                    border: "1px solid #e0e0e0",
+                                                    borderRadius: "6px",
+                                                    cursor: "pointer",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    gap: "4px",
-                                                    backgroundColor: "#007bff",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "6px",
-                                                    padding: "6px 12px",
-                                                    cursor: "pointer",
-                                                    fontSize: "14px",
-                                                    transition: "background-color 0.2s",
+                                                    justifyContent: "center",
+                                                    transition: "all 0.2s"
                                                 }}
-                                                onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
-                                                onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = "#e9ecef";
+                                                    e.target.style.color = "#495057";
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = "#f8f9fa";
+                                                    e.target.style.color = "#6c757d";
+                                                }}
+                                                title="Đóng"
                                             >
-                                                <FileCheck size={14} /> Thay đổi hình ảnh
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={handleRemoveImage}
-                                                className="btn btn-danger btn-sm"
-                                                style={{ display: "flex", alignItems: "center", gap: "4px" }}
-                                            >
-                                                <Trash2 size={14} /> Xóa hình ảnh
+                                                <X size={16} />
                                             </button>
                                         </div>
+                                        {loadingLibrary ? (
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "40px",
+                                                color: "#6c757d"
+                                            }}>
+                                                <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                                                <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải hình ảnh...</div>
+                                            </div>
+                                        ) : libraryImages.length === 0 ? (
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "40px",
+                                                color: "#6c757d"
+                                            }}>
+                                                <div style={{ fontSize: "48px", marginBottom: "12px" }}>📷</div>
+                                                <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                                                    Chưa có hình ảnh nào trong thư viện
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="image-grid" style={{
+                                                display: "grid",
+                                                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                                                gap: "16px"
+                                            }}>
+                                                {libraryImages.map((image) => (
+                                                    <div
+                                                        key={image.publicId}
+                                                        className="image-item"
+                                                        onClick={() => handleSelectFromLibrary(image)}
+                                                        style={{
+                                                            border: "1px solid #e0e0e0",
+                                                            borderRadius: "8px",
+                                                            padding: "12px",
+                                                            cursor: "pointer",
+                                                            transition: "all 0.3s ease",
+                                                            background: "white",
+                                                            textAlign: "center",
+                                                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                                                            position: "relative",
+                                                            overflow: "hidden"
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.target.style.borderColor = "#007bff";
+                                                            e.target.style.boxShadow = "0 4px 12px rgba(0, 123, 255, 0.15)";
+                                                            e.target.style.transform = "translateY(-2px)";
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.target.style.borderColor = "#e0e0e0";
+                                                            e.target.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.05)";
+                                                            e.target.style.transform = "translateY(0)";
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={image.url}
+                                                            alt={image.displayName}
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "120px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "6px",
+                                                                marginBottom: "8px"
+                                                            }}
+                                                        />
+                                                        <p style={{
+                                                            margin: 0,
+                                                            fontSize: "12px",
+                                                            color: "#495057",
+                                                            wordBreak: "break-word",
+                                                            lineHeight: "1.4",
+                                                            display: "-webkit-box",
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: "vertical",
+                                                            overflow: "hidden"
+                                                        }}>
+                                                            {image.displayName}
+                                                        </p>
+                                                        <div style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px",
+                                                            background: "rgba(0, 123, 255, 0.8)",
+                                                            color: "white",
+                                                            borderRadius: "50%",
+                                                            width: "20px",
+                                                            height: "20px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "12px",
+                                                            opacity: 0,
+                                                            transition: "opacity 0.3s"
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.opacity = "1"}
+                                                        onMouseLeave={(e) => e.target.style.opacity = "0"}
+                                                        >
+                                                            ✓
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
