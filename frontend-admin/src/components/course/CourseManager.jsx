@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import MediaSelector from "../mediaSelector/MediaSelector";
-import { uploadImage, uploadVideo, uploadDocument } from "../../lib/cloudinaryService";
+import { uploadCourseImage, uploadCourseVideo, uploadDocument, listImages, listVideos, listDocuments } from "../../lib/cloudinaryService";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
 import "./Coursemanager.css";
@@ -40,6 +40,17 @@ export default function CourseManager() {
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [isDocumentUploading, setIsDocumentUploading] = useState(false);
   const [documentUploadProgress, setDocumentUploadProgress] = useState(0);
+
+  // Library States
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [showVideoLibrary, setShowVideoLibrary] = useState(false);
+  const [showDocumentLibrary, setShowDocumentLibrary] = useState(false);
+  const [libraryImages, setLibraryImages] = useState([]);
+  const [libraryVideos, setLibraryVideos] = useState([]);
+  const [libraryDocuments, setLibraryDocuments] = useState([]);
+  const [loadingImageLibrary, setLoadingImageLibrary] = useState(false);
+  const [loadingVideoLibrary, setLoadingVideoLibrary] = useState(false);
+  const [loadingDocumentLibrary, setLoadingDocumentLibrary] = useState(false);
 
   // Form States
   const [courseFormData, setCourseFormData] = useState({
@@ -717,6 +728,150 @@ export default function CourseManager() {
     }
   };
 
+  // === LIBRARY FUNCTIONS ===
+  const handleShowImageLibrary = useCallback(async () => {
+    setShowImageLibrary(true);
+    setLoadingImageLibrary(true);
+    
+    try {
+      const result = await listImages("uav-training/courses/thumbnails");
+      if (result.success) {
+        setLibraryImages(result.images || []);
+      } else {
+        notifyError("Không thể tải thư viện hình ảnh");
+      }
+    } catch (error) {
+      console.error("Load image library error:", error);
+      notifyError("Lỗi tải thư viện hình ảnh");
+    } finally {
+      setLoadingImageLibrary(false);
+    }
+  }, []);
+
+  const handleSelectFromImageLibrary = useCallback(async (image) => {
+    if (mediaTarget === "thumbnail") {
+      setCourseFormData({ ...courseFormData, thumbnail: image.url });
+      setShowImageLibrary(false);
+      notifySuccess("Đã chọn hình ảnh từ thư viện!");
+    }
+    setMediaTarget(null);
+  }, [courseFormData, mediaTarget]);
+
+  const handleShowVideoLibrary = useCallback(async () => {
+    setShowVideoLibrary(true);
+    setLoadingVideoLibrary(true);
+    
+    try {
+      const result = await listVideos("uav-training/courses/videos");
+      if (result.success) {
+        setLibraryVideos(result.images || []);
+      } else {
+        notifyError("Không thể tải thư viện video");
+      }
+    } catch (error) {
+      console.error("Load video library error:", error);
+      notifyError("Lỗi tải thư viện video");
+    } finally {
+      setLoadingVideoLibrary(false);
+    }
+  }, []);
+
+  const handleSelectFromVideoLibrary = useCallback(async (video) => {
+    if (mediaTarget === "lesson-video") {
+      setLessonFormData({ ...lessonFormData, content: video.url });
+      setShowVideoLibrary(false);
+      notifySuccess("Đã chọn video từ thư viện!");
+    }
+    setMediaTarget(null);
+  }, [lessonFormData, mediaTarget]);
+
+  const handleShowDocumentLibrary = useCallback(async () => {
+    setShowDocumentLibrary(true);
+    setLoadingDocumentLibrary(true);
+    
+    try {
+      const result = await listDocuments("uav-training/documents");
+      if (result.success) {
+        setLibraryDocuments(result.images || []);
+      } else {
+        notifyError("Không thể tải thư viện tài liệu");
+      }
+    } catch (error) {
+      console.error("Load document library error:", error);
+      notifyError("Lỗi tải thư viện tài liệu");
+    } finally {
+      setLoadingDocumentLibrary(false);
+    }
+  }, []);
+
+  const handleSelectFromDocumentLibrary = useCallback(async (document) => {
+    setLessonFormData({ 
+      ...lessonFormData, 
+      documentUrl: document.url,
+      displayName: document.displayName || document.public_id || document.url.split('/').pop()
+    });
+    setShowDocumentLibrary(false);
+    notifySuccess("Đã chọn tài liệu từ thư viện!");
+  }, [lessonFormData]);
+
+  const handleImageUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setIsThumbnailUploading(true);
+      const res = await uploadCourseImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload ảnh thất bại');
+        return;
+      }
+
+      setCourseFormData((p) => ({ ...p, thumbnail: res.url }));
+      notifySuccess('Tải ảnh khóa học lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Image upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload ảnh');
+    } finally {
+      setIsThumbnailUploading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  }, []);
+
+  const handleLessonVideoUpload = useCallback(async (e, videoType = 'lesson') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      notifyError('Vui lòng chọn file video (MP4/AVI/MOV)');
+      return;
+    }
+
+    try {
+      setIsVideoUploading(true);
+      const res = await uploadCourseVideo(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload video thất bại');
+        return;
+      }
+
+      setLessonFormData((p) => ({ ...p, content: res.url }));
+      notifySuccess('Tải video khóa học lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Video upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload video');
+    } finally {
+      setIsVideoUploading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  }, []);
+
   // Extract YouTube video ID from URL
   const extractYouTubeId = (url) => {
     const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([^\s&]+)/;
@@ -1026,57 +1181,108 @@ export default function CourseManager() {
               </div>
               <div className="cm-form-group">
                 <label className="cm-form-label">Ảnh bìa</label>
-                <div className="cm-media-input-group">
-                  <button
-                    type="button"
-                    onClick={() => openMediaSelector("thumbnail")}
-                    className="cm-btn cm-btn-secondary"
-                    disabled={isThumbnailUploading}
-                  >
-                    📁 Chọn ảnh
-                  </button>
+                <div style={{ textAlign: "center" }}>
+                  {!courseFormData.thumbnail ? (
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
+                        Chưa có hình ảnh bìa
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <label className="cm-btn cm-btn-primary" style={{ cursor: 'pointer', marginRight: '0' }}>
+                          Upload từ máy tính
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            style={{ display: 'none' }}
+                            disabled={isThumbnailUploading}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMediaTarget('thumbnail');
+                            handleShowImageLibrary();
+                          }}
+                          className="cm-btn cm-btn-secondary"
+                          disabled={loadingImageLibrary}
+                        >
+                          Chọn từ thư viện
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openMediaSelector('thumbnail')}
+                          className="cm-btn cm-btn-secondary"
+                        >
+                          Chọn từ Media
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <img
+                        src={courseFormData.thumbnail}
+                        alt="Xem trước hình ảnh khóa học"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "250px",
+                          borderRadius: "6px",
+                          marginBottom: "12px",
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => document.querySelector('input[type="file"][accept="image/*"]')?.click()}
+                          className="cm-btn"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            backgroundColor: "#007bff",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            transition: "background-color 0.2s",
+                          }}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                          disabled={isThumbnailUploading}
+                        >
+                          {isThumbnailUploading ? 'Đang upload...' : 'Thay đổi hình ảnh'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMediaTarget('thumbnail');
+                            handleShowImageLibrary();
+                          }}
+                          className="cm-btn cm-btn-secondary"
+                          disabled={loadingImageLibrary}
+                        >
+                          Chọn từ thư viện
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openMediaSelector('thumbnail')}
+                          className="cm-btn cm-btn-secondary"
+                        >
+                          Chọn từ Media
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCourseFormData({ ...courseFormData, thumbnail: '' })}
+                          className="cm-btn cm-btn-danger"
+                        >
+                          Xóa hình ảnh
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {isThumbnailUploading && (
-                  <div style={{ marginTop: "15px" }}>
-                    <div style={{
-                      fontSize: "12px",
-                      marginBottom: "8px",
-                      textAlign: "center",
-                      color: "#0066cc",
-                      fontWeight: "600"
-                    }}>
-                      Đang upload... {thumbnailUploadProgress}%
-                    </div>
-                    <div style={{
-                      width: "100%",
-                      height: "6px",
-                      background: "#e2e8f0",
-                      borderRadius: "3px",
-                      overflow: "hidden"
-                    }}>
-                      <div style={{
-                        width: `${thumbnailUploadProgress}%`,
-                        height: "100%",
-                        background: "linear-gradient(90deg, #0066cc, #0052a3)",
-                        transition: "width 0.3s ease",
-                        borderRadius: "3px"
-                      }} />
-                    </div>
-                  </div>
-                )}
-                {courseFormData.thumbnail && !isThumbnailUploading && (
-                  <div style={{ marginTop: "15px", textAlign: "center" }}>
-                    <img
-                      src={courseFormData.thumbnail}
-                      alt="Xem trước hình ảnh khóa học"
-                      style={{
-                        maxWidth: "100%",
-                        maxHeight: "200px",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </div>
-                )}
               </div>
               <div className="cm-modal-footer">
                 <button type="submit" className="cm-btn cm-btn-primary">
@@ -1159,7 +1365,7 @@ export default function CourseManager() {
 
                       <div className="cm-form-group">
                         <label className="cm-form-label">Hoặc Upload Video</label>
-                        <div className="cm-media-input-group">
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                           <input
                             className="cm-form-input"
                             value={lessonFormData.content}
@@ -1170,52 +1376,40 @@ export default function CourseManager() {
                               })
                             }
                             placeholder="URL video hoặc YouTube embed URL..."
+                            style={{ flex: 1 }}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setIsVideoUploadingOpen(true)}
-                            className="cm-btn cm-btn-primary cm-btn-sm"
-                            disabled={isVideoUploading}
-                          >
-                            <Video size={16} /> Upload
-                          </button>
+                          {isVideoUploading && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
                         </div>
-                        {isVideoUploadingOpen && (
-                          <div style={{ marginTop: "10px" }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <label className="cm-btn cm-btn-primary cm-btn-sm" style={{ cursor: 'pointer', marginRight: '0' }}>
+                            Upload
                             <input
                               type="file"
                               accept="video/*"
-                              onChange={handleVideoUpload}
-                              style={{ display: "block", marginBottom: "10px" }}
+                              onChange={handleLessonVideoUpload}
+                              style={{ display: 'none' }}
+                              disabled={isVideoUploading}
                             />
-                            {isVideoUploading && (
-                              <div style={{ marginTop: "10px" }}>
-                                <div style={{
-                                  textAlign: "center",
-                                  color: "#0066cc",
-                                  fontWeight: "600",
-                                  marginBottom: "5px"
-                                }}>
-                                  Đang upload... {Math.round(videoUploadProgress)}%
-                                </div>
-                                <div style={{
-                                  width: "100%",
-                                  height: "6px",
-                                  background: "#e2e8f0",
-                                  borderRadius: "3px",
-                                  overflow: "hidden"
-                                }}>
-                                  <div style={{
-                                    width: `${videoUploadProgress}%`,
-                                    height: "100%",
-                                    background: "linear-gradient(90deg, #0066cc, #0052a3)",
-                                    transition: "width 0.3s ease"
-                                  }} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaTarget('lesson-video');
+                              handleShowVideoLibrary();
+                            }}
+                            className="cm-btn cm-btn-secondary cm-btn-sm"
+                            disabled={loadingVideoLibrary}
+                          >
+                            Chọn từ thư viện
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openMediaSelector('lesson-content')}
+                            className="cm-btn cm-btn-secondary cm-btn-sm"
+                          >
+                            Chọn từ Media
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
@@ -1223,52 +1417,43 @@ export default function CourseManager() {
                   {/* DOCUMENT CONTENT */}
                   {lessonFormData.type === "document" && (
                     <div className="cm-form-group">
-                      <label className="cm-form-label">Upload Tài liệu</label>
-                      <div style={{ marginBottom: "10px" }}>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                          onChange={handleDocumentUpload}
-                          style={{ display: "block", marginBottom: "10px" }}
-                          disabled={isDocumentUploading}
-                        />
-                        <small style={{ color: "#666", display: "block" }}>
-                          Hỗ trợ: PDF, Word, Excel, PowerPoint
-                        </small>
+                      <label className="cm-form-label">Upload file</label>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        {isDocumentUploading && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                        {lessonFormData.documentUrl && <span style={{ color: '#28a745', fontSize: '12px' }}>✓ Đã upload</span>}
                       </div>
-                      {isDocumentUploading && (
-                        <div style={{ marginTop: "10px" }}>
-                          <div style={{
-                            textAlign: "center",
-                            color: "#0066cc",
-                            fontWeight: "600",
-                            marginBottom: "5px"
-                          }}>
-                            Đang upload... {Math.round(documentUploadProgress)}%
-                          </div>
-                          <div style={{
-                            width: "100%",
-                            height: "6px",
-                            background: "#e2e8f0",
-                            borderRadius: "3px",
-                            overflow: "hidden"
-                          }}>
-                            <div style={{
-                              width: `${documentUploadProgress}%`,
-                              height: "100%",
-                              background: "linear-gradient(90deg, #0066cc, #0052a3)",
-                              transition: "width 0.3s ease"
-                            }} />
-                          </div>
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('documentInput')?.click()}
+                          className="cm-btn cm-btn-primary cm-btn-sm"
+                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                          disabled={isDocumentUploading}
+                        >
+                          Upload từ máy tính
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleShowDocumentLibrary}
+                          className="cm-btn cm-btn-secondary cm-btn-sm"
+                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                        >
+                          Chọn từ thư viện
+                        </button>
+                      </div>
                       {lessonFormData.documentUrl && (
-                        <div style={{ marginTop: "10px", padding: "10px", background: "#f0f9ff", borderRadius: "6px" }}>
-                          <span style={{ color: "#0066cc", wordBreak: "break-all" }}>
-                            📄 {lessonFormData.displayName || 'Tài liệu đã upload'}
-                          </span>
+                        <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '6px' }}>
+                          File: {lessonFormData.displayName || lessonFormData.documentUrl.split('/').pop()}
                         </div>
                       )}
+                      <input
+                        id="documentInput"
+                        type="file"
+                        onChange={handleDocumentUpload}
+                        disabled={isDocumentUploading}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                        style={{ display: 'none' }}
+                      />
                     </div>
                   )}
                 </>
@@ -1542,6 +1727,430 @@ export default function CourseManager() {
                     <p>Chọn hoặc kéo video vào đây</p>
                   )}
                 </label>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IMAGE LIBRARY MODAL */}
+      {showImageLibrary && (
+        <div className='cm-modal-overlay' onClick={() => setShowImageLibrary(false)}>
+          <div className='cm-modal cm-modal-large' onClick={(e) => e.stopPropagation()}>
+            <div className='cm-modal-header'>
+              <h3>Chọn hình ảnh từ thư viện</h3>
+              <button
+                type='button'
+                onClick={() => setShowImageLibrary(false)}
+                className='cm-modal-close'
+                style={{
+                  background: '#f8f9fa',
+                  color: '#6c757d',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  width: 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#e2e6eb';
+                  e.target.style.color = '#495057';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.color = '#6c757d';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className='cm-modal-body'>
+              {loadingImageLibrary ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '12px' }}>⏳</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>Đang tải hình ảnh...</div>
+                </div>
+              ) : libraryImages.length === 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500', textAlign: 'center' }}>
+                    Chưa có hình ảnh nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {libraryImages.map((image, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSelectFromImageLibrary(image)}
+                      style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        background: 'white',
+                        textAlign: 'center',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#007bff';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e0e0e0';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.public_id || `Image ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '6px',
+                          marginBottom: '8px'
+                        }}
+                      />
+                      <p style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        color: '#495057',
+                        wordBreak: 'break-word',
+                        lineHeight: '1.4',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {image.public_id}
+                      </p>
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        background: 'rgba(0, 123, 255, 0.8)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        opacity: 0,
+                        transition: 'opacity 0.3s'
+                      }}>
+                        ✓
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIDEO LIBRARY MODAL */}
+      {showVideoLibrary && (
+        <div className='cm-modal-overlay' onClick={() => setShowVideoLibrary(false)}>
+          <div className='cm-modal cm-modal-large' onClick={(e) => e.stopPropagation()}>
+            <div className='cm-modal-header'>
+              <h3>Chọn video từ thư viện</h3>
+              <button
+                type='button'
+                onClick={() => setShowVideoLibrary(false)}
+                className='cm-modal-close'
+                style={{
+                  background: '#f8f9fa',
+                  color: '#6c757d',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  width: 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#e2e6eb';
+                  e.target.style.color = '#495057';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.color = '#6c757d';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className='cm-modal-body'>
+              {loadingVideoLibrary ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '12px' }}>⏳</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>Đang tải video...</div>
+                </div>
+              ) : libraryVideos.length === 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎬</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500', textAlign: 'center' }}>
+                    Không có video nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {libraryVideos.map((video, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSelectFromVideoLibrary(video)}
+                      style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        background: 'white',
+                        textAlign: 'center',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#007bff';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e0e0e0';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <video
+                        src={video.url}
+                        style={{
+                          width: '100%',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '6px',
+                          marginBottom: '8px',
+                          backgroundColor: '#000'
+                        }}
+                        muted
+                        preload='metadata'
+                      />
+                      <p style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        color: '#495057',
+                        wordBreak: 'break-word',
+                        lineHeight: '1.4',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {video.public_id || `Video ${index + 1}`}
+                      </p>
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        background: 'rgba(0, 123, 255, 0.8)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        opacity: 0,
+                        transition: 'opacity 0.3s'
+                      }}>
+                        ✓
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DOCUMENT LIBRARY MODAL */}
+      {showDocumentLibrary && (
+        <div className='cm-modal-overlay' onClick={() => setShowDocumentLibrary(false)}>
+          <div className='cm-modal cm-modal-large' onClick={(e) => e.stopPropagation()}>
+            <div className='cm-modal-header'>
+              <h3>Chọn tài liệu từ thư viện</h3>
+              <button
+                type='button'
+                onClick={() => setShowDocumentLibrary(false)}
+                className='cm-modal-close'
+                style={{
+                  background: '#f8f9fa',
+                  color: '#6c757d',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  width: 'auto'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#e2e6eb';
+                  e.target.style.color = '#495057';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#f8f9fa';
+                  e.target.style.color = '#6c757d';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className='cm-modal-body'>
+              {loadingDocumentLibrary ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '12px' }}>⏳</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>Đang tải tài liệu...</div>
+                </div>
+              ) : libraryDocuments.length === 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px',
+                  color: '#6c757d'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500', textAlign: 'center' }}>
+                    Không có tài liệu nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {libraryDocuments.map((document, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSelectFromDocumentLibrary(document)}
+                      style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        background: 'white',
+                        textAlign: 'center',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#007bff';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e0e0e0';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '40px',
+                        marginBottom: '8px'
+                      }}>📄</div>
+                      <p style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        color: '#495057',
+                        wordBreak: 'break-word',
+                        lineHeight: '1.4',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {document.displayName || document.public_id || `Document ${index + 1}`}
+                      </p>
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        background: 'rgba(0, 123, 255, 0.8)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        opacity: 0,
+                        transition: 'opacity 0.3s'
+                      }}>
+                        ✓
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

@@ -8,6 +8,7 @@ import PointPreview from "../pointsPreview/PointPreview";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
 import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
+import { uploadPointImage, uploadPanoramaImage, listImages } from "../../lib/cloudinaryService";
 import '../admin/Admin/Admin.css';
 
 // MapPicker thường nặng nên dùng Lazy load
@@ -54,6 +55,14 @@ export default function PointManager() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState(null);
+
+  // Image upload state
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPanorama, setUploadingPanorama] = useState(false);
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [libraryImages, setLibraryImages] = useState([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(false);
 
   // === FETCH DATA USING CUSTOM HOOK ===
   const { data: pointsData, loading, error, refetch } = useApi(API_ENDPOINTS.POINTS);
@@ -163,6 +172,94 @@ export default function PointManager() {
     }
   }, [pointForm.id, savePoint, refetch, handleCancelEditPoint]);
 
+  // Image upload handlers
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingLogo(true);
+      const result = await uploadPointImage(file);
+      if (result.success) {
+        setPointForm(prev => ({ ...prev, logoSrc: result.url }));
+        notifySuccess("Upload logo thành công!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      notifyError("Lỗi upload logo: " + error.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const result = await uploadPointImage(file);
+      if (result.success) {
+        setPointForm(prev => ({ ...prev, imageSrc: result.url }));
+        notifySuccess("Upload ảnh thành công!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      notifyError("Lỗi upload ảnh: " + error.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handlePanoramaUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingPanorama(true);
+      const result = await uploadPanoramaImage(file);
+      if (result.success) {
+        setPointForm(prev => ({ ...prev, panoramaUrl: result.url }));
+        notifySuccess("Upload ảnh 360 thành công!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      notifyError("Lỗi upload ảnh 360: " + error.message);
+    } finally {
+      setUploadingPanorama(false);
+    }
+  };
+
+  const handleShowImageLibrary = async (folder = "uav-training/quản lí điểm 3D") => {
+    try {
+      setLoadingLibrary(true);
+      const result = await listImages(folder);
+      if (result.success) {
+        setLibraryImages(result.images || []);
+      } else {
+        setLibraryImages([]);
+      }
+    } catch (error) {
+      console.error("Error loading image library:", error);
+      setLibraryImages([]);
+    } finally {
+      setLoadingLibrary(false);
+    }
+    setShowImageLibrary(true);
+  };
+
+  const handleSelectFromImageLibrary = (imageUrl) => {
+    if (mediaTarget === 'logoSrc') {
+      setPointForm(prev => ({ ...prev, logoSrc: imageUrl }));
+    } else if (mediaTarget === 'imageSrc') {
+      setPointForm(prev => ({ ...prev, imageSrc: imageUrl }));
+    }
+    setShowImageLibrary(false);
+  };
+
   // Helper hiển thị toạ độ đẹp
   const displayXYZ = (val) => (val !== undefined && val !== null) ? Number(val).toFixed(3) : "0.000";
 
@@ -264,33 +361,123 @@ export default function PointManager() {
                 <h3 className="section-title">Hình ảnh & Media</h3>
 
                 <div className="form-group">
-                  <label className="form-label">Logo & Ảnh đại diện</label>
-                  <div className="media-row">
-                    {/* Logo */}
-                    <div className="media-col">
-                      <div className="input-group">
-                        <input type="text" className="form-control" value={pointForm.logoSrc} readOnly style={{ fontSize: 12 }} />
-                        <button type="button" className="btn btn-primary" onClick={() => { setMediaTarget("logoSrc"); setIsMediaModalOpen(true); }}>Logo</button>
-                      </div>
-                      {pointForm.logoSrc && <img src={pointForm.logoSrc} alt={`Logo diểm: ${pointForm.title || 'Mỏ đầu'}`} className="media-thumb-preview" />}
-                    </div>
-                    {/* Image */}
-                    <div className="media-col">
-                      <div className="input-group">
-                        <input type="text" className="form-control" value={pointForm.imageSrc} readOnly style={{ fontSize: 12 }} />
-                        <button type="button" className="btn btn-primary" onClick={() => { setMediaTarget("imageSrc"); setIsMediaModalOpen(true); }}>Ảnh</button>
-                      </div>
-                      {pointForm.imageSrc && <img src={pointForm.imageSrc} alt={`Hình ảnh diểm: ${pointForm.title || 'Mỏ đầu'}`} className="media-thumb-preview" />}
-                    </div>
+                  <label className="form-label">Logo</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {uploadingLogo && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                    {pointForm.logoSrc && pointForm.logoSrc !== "/images/logo-default.svg" && <span style={{ color: '#28a745', fontSize: '12px' }}>✓ Đã upload</span>}
                   </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('logoInput')?.click()}
+                      className="btn btn-primary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      disabled={uploadingLogo}
+                    >
+                      Upload từ máy tính
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMediaTarget('logoSrc'); handleShowImageLibrary(); }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      Chọn từ thư viện
+                    </button>
+                  </div>
+                  {pointForm.logoSrc && pointForm.logoSrc !== "/images/logo-default.svg" && (
+                    <div style={{ marginTop: '8px' }}>
+                      <img src={pointForm.logoSrc} alt="Logo" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+                    </div>
+                  )}
+                  <input
+                    id="logoInput"
+                    type="file"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Ảnh đại diện</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {uploadingImage && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                    {pointForm.imageSrc && pointForm.imageSrc !== "/images/img-default.jpg" && <span style={{ color: '#28a745', fontSize: '12px' }}>✓ Đã upload</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('imageInput')?.click()}
+                      className="btn btn-primary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      disabled={uploadingImage}
+                    >
+                      Upload từ máy tính
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMediaTarget('imageSrc'); handleShowImageLibrary(); }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      Chọn từ thư viện
+                    </button>
+                  </div>
+                  {pointForm.imageSrc && pointForm.imageSrc !== "/images/img-default.jpg" && (
+                    <div style={{ marginTop: '8px' }}>
+                      <img src={pointForm.imageSrc} alt="Ảnh đại diện" style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+                    </div>
+                  )}
+                  <input
+                    id="imageInput"
+                    type="file"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Ảnh 360 Panorama</label>
-                  <div className="input-group">
-                    <input type="text" className="form-control" placeholder="URL Panorama..." value={pointForm.panoramaUrl} onChange={(e) => setPointForm(prev => ({ ...prev, panoramaUrl: e.target.value }))} />
-                    <button type="button" className="btn btn-primary" onClick={() => { setMediaTarget("panoramaUrl"); setIsMediaModalOpen(true); }}>Chọn 360</button>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    {uploadingPanorama && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                    {pointForm.panoramaUrl && <span style={{ color: '#28a745', fontSize: '12px' }}>✓ Đã upload</span>}
                   </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('panoramaInput')?.click()}
+                      className="btn btn-primary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      disabled={uploadingPanorama}
+                    >
+                      Upload từ máy tính
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMediaTarget('panoramaUrl'); handleShowImageLibrary("uav-training/quản lí điểm 3D/panoramas"); }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                    >
+                      Chọn từ thư viện
+                    </button>
+                  </div>
+                  {pointForm.panoramaUrl && (
+                    <div style={{ marginTop: '8px' }}>
+                      <img src={pointForm.panoramaUrl} alt="Ảnh 360 Panorama" style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+                    </div>
+                  )}
+                  <input
+                    id="panoramaInput"
+                    type="file"
+                    onChange={handlePanoramaUpload}
+                    disabled={uploadingPanorama}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                  />
                 </div>
 
                 {/* Website */}
@@ -415,6 +602,78 @@ export default function PointManager() {
               onClose={() => setIsMediaModalOpen(false)}
               mediaBaseUrl={MEDIA_BASE_URL}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Image Library Modal */}
+      {showImageLibrary && (
+        <div className="modal-overlay" onClick={() => setShowImageLibrary(false)}>
+          <div className="modal-content" style={{ width: '800px', maxHeight: '80vh' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Chọn từ thư viện ảnh</h3>
+              <button className="modal-close" onClick={() => setShowImageLibrary(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              {loadingLibrary ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>Đang tải...</div>
+              ) : libraryImages.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Chưa có ảnh nào trong thư viện</div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                  gap: '12px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryImages.map((image, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        aspectRatio: '1',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onClick={() => handleSelectFromImageLibrary(image.url)}
+                      onMouseOver={(e) => e.currentTarget.style.borderColor = '#0050b8'}
+                      onMouseOut={(e) => e.currentTarget.style.borderColor = '#ddd'}
+                    >
+                      <img
+                        src={image.url}
+                        alt={`Library image ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: 'rgba(0, 80, 184, 0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                      }}>
+                        ✓
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

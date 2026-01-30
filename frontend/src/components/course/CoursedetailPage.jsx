@@ -65,6 +65,7 @@ function CourseDetailPage() {
   // === VIDEO TRACKING STATE ===
   const videoRef = useRef(null);
   const videoTrackingTimeoutRef = useRef(null);
+  const lastProgressUpdateRef = useRef(0);
   const [videoCumulativeTime, setVideoCumulativeTime] = useState(0);
 
   // Watermark text: prefer a custom override stored in localStorage ('watermark_text'),
@@ -463,6 +464,7 @@ function CourseDetailPage() {
     setCurrentQuestionIdx(0);
     setScore(0);
     setVideoCumulativeTime(0); // Reset video time
+    lastProgressUpdateRef.current = 0; // Reset progress tracking
     setQuizAttemptsInfo(null); // Reset quiz attempts info
 
     // Clear existing timeout
@@ -571,6 +573,24 @@ function CourseDetailPage() {
     // Update cumulative time (how much they've watched)
     setVideoCumulativeTime(currentTime);
 
+    // Send progress update every 30 seconds of watch time
+    if (currentTime - lastProgressUpdateRef.current >= 30) {
+      console.log(`📊 Sending progress update at ${currentTime.toFixed(1)}s...`);
+      try {
+        const token = localStorage.getItem('user_token');
+        await axios.post(`${API_BASE}/${id}/track-video/${activeLesson.id}`, {
+          watchedSeconds: Math.round(currentTime),
+          totalSeconds: Math.round(duration)
+        }, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        lastProgressUpdateRef.current = currentTime;
+        console.log(`✅ Progress updated at ${currentTime.toFixed(1)}s`);
+      } catch (err) {
+        console.log('Progress update failed (non-critical):', err);
+      }
+    }
+
     // Track when they've watched >= 80% and we haven't sent it yet
     const watchedPercentage = (currentTime / duration) * 100;
 
@@ -636,6 +656,37 @@ function CourseDetailPage() {
       setScoreRefreshTrigger(prev => prev + 1);
     } catch (err) {
       console.log('Video tracking failed on end (non-critical):', err);
+    }
+  };
+
+  // Handle document download with proper filename
+  const handleDownload = async () => {
+    try {
+      const url = activeLesson.documentUrl || activeLesson.src || activeLesson.video_url;
+      const filename = activeLesson.displayName || activeLesson.title || 'document';
+
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+      // Fallback to direct link
+      const a = document.createElement('a');
+      a.href = activeLesson.documentUrl || activeLesson.src || activeLesson.video_url;
+      a.download = activeLesson.displayName || activeLesson.title;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
@@ -972,9 +1023,8 @@ function CourseDetailPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {/* Nút tải về */}
-                    <a
-                      href={activeLesson.documentUrl || activeLesson.src || activeLesson.video_url}
-                      download={activeLesson.displayName || activeLesson.title}
+                    <button
+                      onClick={handleDownload}
                       className="btn-download-header"
                       style={{
                         background: '#0050b8',
@@ -1001,7 +1051,7 @@ function CourseDetailPage() {
                       }}
                     >
                       Tải về
-                    </a>
+                    </button>
                   </div>
                 </div>
 
