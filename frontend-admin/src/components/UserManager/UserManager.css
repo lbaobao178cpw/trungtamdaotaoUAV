@@ -275,12 +275,20 @@
 }
 
 .user-search-section {
-  padding: "12px";
-  background: "#f9fafb";
-  borderBottom: "1px solid #e5e7eb";
-  display: "flex";
-  gap: "12px";
-  alignItems: "center";
+  padding: 12px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .user-list-item {
@@ -571,7 +579,6 @@
 }
 
 .filter-select {
-  margin-left: 12px;
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ddd;
