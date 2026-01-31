@@ -18,7 +18,7 @@ import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
 import { uploadLicenseImage, listImages } from "../../lib/cloudinaryService";
-import "../admin/Admin/Admin.css";
+import "./LookupManager.css";
 
 const initialLicenseState = {
     id: "",
@@ -384,8 +384,8 @@ export default function LookupManager() {
                 }}
             >
             {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
-            <div className="panel" style={{ flex: 1 }}>
-                <div className="panel-header" style={{ justifyContent: "space-between" }}>
+            <div className="panel flex-1">
+                <div className="panel-header justify-between">
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {isEditing ? <Edit size={18} /> : <Plus size={18} />}
                         {isEditing
@@ -577,8 +577,8 @@ export default function LookupManager() {
                             />
                         </div>
 
-                        <div style={{ display: "flex", gap: "10px" }}>
-                            <div className="form-group" style={{ flex: 1 }}>
+                        <div className="flex-gap-10">
+                            <div className="form-group flex-1">
                                 <label className="form-label">Ngày cấp</label>
                                 <input
                                     type="date"
@@ -590,7 +590,7 @@ export default function LookupManager() {
                                     required
                                 />
                             </div>
-                            <div className="form-group" style={{ flex: 1 }}>
+                            <div className="form-group flex-1">
                                 <label className="form-label">Ngày hết hạn</label>
                                 <input
                                     type="date"
@@ -1052,8 +1052,9 @@ export default function LookupManager() {
                             <div
                                 key={license.id}
                                 className="list-item"
-                                style={{ alignItems: "flex-start", padding: "15px" }}
+                                style={{ alignItems: "flex-start", padding: "15px", display: "flex", justifyContent: "space-between" }}
                             >
+                                <div style={{ display: "flex", alignItems: "flex-start" }}>
                                 {license.portraitImage ? (
                                     <img
                                         src={license.portraitImage}
@@ -1095,36 +1096,14 @@ export default function LookupManager() {
                                     </div>
                                 )}
 
-                                <div style={{ flex: 1 }}>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            marginBottom: "6px",
-                                        }}
-                                    >
+                                <div className="flex-1">
+                                    <div className="justify-between" style={{ marginBottom: "6px" }}>
                                         <div
                                             className="item-title"
                                             style={{ fontSize: "15px", fontWeight: "bold" }}
                                         >
                                             {license.licenseNumber}
                                         </div>
-                                        <span
-                                            style={{
-                                                fontSize: "10px",
-                                                padding: "2px 8px",
-                                                borderRadius: "10px",
-                                                color: "#fff",
-                                                backgroundColor: getStatusBadgeColor(license.status),
-                                                height: "fit-content",
-                                                whiteSpace: "nowrap",
-                                                fontWeight: "600",
-                                            }}
-                                        >
-                                            {license.status === "active"
-                                                ? "Đang hoạt động"
-                                                : "Hết hạn"}
-                                        </span>
                                     </div>
 
                                     <div
@@ -1210,6 +1189,27 @@ export default function LookupManager() {
                                         </button>
                                     </div>
                                 </div>
+                                </div>
+
+                                {/* Status badge ở ngoài cùng bên phải */}
+                                <span
+                                    style={{
+                                        fontSize: "10px",
+                                        padding: "2px 8px",
+                                        borderRadius: "10px",
+                                        color: "#fff",
+                                        backgroundColor: getStatusBadgeColor(license.status),
+                                        height: "fit-content",
+                                        whiteSpace: "nowrap",
+                                        fontWeight: "600",
+                                        marginLeft: "auto",
+                                        alignSelf: "flex-start",
+                                    }}
+                                >
+                                    {license.status === "active"
+                                        ? "Đang hoạt động"
+                                        : "Hết hạn"}
+                                </span>
                             </div>
                         );
                     })}
