@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 // Đảm bảo đường dẫn CSS đúng với cấu trúc dự án của bạn
 import "../admin/Admin/Admin.css";
+import "./SolutionManager.css";
 import MediaSelector from "../mediaSelector/MediaSelector";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
-import { uploadImage, uploadVideo, uploadSolutionImage, listImages, uploadSolutionVideo, listVideos } from "../../lib/cloudinaryService";
+import { uploadImage, uploadVideo, uploadSolutionImage, uploadIllustrationImage, uploadClientImage, listImages, uploadSolutionVideo, listVideos } from "../../lib/cloudinaryService";
 
 const initialSolutionState = {
   id: "",
@@ -91,6 +92,18 @@ export default function SolutionManager() {
   const [loadingVideoLibrary, setLoadingVideoLibrary] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [targetVideoType, setTargetVideoType] = useState(null); // 'hero' or 'footer'
+
+  // State cho thư viện hình ảnh minh họa
+  const [showIllustrationLibrary, setShowIllustrationLibrary] = useState(false);
+  const [libraryIllustrations, setLibraryIllustrations] = useState([]);
+  const [loadingIllustrationLibrary, setLoadingIllustrationLibrary] = useState(false);
+  const [uploadingIllustration, setUploadingIllustration] = useState(false);
+
+  // State cho thư viện logo khách hàng
+  const [showClientLibrary, setShowClientLibrary] = useState(false);
+  const [libraryClients, setLibraryClients] = useState([]);
+  const [loadingClientLibrary, setLoadingClientLibrary] = useState(false);
+  const [uploadingClient, setUploadingClient] = useState(false);
 
   // State để force refresh video preview
   const [videoPreviewKey, setVideoPreviewKey] = useState(0);
@@ -252,6 +265,104 @@ export default function SolutionManager() {
     setShowVideoLibrary(false);
   };
 
+  const handleShowIllustrationLibrary = async () => {
+    setShowIllustrationLibrary(true);
+    setLoadingIllustrationLibrary(true);
+    try {
+      const result = await listImages("uav-training/solutions/illustrations");
+      if (result.success) {
+        setLibraryIllustrations(result.images);
+      } else {
+        alert('Failed to load illustrations: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading illustrations: ' + err.message);
+    } finally {
+      setLoadingIllustrationLibrary(false);
+    }
+  };
+
+  const handleSelectFromIllustrationLibrary = (image) => {
+    updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, image.url);
+    setShowIllustrationLibrary(false);
+  };
+
+  const handleIllustrationUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setUploadingIllustration(true);
+      const res = await uploadIllustrationImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload ảnh thất bại');
+        return;
+      }
+
+      updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, res.url);
+      notifySuccess('Tải ảnh minh họa lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Illustration upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload ảnh');
+    } finally {
+      setUploadingIllustration(false);
+    }
+  };
+
+  const handleShowClientLibrary = async () => {
+    setShowClientLibrary(true);
+    setLoadingClientLibrary(true);
+    try {
+      const result = await listImages("uav-training/solutions/clients");
+      if (result.success) {
+        setLibraryClients(result.images);
+      } else {
+        alert('Failed to load client logos: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading client logos: ' + err.message);
+    } finally {
+      setLoadingClientLibrary(false);
+    }
+  };
+
+  const handleSelectFromClientLibrary = (image) => {
+    updateClient(targetContext.imgIdx, image.url);
+    setShowClientLibrary(false);
+  };
+
+  const handleClientUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setUploadingClient(true);
+      const res = await uploadClientImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload logo thất bại');
+        return;
+      }
+
+      updateClient(targetContext.imgIdx, res.url);
+      notifySuccess('Tải logo khách hàng lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Client upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload logo');
+    } finally {
+      setUploadingClient(false);
+    }
+  };
+
   const handleVideoUpload = async (e, videoType) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -361,15 +472,7 @@ export default function SolutionManager() {
   };
 
   return (
-    <div
-      className="solution-manager-container"
-      style={{
-        display: "flex",
-        gap: "24px",
-        marginTop: "20px",
-        flexDirection: "row-reverse",
-      }}
-    >
+    <div className="solution-manager-container">
       {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
       <div className="panel" style={{ flex: 2 }}>
         <div
@@ -419,15 +522,15 @@ export default function SolutionManager() {
 
             <div className="form-group">
               <label className="form-label">Ảnh Hero (Thumbnail)</label>
-              <div style={{ textAlign: "center" }}>
+              <div className="center-text">
                 {!showLibrary ? (
                   <>
                     {!form.image ? (
                       <div>
-                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
+                        <div className="no-image-text">
                           Chưa có hình ảnh hero
                         </div>
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <div style={{ display: "flex", gap: "8px" }}>
                           <button
                             type="button"
                             onClick={() => document.getElementById("solutionImageInput")?.click()}
@@ -445,10 +548,17 @@ export default function SolutionManager() {
                           >
                             Chọn từ thư viện
                           </button>
+                          <button
+                            type="button"
+                            className="btn btn-info btn-sm"
+                            onClick={() => openMedia("hero_img")}
+                          >
+                            Chọn từ Media
+                          </button>
                         </div>
                       </div>
                     ) : (
-                      <div>
+                      <div className="center-text">
                         <img
                           src={getImageUrl(form.image)}
                           alt="Ảnh Hero"
@@ -463,26 +573,11 @@ export default function SolutionManager() {
                             e.target.src = "/images/img-default.jpg";
                           }}
                         />
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                        <div className="button-group-center">
                           <button
                             type="button"
                             onClick={() => document.getElementById("solutionImageInput")?.click()}
-                            className="btn btn-sm"
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "4px",
-                              backgroundColor: "#007bff",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "6px",
-                              padding: "6px 12px",
-                              cursor: "pointer",
-                              fontSize: "14px",
-                              transition: "background-color 0.2s",
-                            }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                            className="change-btn"
                             disabled={uploadingImage}
                           >
                             {uploadingImage ? 'Đang upload...' : 'Thay đổi hình ảnh'}
@@ -490,16 +585,21 @@ export default function SolutionManager() {
                           <button
                             type="button"
                             onClick={handleShowLibrary}
-                            className="btn btn-secondary btn-sm"
-                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                            className="btn btn-secondary btn-sm library-btn"
                           >
                             Chọn từ thư viện
                           </button>
                           <button
                             type="button"
+                            className="btn btn-info btn-sm"
+                            onClick={() => openMedia("hero_img")}
+                          >
+                            Chọn từ Media
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setForm({ ...form, image: "" })}
-                            className="btn btn-danger btn-sm"
-                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                            className="btn btn-danger btn-sm remove-btn"
                           >
                             Xóa hình ảnh
                           </button>
@@ -559,108 +659,33 @@ export default function SolutionManager() {
                       </button>
                     </div>
                     {loadingLibrary ? (
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "40px",
-                        color: "#6c757d"
-                      }}>
-                        <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
-                        <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải hình ảnh...</div>
+                      <div className="loading-state">
+                        <div className="loading-icon">⏳</div>
+                        <div className="loading-text">Đang tải hình ảnh...</div>
                       </div>
                     ) : libraryImages.length === 0 ? (
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "40px",
-                        color: "#6c757d"
-                      }}>
-                        <div style={{ fontSize: "48px", marginBottom: "12px" }}>📷</div>
-                        <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                      <div className="empty-state">
+                        <div className="empty-icon">📷</div>
+                        <div className="empty-text">
                           Chưa có hình ảnh nào trong thư viện
                         </div>
                       </div>
                     ) : (
-                      <div className="image-grid" style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-                        gap: "16px"
-                      }}>
+                      <div className="image-grid">
                         {libraryImages.map((image) => (
                           <div
                             key={image.publicId}
                             className="image-item"
                             onClick={() => handleSelectFromLibrary(image)}
-                            style={{
-                              border: "1px solid #e0e0e0",
-                              borderRadius: "8px",
-                              padding: "12px",
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              background: "white",
-                              textAlign: "center",
-                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-                              position: "relative",
-                              overflow: "hidden"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.borderColor = "#007bff";
-                              e.target.style.boxShadow = "0 4px 12px rgba(0, 123, 255, 0.15)";
-                              e.target.style.transform = "translateY(-2px)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.borderColor = "#e0e0e0";
-                              e.target.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.05)";
-                              e.target.style.transform = "translateY(0)";
-                            }}
                           >
                             <img
                               src={image.url}
                               alt={image.displayName}
-                              style={{
-                                width: "100%",
-                                height: "120px",
-                                objectFit: "cover",
-                                borderRadius: "6px",
-                                marginBottom: "8px"
-                              }}
                             />
-                            <p style={{
-                              margin: 0,
-                              fontSize: "12px",
-                              color: "#495057",
-                              wordBreak: "break-word",
-                              lineHeight: "1.4",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden"
-                            }}>
+                            <p>
                               {image.displayName}
                             </p>
-                            <div style={{
-                              position: "absolute",
-                              top: "8px",
-                              right: "8px",
-                              background: "rgba(0, 123, 255, 0.8)",
-                              color: "white",
-                              borderRadius: "50%",
-                              width: "20px",
-                              height: "20px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "12px",
-                              opacity: 0,
-                              transition: "opacity 0.3s"
-                            }}
-                            onMouseEnter={(e) => e.target.style.opacity = "1"}
-                            onMouseLeave={(e) => e.target.style.opacity = "0"}
-                            >
+                            <div className="checkmark">
                               ✓
                             </div>
                           </div>
@@ -677,11 +702,25 @@ export default function SolutionManager() {
                 onChange={handleImageUpload}
                 style={{ display: "none" }}
               />
+              <input
+                id="illustrationImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleIllustrationUpload}
+                style={{ display: "none" }}
+              />
+              <input
+                id="clientImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleClientUpload}
+                style={{ display: "none" }}
+              />
             </div>
 
             <div className="form-group">
               <label className="form-label">Video Hero</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+              <div className="flex-gap">
                 <input
                   className="form-control"
                   value={form.hero_video}
@@ -826,27 +865,11 @@ export default function SolutionManager() {
                   />
                 </div>
 
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: "0.9em",
-                    fontWeight: "bold",
-                    marginBottom: 8,
-                    display: "block",
-                  }}
-                >
+                <label className="form-label">
                   Hình ảnh minh họa:
                 </label>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(180px, 1fr))",
-                    gap: 12,
-                    marginBottom: 12,
-                  }}
-                >
+                <div className="image-grid-section">
                   {sec.images.map((img, imgIdx) => (
                     <div
                       key={imgIdx}
@@ -860,75 +883,60 @@ export default function SolutionManager() {
                         gap: "8px",
                       }}
                     >
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "100px",
-                          background: "#f5f5f5",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                          borderRadius: "2px",
-                          border: "1px solid #eee",
-                        }}
-                      >
+                      <div className="image-preview center-text">
                         {img ? (
                           <img
                             src={getImageUrl(img)}
                             alt={`Slide ảnh giải pháp ${imgIdx + 1}`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "contain",
-                            }}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                            }}
                           />
                         ) : (
-                          <span style={{ fontSize: "11px", color: "#999" }}>
+                          <span className="no-image">
                             No Image
                           </span>
                         )}
                       </div>
 
                       <input
-                        className="form-control"
+                        className="image-url-input"
                         value={img}
                         onChange={(e) =>
                           updateSectionImage(idx, imgIdx, e.target.value)
                         }
                         placeholder="URL ảnh..."
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "4px 6px",
-                          height: "auto",
-                        }}
                       />
 
-                      <div style={{ display: "flex", gap: 4 }}>
+                      <div className="button-group-center">
                         <button
                           type="button"
-                          className="btn btn-primary btn-sm"
-                          style={{
-                            flex: 1,
-                            padding: "2px 0",
-                            fontSize: "11px",
+                          onClick={() => {
+                            setTargetContext({ type: "section", sectionIdx: idx, imgIdx });
+                            document.getElementById("illustrationImageInput")?.click();
                           }}
+                          className="btn btn-primary btn-sm"
+                          disabled={uploadingIllustration}
+                        >
+                          {uploadingIllustration ? 'Đang upload...' : 'Upload từ máy tính'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTargetContext({ type: "section", sectionIdx: idx, imgIdx });
+                            handleShowIllustrationLibrary();
+                          }}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Chọn từ thư viện
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-info btn-sm"
                           onClick={() => openMedia("section", idx, imgIdx)}
                         >
-                          Chọn
+                          Chọn từ Media
                         </button>
                         <button
                           type="button"
                           className="btn btn-danger btn-sm"
-                          style={{
-                            width: "30px",
-                            padding: "2px 0",
-                            fontSize: "12px",
-                          }}
                           onClick={() => removeSectionImage(idx, imgIdx)}
                         >
                           ×
@@ -940,25 +948,7 @@ export default function SolutionManager() {
                   <button
                     type="button"
                     onClick={() => addSectionImage(idx)}
-                    style={{
-                      border: "2px dashed #0066cc",
-                      background: "#f0f7ff",
-                      borderRadius: "4px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      color: "#0066cc",
-                      minHeight: "160px",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = "#e0f0ff";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = "#f0f7ff";
-                    }}
+                    className="add-image-btn"
                   >
                     <span style={{ fontSize: "24px", marginBottom: "4px" }}>
                       +
@@ -973,13 +963,8 @@ export default function SolutionManager() {
 
             <button
               type="button"
-              className="btn btn-secondary btn-block"
+              className="btn btn-secondary btn-block add-section-btn"
               onClick={addSection}
-              style={{
-                marginTop: "10px",
-                borderColor: "#0066cc",
-                color: "#0066cc",
-              }}
             >
               + Thêm khối dịch vụ mới
             </button>
@@ -1102,14 +1087,7 @@ export default function SolutionManager() {
               />
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-                gap: 10,
-                marginTop: 10,
-              }}
-            >
+            <div className="client-grid">
               {clients.map((url, idx) => (
                 <div
                   key={idx}
@@ -1151,14 +1129,34 @@ export default function SolutionManager() {
                     onChange={(e) => updateClient(idx, e.target.value)}
                     style={{ fontSize: "0.7rem", padding: 2, marginBottom: 4 }}
                   />
-                  <div style={{ display: "flex", gap: 2 }}>
+                  <div className="button-group-center">
                     <button
                       type="button"
+                      onClick={() => {
+                        setTargetContext({ type: "client", imgIdx: idx });
+                        document.getElementById("clientImageInput")?.click();
+                      }}
                       className="btn btn-primary btn-sm"
-                      style={{ flex: 1 }}
+                      disabled={uploadingClient}
+                    >
+                      {uploadingClient ? 'Đang upload...' : 'Upload từ máy tính'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTargetContext({ type: "client", imgIdx: idx });
+                        handleShowClientLibrary();
+                      }}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
                       onClick={() => openMedia("client", null, idx)}
                     >
-                      ...
+                      Chọn từ Media
                     </button>
                     <button
                       type="button"
@@ -1426,6 +1424,284 @@ export default function SolutionManager() {
                           overflow: 'hidden'
                         }}>
                           {cleanDisplayName || 'Video'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thư viện hình ảnh minh họa */}
+      {showIllustrationLibrary && (
+        <div className="legal-modal-overlay">
+          <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện hình ảnh minh họa</h3>
+              <button
+                onClick={() => setShowIllustrationLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingIllustrationLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải hình ảnh...</div>
+                </div>
+              ) : libraryIllustrations.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🖼️</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có hình ảnh minh họa nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryIllustrations.map((image) => {
+                    // Làm sạch displayName để loại bỏ timestamp và hash
+                    const cleanDisplayName = image.displayName
+                      .replace(/^\d+-[a-f0-9]+-/, '') // Loại bỏ timestamp-hash-
+                      .replace(/-origin-\d+/, '') // Loại bỏ -origin-timestamp
+                      .replace(/-\d+$/, '') // Loại bỏ -timestamp ở cuối
+                      .replace(/^-|-$/g, ''); // Loại bỏ - ở đầu và cuối
+                    
+                    return (
+                      <div
+                        key={image.publicId}
+                        onClick={() => handleSelectFromIllustrationLibrary(image)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <img
+                          src={image.url}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            objectFit: 'contain',
+                            borderRadius: '6px',
+                            marginBottom: '8px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                          alt={cleanDisplayName}
+                        />
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Image'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thư viện logo khách hàng */}
+      {showClientLibrary && (
+        <div className="legal-modal-overlay">
+          <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện logo khách hàng</h3>
+              <button
+                onClick={() => setShowClientLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingClientLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải logo...</div>
+                </div>
+              ) : libraryClients.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏢</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có logo khách hàng nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryClients.map((image) => {
+                    // Làm sạch displayName để loại bỏ timestamp và hash
+                    const cleanDisplayName = image.displayName
+                      .replace(/^\d+-[a-f0-9]+-/, '') // Loại bỏ timestamp-hash-
+                      .replace(/-origin-\d+/, '') // Loại bỏ -origin-timestamp
+                      .replace(/-\d+$/, '') // Loại bỏ -timestamp ở cuối
+                      .replace(/^-|-$/g, ''); // Loại bỏ - ở đầu và cuối
+                    
+                    return (
+                      <div
+                        key={image.publicId}
+                        onClick={() => handleSelectFromClientLibrary(image)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <img
+                          src={image.url}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            objectFit: 'contain',
+                            borderRadius: '6px',
+                            marginBottom: '8px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                          alt={cleanDisplayName}
+                        />
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Logo'}
                         </p>
                         <div style={{
                           position: 'absolute',

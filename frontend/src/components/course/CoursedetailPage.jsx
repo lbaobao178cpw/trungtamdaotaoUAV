@@ -671,7 +671,11 @@ function CourseDetailPage() {
 
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = filename;
+      // Ensure filename has .pdf extension for documents
+      const downloadName = activeLesson.type === 'document' && !filename.toLowerCase().endsWith('.pdf') 
+        ? `${filename}.pdf` 
+        : filename;
+      a.download = downloadName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -682,7 +686,10 @@ function CourseDetailPage() {
       // Fallback to direct link
       const a = document.createElement('a');
       a.href = activeLesson.documentUrl || activeLesson.src || activeLesson.video_url;
-      a.download = activeLesson.displayName || activeLesson.title;
+      const fallbackName = activeLesson.displayName || activeLesson.title;
+      a.download = activeLesson.type === 'document' && !fallbackName.toLowerCase().endsWith('.pdf') 
+        ? `${fallbackName}.pdf` 
+        : fallbackName;
       a.target = '_blank';
       document.body.appendChild(a);
       a.click();

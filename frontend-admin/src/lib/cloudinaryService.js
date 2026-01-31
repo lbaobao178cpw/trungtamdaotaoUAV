@@ -86,6 +86,26 @@ export const uploadSolutionImage = async (file) => {
   return uploadToCloudinary(file, "uav-training/solutions");
 };
 
+export const uploadIllustrationImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/solutions/illustrations");
+};
+
+export const uploadClientImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/solutions/clients");
+};
+
 export const uploadSolutionVideo = async (file) => {
   if (!file.type.startsWith("video/")) {
     return {
