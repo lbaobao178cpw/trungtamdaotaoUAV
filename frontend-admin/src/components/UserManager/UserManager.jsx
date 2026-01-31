@@ -6,7 +6,7 @@ import {
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
-import "../admin/Admin/Admin.css";
+import "./UserManager.css";
 
 const initialUserState = {
   id: "", full_name: "", email: "", phone: "", role: "student", is_active: true, is_approved: false, password: "", avatar: "", failed_login_attempts: 0,
@@ -512,12 +512,12 @@ export default function UserManager() {
   };
 
   return (
-    <div className="solution-manager-container" style={{ display: "flex", gap: "24px", marginTop: "20px", flexDirection: "row-reverse" }}>
+    <div className="solution-manager-container">
 
       {/* PANEL 1: FORM (Giữ nguyên, chỉ thêm validate) */}
-      <div className="panel" style={{ flex: 1, height: 'fit-content' }}>
+      <div className="panel flex-1 fit-content">
         <div className="panel-header">
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span className="flex-center gap-8">
             {isEditing ? <Edit size={18} /> : <Plus size={18} />}
             {isEditing ? `Sửa #${form.id}` : "Thêm Mới"}
           </span>
@@ -540,21 +540,21 @@ export default function UserManager() {
             {errors.phone && <small style={{ color: 'red', fontSize: '12px' }}>{errors.phone}</small>}</div>
             {!isEditing && <div className="form-group"><label className="form-label">Mật khẩu</label><input className="form-control" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mặc định: 123456" /></div>}
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              <div className="form-group" style={{ flex: 1 }}><label className="form-label">Vai trò</label><select className="form-control" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="student">Học viên</option><option value="admin">Admin</option><option value="instructor">Giảng viên</option></select></div>
-              <div className="form-group" style={{ flex: 1 }}><label className="form-label">Trạng thái</label><select className="form-control" value={form.is_active ? "active" : "locked"} onChange={(e) => setForm({ ...form, is_active: e.target.value === "active" })}><option value="active">Hoạt động</option><option value="locked">Khóa</option></select></div>
+            <div className="flex-gap-10">
+              <div className="form-group flex-1"><label className="form-label">Vai trò</label><select className="form-control" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="student">Học viên</option><option value="admin">Admin</option><option value="instructor">Giảng viên</option></select></div>
+              <div className="form-group flex-1"><label className="form-label">Trạng thái</label><select className="form-control" value={form.is_active ? "active" : "locked"} onChange={(e) => setForm({ ...form, is_active: e.target.value === "active" })}><option value="active">Hoạt động</option><option value="locked">Khóa</option></select></div>
             </div>
 
-            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="mt-12 flex-space-between">
               <button type="button" className="btn btn-sm btn-outline" onClick={() => setShowDetails(s => !s)} style={{ padding: '6px 10px' }}>
                 {showDetails ? 'Ẩn chi tiết' : 'Xem chi tiết hồ sơ'}
               </button>
-              <small style={{ color: '#666' }}>Bạn đang {isEditing ? `chỉnh sửa #${form.id}` : 'tạo người dùng mới'}</small>
+              <small className="text-muted">Bạn đang {isEditing ? `chỉnh sửa #${form.id}` : 'tạo người dùng mới'}</small>
             </div>
 
             {showDetails && (
-              <div style={{ marginTop: 12, padding: 12, background: '#fbfbfc', border: '1px solid #eee', borderRadius: 6 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="user-details-section">
+                <div className="grid-2-cols">
                   <div className="form-group"><label className="form-label">CCCD</label><input className="form-control" value={form.identity_number || ''} onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '');
                     setForm({ ...form, identity_number: value });
@@ -602,9 +602,9 @@ export default function UserManager() {
                   <div className="form-group"><label className="form-label">Kinh nghiệm</label><input className="form-control" value={form.uav_experience || ''} onChange={(e) => setForm({ ...form, uav_experience: e.target.value })} placeholder="Mô tả kinh nghiệm" /></div>
 
                   {(form.identity_image_front || form.identity_image_back) && (
-                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="grid-span-2 grid-2-cols">
                       {form.identity_image_front && (
-                        <div className="form-group" style={{ margin: 0 }}>
+                        <div className="form-group margin-0">
                           <label className="form-label">CCCD Mặt Trước</label>
                           <img 
                             src={form.identity_image_front} 
@@ -629,9 +629,9 @@ export default function UserManager() {
                   )}
 
                   {/* Địa chỉ hộ khẩu section */}
-                  <div style={{ gridColumn: '1 / -1', marginTop: 12, padding: 12, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600, color: '#1f2937' }}>Địa chỉ hộ khẩu</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="address-section">
+                    <h4 className="section-title-small">Địa chỉ hộ khẩu</h4>
+                    <div className="address-grid">
                       <div className="form-group">
                         <label className="form-label">Tỉnh/Thành phố</label>
                         <select 
@@ -660,7 +660,7 @@ export default function UserManager() {
                         </select>
                       </div>
                     </div>
-                    <div className="form-group" style={{ marginTop: 12 }}>
+                    <div className="form-group mt-12">
                       <label className="form-label">Địa chỉ cụ thể</label>
                       <textarea 
                         className="form-control" 
@@ -673,9 +673,9 @@ export default function UserManager() {
                   </div>
 
                   {/* Địa chỉ hiện tại section */}
-                  <div style={{ gridColumn: '1 / -1', marginTop: 12, padding: 12, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600, color: '#1f2937' }}>Địa chỉ hiện tại</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="address-section">
+                    <h4 className="section-title-small">Địa chỉ hiện tại</h4>
+                    <div className="address-grid">
                       <div className="form-group">
                         <label className="form-label">Tỉnh/Thành phố</label>
                         <select 
@@ -704,7 +704,7 @@ export default function UserManager() {
                         </select>
                       </div>
                     </div>
-                    <div className="form-group" style={{ marginTop: 12 }}>
+                    <div className="form-group mt-12">
                       <label className="form-label">Địa chỉ cụ thể</label>
                       <textarea 
                         className="form-control" 
@@ -719,7 +719,7 @@ export default function UserManager() {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <button type="submit" className="btn btn-primary btn-block mt-20 flex-center gap-8" disabled={loading}>
               {loading ? <RefreshCw className="spin" size={18} /> : <Save size={18} />} Lưu thông tin
             </button>
           </form>
@@ -727,27 +727,20 @@ export default function UserManager() {
       </div>
 
       {/* PANEL 2: DANH SÁCH CHI TIẾT */}
-      <div className="panel" style={{ flex: 1.8 }}>
-        <div className="panel-header" style={{ justifyContent: "space-between" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><Users size={18} /> Danh sách ({users.length})</span>
+      <div className="panel flex-1-8">
+        <div className="panel-header justify-between">
+          <span className="flex-center gap-8"><Users size={18} /> Danh sách ({users.length})</span>
           <button className="btn btn-success btn-sm" onClick={refreshUsers}><RefreshCw size={14} /> Làm mới</button>
         </div>
 
-        <div style={{ padding: "12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", gap: "12px", alignItems: "center" }}>
+        <div className="user-search-section">
           <Search size={18} color="#999" />
           <input
             type="text"
             placeholder="Tìm kiếm theo tên, email, SĐT, ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              flex: 1,
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-              padding: "8px 12px",
-              fontSize: "14px",
-              outline: "none"
-            }}
+            className="search-input"
             onFocus={(e) => e.target.style.borderColor = "#0066cc"}
             onBlur={(e) => e.target.style.borderColor = "#ddd"}
           />
@@ -755,7 +748,7 @@ export default function UserManager() {
           <select
             value={approvalFilter}
             onChange={(e) => setApprovalFilter(e.target.value)}
-            style={{ marginLeft: 12, padding: '8px', borderRadius: 6, border: '1px solid #ddd', background: '#fff' }}
+            className="filter-select"
           >
             <option value="all">Tất cả</option>
             <option value="approved">Đã duyệt</option>
@@ -1075,46 +1068,18 @@ export default function UserManager() {
 
       {/* Image Modal */}
       {showImageModal && (
-        <div 
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            background: 'rgba(0,0,0,0.8)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            zIndex: 1000 
-          }} 
-          onClick={() => setShowImageModal(false)}
-        >
-          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }} onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={selectedImage} 
-              alt={selectedImageAlt} 
-              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '8px' }} 
+        <div className="image-modal-overlay" onClick={() => setShowImageModal(false)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={selectedImage}
+              alt={selectedImageAlt}
+              className="rounded"
             />
-            <button 
-              onClick={() => setShowImageModal(false)} 
-              style={{ 
-                position: 'absolute', 
-                top: 10, 
-                right: 10, 
-                background: 'rgba(0,0,0,0.5)', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '50%', 
-                width: 30, 
-                height: 30, 
-                cursor: 'pointer',
-                fontSize: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="image-modal-close"
             >
+            
               ×
             </button>
           </div>

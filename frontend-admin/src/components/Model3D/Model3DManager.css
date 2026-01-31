@@ -172,3 +172,14 @@
     transform: translateY(0);
   }
 }
+
+/* === SAVE CAMERA BUTTON HOVER === */
+.save-camera-btn {
+  background-color: #ff8c00 !important; /* Màu cà (carrot orange) */
+  border-color: #ff8c00 !important;
+}
+
+.save-camera-btn:hover {
+  background-color: #ff4500 !important; /* Màu cà đậm hơn khi hover */
+  border-color: #ff4500 !important;
+}

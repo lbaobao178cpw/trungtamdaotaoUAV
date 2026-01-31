@@ -9,7 +9,7 @@ import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION, MEDIA_BASE_URL } from "../../constants/api";
 import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import { uploadPointImage, uploadPanoramaImage, listImages } from "../../lib/cloudinaryService";
-import '../admin/Admin/Admin.css';
+import './PointManager.css';
 
 // MapPicker thường nặng nên dùng Lazy load
 const MapPicker = React.lazy(() => import("../mappicker/MapPicker"));

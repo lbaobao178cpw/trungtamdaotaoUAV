@@ -329,7 +329,7 @@ export default function Model3DManager() {
               </p>
               <button
                 onClick={handleSaveCameraView}
-                className="btn btn-warning"
+                className="btn btn-warning save-camera-btn"
                 style={{ width: "100%", fontWeight: "bold" }}
                 disabled={!currentModel || loading}
               >

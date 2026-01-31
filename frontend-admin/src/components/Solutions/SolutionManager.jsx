@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 // Đảm bảo đường dẫn CSS đúng với cấu trúc dự án của bạn
-import "../admin/Admin/Admin.css";
 import "./SolutionManager.css";
 import MediaSelector from "../mediaSelector/MediaSelector";
 import { useApi, useApiMutation } from "../../hooks/useApi";
@@ -573,7 +572,7 @@ export default function SolutionManager() {
                             e.target.src = "/images/img-default.jpg";
                           }}
                         />
-                        <div className="button-group-center">
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
                           <button
                             type="button"
                             onClick={() => document.getElementById("solutionImageInput")?.click()}
@@ -720,42 +719,99 @@ export default function SolutionManager() {
 
             <div className="form-group">
               <label className="form-label">Video Hero</label>
-              <div className="flex-gap">
-                <input
-                  className="form-control"
-                  value={form.hero_video}
-                  onChange={(e) =>
-                    setForm({ ...form, hero_video: e.target.value })
-                  }
-                  placeholder="Link Video (MP4/Youtube)..."
-                  style={{ flex: 1 }}
-                />
-                {uploadingVideo && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("heroVideoInput")?.click()}
-                  className="btn btn-primary btn-sm"
-                  disabled={uploadingVideo}
-                >
-                  Upload từ máy tính
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleShowVideoLibrary('hero')}
-                  className="btn btn-secondary btn-sm"
-                >
-                  Chọn từ thư viện
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-info btn-sm"
-                  onClick={() => openMedia("hero_video")}
-                >
-                  Chọn từ Media
-                </button>
-              </div>
+              {!form.hero_video ? (
+                <>
+                  <div className="flex-gap">
+                    <input
+                      className="form-control"
+                      value={form.hero_video}
+                      onChange={(e) =>
+                        setForm({ ...form, hero_video: e.target.value })
+                      }
+                      placeholder="Link Video (MP4/Youtube)..."
+                      style={{ flex: 1 }}
+                    />
+                    {uploadingVideo && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("heroVideoInput")?.click()}
+                      className="btn btn-primary btn-sm"
+                      disabled={uploadingVideo}
+                    >
+                      Upload từ máy tính
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShowVideoLibrary('hero')}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
+                      onClick={() => openMedia("hero_video")}
+                    >
+                      Chọn từ Media
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="center-text">
+                  <div key={`hero-video-${videoPreviewKey}`} style={{ marginBottom: 12, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
+                    {form.hero_video.includes("youtube.com") || form.hero_video.includes("youtu.be") ? (
+                      <iframe
+                        width="100%"
+                        height="200"
+                        src={getYouTubeEmbedUrl(form.hero_video)}
+                        title="Hero Video Preview"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ borderRadius: 4 }}
+                      ></iframe>
+                    ) : (
+                      <video key={`hero-video-player-${videoPreviewKey}`} width="100%" height="200" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
+                        <source src={form.hero_video} type="video/mp4" />
+                        Trình duyệt không hỗ trợ thẻ video.
+                      </video>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("heroVideoInput")?.click()}
+                      className="change-btn"
+                      disabled={uploadingVideo}
+                    >
+                      {uploadingVideo ? 'Đang upload...' : 'Thay đổi video'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShowVideoLibrary('hero')}
+                      className="btn btn-secondary btn-sm library-btn"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
+                      onClick={() => openMedia("hero_video")}
+                    >
+                      Chọn từ Media
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, hero_video: "" })}
+                      className="btn btn-danger btn-sm remove-btn"
+                    >
+                      Xóa video
+                    </button>
+                  </div>
+                </div>
+              )}
               <input
                 id="heroVideoInput"
                 type="file"
@@ -763,28 +819,6 @@ export default function SolutionManager() {
                 onChange={(e) => handleVideoUpload(e, 'hero')}
                 style={{ display: "none" }}
               />
-
-              {form.hero_video && (
-                <div key={`hero-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
-                  {form.hero_video.includes("youtube.com") || form.hero_video.includes("youtu.be") ? (
-                    <iframe
-                      width="100%"
-                      height="200"
-                      src={getYouTubeEmbedUrl(form.hero_video)}
-                      title="Hero Video Preview"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{ borderRadius: 4 }}
-                    ></iframe>
-                  ) : (
-                    <video key={`hero-video-player-${videoPreviewKey}`} width="100%" height="200" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
-                      <source src={form.hero_video} type="video/mp4" />
-                      Trình duyệt không hỗ trợ thẻ video.
-                    </video>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="form-group">
