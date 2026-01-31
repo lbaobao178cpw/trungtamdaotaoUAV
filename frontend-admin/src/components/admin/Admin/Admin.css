@@ -465,126 +465,6 @@ a:hover {
 }
 
 /* =========================================
-   POINT PREVIEW COMPONENT
-   (Giữ nguyên layout, cập nhật màu sắc)
-   ========================================= */
-.point-preview-container {
-  width: 100%;
-  animation: fadeInUp 0.4s ease;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.preview-card {
-  background: var(--bg-white);
-  border: 1px solid var(--border-light);
-  /* Viền mỏng hơn */
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.preview-header {
-  background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--bg-white) 100%);
-  border-bottom: 1px solid var(--border-light);
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.preview-logo-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
-}
-
-.preview-logo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.preview-point-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary-dark);
-  /* Màu xanh đậm */
-  margin: 0 0 6px 0;
-}
-
-.preview-id-value {
-  background: var(--primary);
-  color: white;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.preview-image-wrapper {
-  background: var(--bg-gray-100);
-  max-height: 300px;
-  overflow: hidden;
-}
-
-.preview-main-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.preview-section-title {
-  color: var(--primary);
-  font-weight: 700;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.preview-lead-wrapper {
-  background: #f0f4ff;
-  border-left: 4px solid var(--accent);
-  /* Viền cam */
-  padding: 16px;
-  border-radius: var(--radius);
-}
-
-.preview-lead {
-  font-style: italic;
-  color: #333;
-}
-
-.preview-coord-value {
-  color: var(--primary);
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-}
-
-.preview-footer {
-  background: var(--bg-gray-50);
-  border-top: 2px solid var(--info);
-  padding: 16px 20px;
-}
-
-/* =========================================
    MEDIA SELECTOR - FIXED & BRANDED
    (Phần quan trọng được thêm lại và sửa màu)
    ========================================= */
@@ -757,258 +637,9 @@ a:hover {
   cursor: not-allowed;
 }
 
-/* Solution Manager Layout */
-.solution-manager-container {
-  display: flex;
-  gap: 24px;
-  margin-top: 24px;
-  flex-direction: row-reverse;
-}
-
-.admin-left-panel {
-  flex: 2;
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-.admin-right-panel {
-  flex: 1;
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-/* Animations */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* Responsive Media Selector */
-@media (max-width: 992px) {
-  .media-modal-content {
-    width: 98vw !important;
-    height: 95vh !important;
-  }
-
-  .solution-manager-container,
-  .split-layout {
-    flex-direction: column;
-    grid-template-columns: 1fr;
-  }
-
-  .admin-right-panel {
-    order: -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .media-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .media-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
 /* =========================================
    NEW STYLES EXTRACTED FROM ADMIN.JSX
    ========================================= */
-
-/* Wrapper chính */
-.admin-content-wrapper {
-  margin-top: 20px;
-}
-
-/* Layout Grid: Chia cột Form và Preview */
-.admin-layout-grid {
-  display: grid;
-  grid-template-columns: 1fr 520px;
-  gap: 24px;
-  align-items: stretch;
-  /* ⭐ BẮT BUỘC */
-}
-
-
-/* Header của Panel Form */
-.panel-header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Input readonly hiển thị tọa độ */
-.input-display-readonly {
-  background: #f8f9fa;
-  color: #666;
-}
-
-/* Grid cho hàng ID và Title */
-.form-row-id-title {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 15px;
-}
-
-/* Wrapper cho ReactQuill để nền trắng */
-.quill-wrapper {
-  background: white;
-}
-
-/* Style cho Quill Editor */
-.quill-editor-custom {
-  height: 200px;
-  margin-bottom: 50px;
-}
-
-/* Hàng Media (Logo & Ảnh) */
-.media-row {
-  display: flex;
-  gap: 20px;
-}
-
-.media-col {
-  flex: 1;
-}
-
-/* Ảnh preview nhỏ trong form */
-.media-thumb-preview {
-  height: 40px;
-  margin-top: 5px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-/* Grid cho lịch mở cửa */
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.schedule-item {
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-}
-
-.schedule-label {
-  width: 80px;
-  text-transform: capitalize;
-  font-weight: 500;
-}
-
-.schedule-input {
-  padding: 4px 8px;
-}
-
-/* Grid cho liên hệ */
-.contact-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-/* Footer Action Buttons */
-.form-actions-footer {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-/* --- PREVIEW SIDEBAR STYLES --- */
-.preview-sticky-sidebar {
-  position: sticky;
-  top: calc(var(--header-height, 64px) + 24px);
-  max-height: calc(100vh - var(--header-height, 64px) - 48px);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.preview-header-gradient {
-  /* Đổi sang nền Trắng (Giống Header Menu) */
-  background: #ffffff;
-
-  /* Chữ màu Xanh DJI */
-  color: #0066cc;
-  font-weight: 700;
-
-  /* Thêm viền dưới để tách biệt nội dung */
-  border-bottom: 2px solid #f0f7ff;
-
-  /* Giữ nguyên vị trí */
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-
-  /* Bo góc trên */
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.preview-content-wrapper {
-  padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  min-height: 500px;
-}
-
-/* --- RESPONSIVE MEDIA QUERIES --- */
-/* Đã chuyển từ thẻ <style> trong JS sang đây */
-
-@media (max-width: 1400px) {
-  .admin-layout-grid {
-    grid-template-columns: 1fr 450px !important;
-  }
-}
-
-@media (max-width: 1200px) {
-  .admin-layout-grid {
-    grid-template-columns: 1fr 400px !important;
-  }
-}
-
-@media (max-width: 992px) {
-  .split-layout {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Reset layout grid về 1 cột trên mobile */
-  .admin-layout-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Ẩn sidebar preview trên màn hình nhỏ */
-  .preview-sticky-sidebar {
-    display: none !important;
-  }
-}
 
 /* =========================================
    MAP PICKER & MODAL FIX (Thêm vào cuối file)
@@ -1333,4 +964,145 @@ input:checked+.toggle-slider:before {
   flex: 1;
   /* Cho sidebar */
   overflow-y: auto;
+}
+
+/* =========================================================
+   LOADING SCREEN (THEME TRẮNG - XANH)
+   ========================================================= */
+.loading-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* ĐỔI: Nền trắng pha chút xám xanh nhẹ cho sang trọng */
+  background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /* Giữ hiệu ứng mờ nếu có lớp phía sau */
+  backdrop-filter: blur(10px); 
+}
+
+.loading-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  /* ĐỔI: Viền nền màu xám nhạt để nổi bật trên nền trắng */
+  border: 4px solid #e6e6e6;
+  /* ĐỔI: Viền xoay màu Xanh chủ đạo (Primary Blue) */
+  border-top: 4px solid #0050b8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text-container {
+  text-align: center;
+  /* ĐỔI: Chữ màu Xanh chủ đạo thay vì màu trắng */
+  color: #0050b8;
+}
+
+.loading-title {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: 700; /* Tăng độ đậm */
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.loading-subtitle {
+  margin: 0;
+  /* ĐỔI: Chữ phụ màu xám đậm để dễ đọc trên nền trắng */
+  color: #555555; 
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.loading-dot {
+  width: 10px; /* Tăng nhẹ kích thước chấm */
+  height: 10px;
+  border-radius: 50%;
+  /* ĐỔI: Dùng màu Vàng (Secondary) để tạo điểm nhấn hoặc giữ màu Xanh */
+  background: #0050b8; 
+  animation: bounce 1.4s infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { opacity: 0.5; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+/* =========================================
+   HEADER BRAND DROPDOWN
+   ========================================= */
+.header-brand-wrapper {
+  position: relative;
+}
+
+.header-brand-trigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-brand-title {
+  margin: 0;
+}
+
+.header-brand-arrow {
+  font-size: 12px;
+}
+
+.header-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-width: 140px;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.header-dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  color: red;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.header-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* =========================================
+   PANEL UTILS
+   ========================================= */
+.panel-transparent {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
 }

@@ -18,7 +18,7 @@ import {
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
-import "../admin/Admin/Admin.css";
+import "./ExamManager.css";
 
 const initialExamState = {
   id: "",
@@ -119,19 +119,11 @@ export default function ExamManager() {
   };
 
   return (
-    <div
-      className="solution-manager-container"
-      style={{
-        display: "flex",
-        gap: "24px",
-        marginTop: "20px",
-        flexDirection: "row-reverse",
-      }}
-    >
+    <div className="solution-manager-container">
       {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
-      <div className="panel" style={{ flex: 1 }}>
-        <div className="panel-header" style={{ justifyContent: "space-between" }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="panel flex-1">
+        <div className="panel-header justify-between">
+          <span className="flex-center gap-8">
             {isEditing ? <Edit size={18} /> : <Plus size={18} />}
             {isEditing ? `Sửa Lịch Thi #${form.id}` : "Thêm Lịch Thi Mới"}
           </span>
@@ -139,8 +131,7 @@ export default function ExamManager() {
             <button
               type="button"
               onClick={handleAddNew}
-              className="btn btn-sm btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              className="btn btn-sm btn-secondary flex-center gap-4"
             >
               <X size={14} /> Hủy
             </button>
@@ -232,12 +223,11 @@ export default function ExamManager() {
               </div>
             </div>
 
-            <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: 20 }}>
+            <div className="mt-20" style={{ borderTop: "1px solid #eee", paddingTop: 20 }}>
               <button
                 type="submit"
-                className="btn btn-primary btn-block"
+                className="btn btn-primary btn-block flex-center gap-8"
                 disabled={loading}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 {loading ? <RefreshCw className="spin" size={18} /> : <Save size={18} />}
                 {loading ? "Đang xử lý..." : isEditing ? "CẬP NHẬT LỊCH THI" : "TẠO LỊCH THI MỚI"}
@@ -248,15 +238,14 @@ export default function ExamManager() {
       </div>
 
       {/* --- PANEL 2: DANH SÁCH --- */}
-      <div className="panel" style={{ flex: 1.5 }}>
-        <div className="panel-header" style={{ justifyContent: "space-between" }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="panel flex-1-5">
+        <div className="panel-header justify-between">
+          <span className="flex-center gap-8">
             <Calendar size={18} /> Danh sách Lịch Thi
           </span>
           <button
-            className="btn btn-success btn-sm"
+            className="btn btn-success btn-sm flex-center gap-4"
             onClick={refreshExams}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <RefreshCw size={14} /> Làm mới
           </button>

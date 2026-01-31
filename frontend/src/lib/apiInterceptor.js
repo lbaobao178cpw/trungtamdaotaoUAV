@@ -57,7 +57,7 @@ const refreshAccessToken = async () => {
 
     try {
         // Tạo instance axios mới để tránh interceptor infinite loop
-        const freshAxios = axios.create({ baseURL: API_BASE, timeout: 10000 });
+        const freshAxios = axios.create({ baseURL: API_BASE_URL, timeout: 10000 });
         const response = await freshAxios.post('/auth/refresh-token', { refreshToken });
         const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
@@ -176,7 +176,7 @@ apiClient.interceptors.response.use(
 
             // Gọi refresh token endpoint
             return axios
-                .post(`${API_BASE}/auth/refresh-token`, { refreshToken })
+                .post(`${API_BASE_URL}/auth/refresh-token`, { refreshToken })
                 .then(({ data }) => {
                     const { token: newAccessToken, refreshToken: newRefreshToken } = data;
 

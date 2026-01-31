@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { apiClient } from '../../lib/apiInterceptor';
 import { notifySuccess, notifyError, notifyWarning } from '../../lib/notifications';
+import { API_ENDPOINTS } from '../../config/apiConfig';
 
 function PersonalInfo() {
 
@@ -10,6 +11,20 @@ function PersonalInfo() {
   const fileInputRef = useRef(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState(profile?.is_approved);
+  const [tierBServices, setTierBServices] = useState([]);
+
+  // Fetch tier B services
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await apiClient.get(`${API_ENDPOINTS.BASE_URL}/nghiep-vu-hang-b`);
+        setTierBServices(res.data || []);
+      } catch (err) {
+        console.error('Error fetching tier B services:', err);
+      }
+    };
+    fetchServices();
+  }, []);
 
   // Kiểm tra status phê duyệt từ localStorage hoặc fetch lại từ server
   useEffect(() => {
@@ -372,10 +387,7 @@ function PersonalInfo() {
                   <span className="info-value">{profile.target_tier || '--'}</span>
                 </div>
 
-                <div className="info-row">
-                  <span className="info-label">Loại UAV</span>
-                  <span className="info-value">{profile.uav_type || '--'}</span>
-                </div>
+                
 
                 <div className="info-row">
                   <span className="info-label">Ngày kích hoạt</span>
@@ -384,126 +396,32 @@ function PersonalInfo() {
                   </span>
                 </div>
 
-
-                {/* <>
-                    <div className="info-row">
-                      <span className="info-label">Họ tên</span>
-                      <span className="info-value">{profile.full_name}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Email</span>
-                      <input
-                        type="email"
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="form-input"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Số điện thoại</span>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        className="form-input"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Mã định danh</span>
-                      <span className="info-value">{profile.identity_number || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Giới tính</span>
-                      <span className="info-value">{profile.gender || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Ngày sinh</span>
-                      <span className="info-value">
-                        {profile.birth_date ? formatDate(profile.birth_date) : '--'}
-                      </span>
-                    </div>
-
-
-                    <div className="info-row">
-                      <span className="info-label">Địa chỉ</span>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <input
-                          type="text"
-                          name="address"
-                          value={form.address}
-                          onChange={handleChange}
-                          className="form-input"
-                          placeholder="Số nhà, đường..."
-                        />
-                        <select
-                          value={form.cityId}
-                          onChange={handleProvinceChange}
-                          className="form-input"
-                        >
-                          <option value="">
-                            {form.cityName && !form.cityId
-                              ? `${form.cityName}`
-                              : 'Chọn tỉnh/thành '}
-                          </option>
-                          {provinces.map(p => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={form.wardId}
-                          onChange={(e) => {
-                            const ward = wards.find(w => w.id == e.target.value);
-                            setForm(prev => ({
-                              ...prev,
-                              wardId: ward?.id || '',
-                              wardName: ward?.name || '',
-                            }));
-                          }}
-                          className="form-input"
-                          disabled={!wards.length && !form.wardName}
-                        >
-                          <option value="">
-                            {form.wardName && !form.wardId
-                              ? `${form.wardName}`
-                              : 'Chọn xã/phường'}
-                          </option>
-                          {wards.map(w => (
-                            <option key={w.id} value={w.id}>
-                              {w.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Hạng</span>
-                      <span className="info-value">{profile.target_tier || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Loại UAV</span>
-                      <span className="info-value">{profile.uav_type || '--'}</span>
-                    </div>
-
-                    <div className="info-row">
-                      <span className="info-label">Ngày kích hoạt</span>
-                      <span className="info-value">
-                        {profile.created_at ? formatDate(profile.created_at) : '--'}
-                      </span>
-                    </div>
-                  </>
-                )} */}
+                {profile.tier_b_services && (
+                  <div className="info-row">
+                    <span className="info-label">Nghiệp vụ đã đăng kí</span>
+                    <span className="info-value">
+                      {(() => {
+                        try {
+                          const serviceIds = typeof profile.tier_b_services === 'string'
+                            ? JSON.parse(profile.tier_b_services)
+                            : Array.isArray(profile.tier_b_services)
+                              ? profile.tier_b_services
+                              : [];
+                          
+                          if (!serviceIds.length) return '--';
+                          
+                          const serviceNames = serviceIds
+                            .map(id => tierBServices.find(s => s.id === id)?.title || `ID: ${id}`)
+                            .join(', ');
+                          
+                          return serviceNames || '--';
+                        } catch (err) {
+                          return '--';
+                        }
+                      })()}
+                    </span>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -569,51 +487,7 @@ function PersonalInfo() {
           </div>
         </div>
       </div>
-      {/* <div>
-        {!isEditing ? (
-          <button
-            className="btn-edit-profile"
-            onClick={() => {
-              const parsed = parseAddress(profile.address);
-              setForm({
-                full_name: profile.full_name || '',
-                email: profile.email || '',
-                phone: profile.phone || '',
-                birth_date: formatDateToInput(profile.birth_date) || '',
-                gender: profile.gender || '',
-                address: parsed.street || '',
-                cityId: '',
-                cityName: parsed.cityName || '',
-                wardId: '',
-                wardName: parsed.wardName || ''
-              });
-              setIsEditing(true);
-            }}
-          >
-            Chỉnh Sửa Thông Tin Cá Nhân
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              className="btn-cancel btn-large"
-              style={{ flex: 2 }}
-              onClick={handleCancel}
-            >
-              Hủy
-            </button>
-
-            <button
-              className="btn btn-primary btn-large"
-              style={{ flex: 8 }}
-              onClick={handleSave}
-            >
-              Lưu
-            </button>
-          </div>
-
-        )}
-      </div> */}
-    </>
+</>
   );
 }
 

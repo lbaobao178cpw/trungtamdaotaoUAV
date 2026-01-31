@@ -7,6 +7,7 @@ import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { STYLES, ANIMATIONS } from "../../constants/styles";
 import { notifyWarning, notifyError, notifySuccess } from "../../lib/notifications";
+import { uploadModel3D, listModel3Ds } from "../../lib/cloudinaryService";
 import "./Model3DManager.css";
 
 // === 0. WEBGL SUPPORT CHECK ===
@@ -152,6 +153,10 @@ export default function Model3DManager() {
   const [currentModel, setCurrentModel] = useState("");
   const [defaultView, setDefaultView] = useState(null);
   const [showMediaModal, setShowMediaModal] = useState(false);
+  const [showModelLibrary, setShowModelLibrary] = useState(false);
+  const [libraryModels, setLibraryModels] = useState([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(false);
+  const [uploadingModel, setUploadingModel] = useState(false);
   const controlsRef = useRef(null);
 
   // Fetch data using custom hook
@@ -193,6 +198,85 @@ export default function Model3DManager() {
       setShowMediaModal(false);
     } else {
       notifyError(result.error || "Lỗi lưu cài đặt");
+    }
+  }, [saveSettings]);
+
+  // === MODEL LIBRARY FUNCTIONS ===
+  const handleShowModelLibrary = useCallback(async () => {
+    console.log("Opening model library modal");
+    setShowModelLibrary(true);
+    setLoadingLibrary(true);
+    
+    try {
+      const result = await listModel3Ds();
+      console.log("Model library result:", result);
+      if (result.success) {
+        setLibraryModels(result.images || []);
+        console.log("Set library models:", result.images);
+      } else {
+        notifyError("Không thể tải thư viện model");
+      }
+    } catch (error) {
+      console.error("Load model library error:", error);
+      notifyError("Lỗi tải thư viện model");
+    } finally {
+      setLoadingLibrary(false);
+    }
+  }, []);
+
+  const handleSelectFromModelLibrary = useCallback(async (model) => {
+    const result = await saveSettings({
+      url: API_ENDPOINTS.SETTINGS,
+      method: "POST",
+      data: { key: "current_model_url", value: model.url },
+    });
+
+    if (result.success) {
+      setCurrentModel(model.url);
+      notifySuccess("Đã chọn model từ thư viện!");
+      setShowModelLibrary(false);
+    } else {
+      notifyError(result.error || "Lỗi lưu cài đặt");
+    }
+  }, [saveSettings]);
+
+  const handleModelUpload = useCallback(async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+      notifyError("Chỉ hỗ trợ file .glb hoặc .gltf");
+      return;
+    }
+
+    setUploadingModel(true);
+    try {
+      const result = await uploadModel3D(file);
+      if (result.success) {
+        notifySuccess("Upload model thành công!");
+        
+        // Auto select the uploaded model
+        const saveResult = await saveSettings({
+          url: API_ENDPOINTS.SETTINGS,
+          method: "POST",
+          data: { key: "current_model_url", value: result.url },
+        });
+
+        if (saveResult.success) {
+          setCurrentModel(result.url);
+          notifySuccess("Đã đặt làm model hiện tại!");
+        }
+      } else {
+        notifyError(result.error || "Upload thất bại");
+      }
+    } catch (error) {
+      console.error("Upload model error:", error);
+      notifyError("Lỗi upload model");
+    } finally {
+      setUploadingModel(false);
+      // Reset file input
+      event.target.value = '';
     }
   }, [saveSettings]);
 
@@ -245,7 +329,7 @@ export default function Model3DManager() {
               </p>
               <button
                 onClick={handleSaveCameraView}
-                className="btn btn-warning"
+                className="btn btn-warning save-camera-btn"
                 style={{ width: "100%", fontWeight: "bold" }}
                 disabled={!currentModel || loading}
               >
@@ -255,12 +339,36 @@ export default function Model3DManager() {
           </div>
 
           <div className="upload-wrapper">
+            <input
+              id="modelUploadInput"
+              type="file"
+              accept=".glb,.gltf"
+              onChange={handleModelUpload}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              onClick={() => document.getElementById("modelUploadInput")?.click()}
+              className="btn btn-success"
+              disabled={uploadingModel}
+              style={{ width: "100%", marginBottom: "10px" }}
+            >
+              {uploadingModel ? "Đang upload..." : "Upload từ máy tính"}
+            </button>
+            <button
+              type="button"
+              onClick={handleShowModelLibrary}
+              className="btn btn-secondary"
+              style={{ width: "100%", marginBottom: "10px" }}
+            >
+              Chọn từ thư viện
+            </button>
             <button
               onClick={() => setShowMediaModal(true)}
               className="btn btn-primary"
               style={{ width: "100%" }}
             >
-              Chọn File Từ Thư Viện
+              Chọn File Từ Media
             </button>
           </div>
         </div>
@@ -298,6 +406,147 @@ export default function Model3DManager() {
           )}
         </div>
       </div>
+
+      {/* MODAL THƯ VIỆN MODEL */}
+      {showModelLibrary && (
+        <div 
+          className="legal-modal-overlay" 
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000
+          }}
+        >
+          <div className="legal-modal-content" style={{ maxWidth: '900px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện model 3D</h3>
+              <button
+                onClick={() => setShowModelLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải model...</div>
+                </div>
+              ) : libraryModels.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>📦</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có model nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryModels.map((model) => {
+                    // Làm sạch displayName để loại bỏ timestamp
+                    const cleanDisplayName = model.displayName
+                      .replace(/^\d+-\w+-\d+-/, '') // Loại bỏ pattern timestamp-name-timestamp-
+                      .replace(/^\d+-/, '') // Loại bỏ timestamp ở đầu
+                      .replace(/-\d+$/, ''); // Loại bỏ timestamp ở cuối
+                    
+                    return (
+                      <div
+                        key={model.publicId}
+                        onClick={() => handleSelectFromModelLibrary(model)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <div style={{ fontSize: '48px', marginBottom: '8px' }}>📦</div>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Model 3D'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL */}
       {showMediaModal && (

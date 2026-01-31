@@ -212,22 +212,18 @@ router.post("/send", async (req, res) => {
       licenseNumber = licenses[0].license_number;
       
     } else if (searchType === 'cccd') {
-      // Tra cứu theo CCCD
-      if (!birthDate) {
-        return res.status(400).json({ error: "Vui lòng cung cấp ngày sinh" });
-      }
-      
+      // Tra cứu theo CCCD (không yêu cầu ngày sinh)
       const [users] = await db.query(`
         SELECT u.id, u.email, u.full_name
         FROM users u
         LEFT JOIN user_profiles p ON u.id = p.user_id
-        WHERE p.identity_number = ? AND DATE(p.birth_date) = DATE(?)
-      `, [searchValue, birthDate]);
-      
+        WHERE p.identity_number = ?
+      `, [searchValue]);
+
       if (users.length === 0) {
-        return res.status(404).json({ error: "Không tìm thấy thông tin với CCCD và ngày sinh này" });
+        return res.status(404).json({ error: "Không tìm thấy thông tin với CCCD này" });
       }
-      
+
       email = users[0].email;
       
     } else if (searchType === 'device') {
@@ -367,8 +363,8 @@ router.post("/resend", async (req, res) => {
         const [users] = await db.query(`
           SELECT u.email FROM users u
           LEFT JOIN user_profiles p ON u.id = p.user_id
-          WHERE p.identity_number = ? AND DATE(p.birth_date) = DATE(?)
-        `, [searchValue, birthDate]);
+          WHERE p.identity_number = ?
+        `, [searchValue]);
         email = users[0]?.email;
       } else if (searchType === 'device') {
         const [devices] = await db.query(`

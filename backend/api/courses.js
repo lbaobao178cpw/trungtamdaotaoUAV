@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require('../config/db');
-const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verifyToken');
+const { verifyToken, verifyAdmin, verifyStudent, verifyTokenOptional } = require('../middleware/verifyToken');
 
 // === AUTO MIGRATION: Thêm cột max_attempts và pass_score nếu chưa có ===
 (async () => {
@@ -289,12 +289,12 @@ router.get("/lesson/:id", async (req, res) => {
 });
 
 
-router.get("/:id", verifyToken, async (req, res) => {
+router.get("/:id", verifyTokenOptional, async (req, res) => {
   try {
     const courseId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
-    console.log("[course/:id] courseId:", courseId, "userId:", userId, "role:", req.user.role);
+    console.log("[course/:id] courseId:", courseId, "userId:", userId, "role:", req.user?.role);
 
     // 1. Lấy thông tin khóa học
     const [courseRows] = await db.query("SELECT * FROM courses WHERE id = ?", [courseId]);
@@ -313,16 +313,14 @@ router.get("/:id", verifyToken, async (req, res) => {
     const userTier = userProfile[0]?.target_tier?.toUpperCase() || null;
     console.log("[course/:id] userProfile:", userProfile, "userTier:", userTier);
 
-    // 3. Kiểm tra quyền xem khóa học
-    // - Hạng A: chỉ xem được khóa học level A (hoặc Cơ bản)
-    // - Hạng B: xem được cả khóa học level A và B
+    // 3. Kiểm tra quyền xem khóa học 
+    // - Chỉ kiểm tra nếu user đã authenticate (có token hợp lệ)
     // - Admin luôn được xem tất cả
-    // - Nếu user chưa đăng ký hạng nào thì không xem được
+    // - Nếu user public (không có token) → cho phép xem tất cả
+    // - Nếu user đã login nhưng chưa đăng ký tier → kiểm tra
 
-    // Admin bypass tất cả
-    if (req.user.role === 'admin') {
-      // Admin được xem tất cả, không cần kiểm tra tier
-    } else {
+    // Nếu có user và không phải admin thì kiểm tra tier
+    if (req.user && req.user.role !== 'admin') {
       // Kiểm tra level B hoặc "Nâng cao"
       const isLevelB = courseLevel === 'B' || (course.level && course.level.toLowerCase().includes('nâng cao'));
       // Kiểm tra level A hoặc "Cơ bản"
@@ -346,6 +344,7 @@ router.get("/:id", verifyToken, async (req, res) => {
         });
       }
     }
+    // Nếu không có user (public) hoặc là admin → cho phép xem tất cả
 
     // 4. Lấy danh sách CHƯƠNG (Chapters)
     const [chapterRows] = await db.query(
@@ -1185,12 +1184,12 @@ router.post("/:courseId/calculate-score/:userId", verifyToken, async (req, res) 
     // Giả sử: Quiz được lưu trong bảng quiz_results hoặc quiz_scores
     // Nếu chưa có, set mặc định = NULL (chưa làm quiz)
     const [quizScores] = await db.query(`
-      SELECT AVG(score) as avg_quiz_score
+      SELECT MAX(score) as max_quiz_score
       FROM quiz_results
       WHERE user_id = ? AND course_id = ?
     `, [userId, courseId]);
 
-    const rawQuizScore = quizScores[0]?.avg_quiz_score;
+    const rawQuizScore = quizScores[0]?.max_quiz_score;
     const quizScore = rawQuizScore ? parseFloat(rawQuizScore) : 0;
 
     // 4. Tính điểm tổng thể theo công thức

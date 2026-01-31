@@ -9,6 +9,34 @@ import { apiClient } from "../lib/apiInterceptor";
 import "./UAVLandingPage.css";
 
 // =====================================================================
+// LOADING SCREEN COMPONENT
+// =====================================================================
+const LoadingScreen = () => (
+  <div className="loading-screen-overlay">
+    <div className="loading-screen-content">
+      {/* Animated spinner */}
+      <div className="loading-spinner"></div>
+      
+      <div className="loading-text-container">
+        <h2 className="loading-title">Đang tải dữ liệu</h2>
+        <p className="loading-subtitle">Vui lòng chờ...</p>
+      </div>
+
+      {/* Dot animation */}
+      <div className="loading-dots">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="loading-dot"
+            style={{ animationDelay: `${i * 0.2}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// =====================================================================
 // 0. WEBGL SUPPORT CHECK
 // =====================================================================
 const checkWebGLSupport = () => {
@@ -23,23 +51,10 @@ const checkWebGLSupport = () => {
 
 // Fallback component khi WebGL không khả dụng
 const WebGLFallback = () => (
-  <div style={{
-    width: '100%',
-    height: '100%',
-    minHeight: '400px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    borderRadius: '12px',
-    color: '#fff',
-    textAlign: 'center',
-    padding: '40px'
-  }}>
-    <div style={{ fontSize: '48px', marginBottom: '20px' }}>🏢</div>
-    <h3 style={{ margin: '0 0 10px', fontSize: '20px' }}>Mô hình 3D không khả dụng</h3>
-    <p style={{ margin: 0, opacity: 0.7, fontSize: '14px', maxWidth: '300px' }}>
+  <div className="webgl-fallback-container">
+    <div className="webgl-fallback-icon">🏢</div>
+    <h3 className="webgl-fallback-title">Mô hình 3D không khả dụng</h3>
+    <p className="webgl-fallback-desc">
       Trình duyệt của bạn không hỗ trợ WebGL hoặc GPU đang bận.
       Vui lòng thử refresh trang hoặc sử dụng trình duyệt khác (Chrome, Firefox, Edge).
     </p>
@@ -126,17 +141,7 @@ const PanoramaViewer = ({ panoramaUrl }) => {
   return (
     <div
       ref={viewerContainerRef}
-      className="panorama-container"
-      style={{
-        width: "100%",
-        height: "350px",
-        borderRadius: "8px",
-        overflow: "hidden",
-        backgroundColor: "#222",
-        boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)",
-        position: "relative",
-        border: "1px solid #444",
-      }}
+      className="panorama-viewer-container"
     >
       {/* Chỉ hiển thị Loading khi state isLoading = true */}
       {isLoading && (
@@ -156,9 +161,8 @@ const PanoramaViewer = ({ panoramaUrl }) => {
 // =====================================================================
 const StarIcon = () => (
   <svg
-    className="star-icon"
+    className="star-icon-svg"
     viewBox="0 0 24 24"
-    style={{ width: "16px", height: "16px", fill: "#0050b8" }}
   >
     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
   </svg>
@@ -190,6 +194,7 @@ function UAVLandingPage() {
   const [activeCertTab, setActiveCertTab] = useState("map");
   const [webglSupported, setWebglSupported] = useState(true); // WebGL support state
   const [monthlyExams, setMonthlyExams] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [user, setUser] = useState(() => {
     // Initialize user from localStorage on mount
     const savedUser = localStorage.getItem("user");
@@ -212,45 +217,136 @@ function UAVLandingPage() {
     art: ["Trình diễn nghệ thuật UAV", "Biểu Diễn Mô Hình R/C", "Tổ hợp sáng tạo nội dung số UAV"],
   };
 
-  useEffect(() => {
-    apiClient.get("/points")
-      .then((res) => setPoints(res.data))
-      .catch((err) => console.error(err));
-    apiClient.get("/solutions")
-      .then((res) => setSolutions(res.data))
-      .catch((err) => console.error(err));
-    apiClient.get("/display/notifications")
-      .then((res) => setNotifications(Array.isArray(res.data) ? res.data : res.data.data || []))
-      .catch((err) => console.error(err));
+  // Dynamic Hạng B groups (fetched from backend). Each group: { label, items }
+  const [hangBGroups, setHangBGroups] = useState({});
+  const [expandedItemId, setExpandedItemId] = useState(null);
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [modalGroup, setModalGroup] = useState(null);
 
-    // Fetch courses và ratings
-    apiClient.get("/courses")
+  // tab keys come from API-driven groups (no static fallback)
+  const tabKeys = Object.keys(hangBGroups);
+
+useEffect(() => {
+    let mounted = true;
+    apiClient.get('/nghiep-vu-hang-b')
       .then((res) => {
-        setCourses(res.data);
+        let data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        
+        // --- THÊM MỚI: Sắp xếp dữ liệu theo sort_order tăng dần ---
+        // Việc này đảm bảo cả Item và Thứ tự Nhóm (Category) đều đúng theo Admin
+        data = data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-        // Fetch ratings cho từng course
-        const ratings = {};
-        res.data.forEach((course) => {
-          apiClient.get(`/comments/course/${course.id}`)
-            .then((commentsRes) => {
-              const ratedComments = (commentsRes.data.comments || []).filter(c => c.rating);
-              if (ratedComments.length > 0) {
-                const avg = (ratedComments.reduce((sum, c) => sum + c.rating, 0) / ratedComments.length).toFixed(1);
-                ratings[course.id] = { average: avg, count: ratedComments.length };
-                setCourseRatings(prev => ({ ...prev, [course.id]: { average: avg, count: ratedComments.length } }));
-              }
-            })
-            .catch((err) => console.error(`Lỗi fetch comments cho course ${course.id}:`, err));
+        const grouped = {};
+
+        const defaultLabelFor = (key) => {
+          if (key === 'map') return 'Khảo sát bản đồ';
+          if (key === 'check') return 'Kiểm tra công nghiệp';
+          if (key === 'agro') return 'Nông Lâm Vận Tải';
+          if (key === 'art') return 'Trình diễn nghệ thuật';
+          return key;
+        };
+
+        data.forEach((item) => {
+          const rawCat = (item.category || '').toLowerCase();
+          let key = 'other';
+          
+          // Logic xác định key nhóm (giữ nguyên logic cũ của bạn)
+          if (rawCat.includes('map') || rawCat.includes('khảo')) key = 'map';
+          else if (rawCat.includes('check') || rawCat.includes('kiểm')) key = 'check';
+          else if (rawCat.includes('agro') || rawCat.includes('nông') || rawCat.includes('lâm')) key = 'agro';
+          else if (rawCat.includes('art') || rawCat.includes('trình') || rawCat.includes('biểu')) key = 'art';
+          else key = item.category; // Fallback lấy luôn tên category nếu không khớp keyword
+
+          // Nếu nhóm chưa tồn tại, tạo mới.
+          // Do data đã sort, nhóm nào có item xuất hiện trước sẽ được tạo trước -> Tab sẽ đúng thứ tự.
+          if (!grouped[key]) grouped[key] = { label: item.category || defaultLabelFor(key), items: [] };
+          
+          grouped[key].items.push(item);
         });
-      })
-      .catch((err) => console.error(err));
 
-    apiClient.get("/settings/current_model_url")
-      .then((res) => setModelUrl(res.data.value || "/models/scene.glb"))
-      .catch(() => setModelUrl("/models/scene.glb"));
-    apiClient.get("/settings/default_camera_view")
-      .then((res) => { if (res.data.value) try { setCameraSettings(JSON.parse(res.data.value)); } catch (e) { } })
-      .catch(() => { });
+        if (mounted) setHangBGroups(grouped);
+      })
+      .catch((err) => console.error('Lỗi fetch nghiep vu hang B:', err));
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        setIsDataLoading(true);
+        
+        // Fetch all data in parallel
+        const [pointsRes, solutionsRes, notificationsRes, coursesRes, modelRes, cameraRes] = await Promise.allSettled([
+          apiClient.get("/points"),
+          apiClient.get("/solutions"),
+          apiClient.get("/display/notifications"),
+          apiClient.get("/courses"),
+          apiClient.get("/settings/current_model_url"),
+          apiClient.get("/settings/default_camera_view")
+        ]);
+
+        // Handle points
+        if (pointsRes.status === 'fulfilled') {
+          setPoints(pointsRes.value.data);
+        }
+
+        // Handle solutions
+        if (solutionsRes.status === 'fulfilled') {
+          setSolutions(solutionsRes.value.data);
+        }
+
+        // Handle notifications
+        if (notificationsRes.status === 'fulfilled') {
+          setNotifications(Array.isArray(notificationsRes.value.data) ? notificationsRes.value.data : notificationsRes.value.data.data || []);
+        }
+
+        // Handle courses and ratings
+        if (coursesRes.status === 'fulfilled') {
+          const courses = coursesRes.value.data;
+          setCourses(courses);
+
+          // Fetch ratings cho từng course
+          const ratings = {};
+          courses.forEach((course) => {
+            apiClient.get(`/comments/course/${course.id}`)
+              .then((commentsRes) => {
+                const ratedComments = (commentsRes.data.comments || []).filter(c => c.rating);
+                if (ratedComments.length > 0) {
+                  const avg = (ratedComments.reduce((sum, c) => sum + c.rating, 0) / ratedComments.length).toFixed(1);
+                  ratings[course.id] = { average: avg, count: ratedComments.length };
+                  setCourseRatings(prev => ({ ...prev, [course.id]: { average: avg, count: ratedComments.length } }));
+                }
+              })
+              .catch((err) => console.error(`Lỗi fetch comments cho course ${course.id}:`, err));
+          });
+        }
+
+        // Handle model URL
+        if (modelRes.status === 'fulfilled') {
+          setModelUrl(modelRes.value.data.value || "/models/scene.glb");
+        } else {
+          setModelUrl("/models/scene.glb");
+        }
+
+        // Handle camera settings
+        if (cameraRes.status === 'fulfilled') {
+          if (cameraRes.value.data.value) {
+            try {
+              setCameraSettings(JSON.parse(cameraRes.value.data.value));
+            } catch (e) {
+              console.error("Lỗi parse camera settings:", e);
+            }
+          }
+        }
+
+        setIsDataLoading(false);
+      } catch (error) {
+        console.error("Lỗi khi fetch dữ liệu:", error);
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchAllData();
   }, []);
 
   // Fetch all upcoming exams for banner
@@ -370,7 +466,7 @@ function UAVLandingPage() {
           <div className="course-rating">
             <div className="stars" style={{ display: "flex" }}>
               {[...Array(5)].map((_, i) => (
-                <svg key={i} className="star-icon" viewBox="0 0 24 24" style={{ width: "16px", height: "16px" }}>
+                <svg key={i} className="star-icon-svg" viewBox="0 0 24 24">
                   <path
                     d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
                     fill={i < Math.round(rating) ? '#FFC107' : '#ddd'}
@@ -378,7 +474,7 @@ function UAVLandingPage() {
                 </svg>
               ))}
             </div>
-            <span style={{ marginLeft: "8px", fontSize: "14px", color: "#b0b0b0" }}>
+            <span className="rating-text">
               {courseRatings[course.id]
                 ? `${courseRatings[course.id].average} (${course.totalViews || 0} lượt xem)`
                 : `${course.rating || '5.0'} (${course.totalViews || 0} lượt xem)`}
@@ -410,6 +506,9 @@ function UAVLandingPage() {
 
   return (
     <>
+      {/* Show loading screen while fetching data */}
+      {isDataLoading && <LoadingScreen />}
+
       {/* 1. Hero Section */}
       <section className="hero">
         <div className="container">
@@ -444,29 +543,31 @@ function UAVLandingPage() {
             };
 
             return (
-              <div className="exam-banner" style={{ marginBottom: '20px' }}>
-                <h3 className="exam-banner-title" style={{ color: '#0050B8', margin: '0 0 12px 0' }}>Kỳ Thi Tháng {bannerMonth} Năm {bannerYear}</h3>
+              <div className="exam-banner">
+                <h3 className="exam-banner-title">Kỳ Thi Tháng {bannerMonth} Năm {bannerYear}</h3>
 
-                <div style={{ overflow: 'hidden' }}>
-                  <marquee behavior="scroll" direction="left" scrollamount="10" style={{ display: 'block', padding: '6px 0' }}>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div className="exam-marquee-wrapper">
+                  <marquee behavior="scroll" direction="left" scrollamount="10" className="exam-marquee-content">
+                    <div className="exam-list-flex">
                       {monthlyExams.map((ex) => {
                         const { day, month } = renderDayMonth(ex.exam_date || ex.date || null);
                         const timeText = ex.exam_time || (ex.exam_date && new Date(ex.exam_date).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })) || '';
                         return (
-                          <div key={ex.id} className="exam-card" style={{ display: 'flex', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', padding: '12px 14px', alignItems: 'center', minWidth: '380px' }}>
-                            <div className="exam-date-box" style={{ width: '62px', textAlign: 'center', marginRight: '12px' }}>
-                              <div style={{ background: '#f0f8ff', borderRadius: '6px', padding: '6px' }}>
-                                <div style={{ fontSize: '20px', fontWeight: 800, color: '#0050b8' }}>{day || '-'}</div>
-                                <div style={{ fontSize: '11px', color: '#666' }}>THÁNG {month || '-'}</div>
+                          <div key={ex.id} className="exam-card">
+                            <div className="exam-date-box">
+                              <div className="exam-date-inner">
+                                <div className="exam-day">{day || '-'}</div>
+                                <div className="exam-month">THÁNG {month || '-'}</div>
                               </div>
                             </div>
 
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '15px', fontWeight: 700, color: '#0b3d91' }}>{ex.title || ex.type || 'Kỳ Thi'}</div>
-                              <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>{ex.location || ex.address || ''}</div>
-                              <div style={{ fontSize: '11px', color: '#0050b8', marginTop: '4px', fontWeight: 600 }}>Giờ: {timeText}</div>
-                              <div style={{ marginTop: '6px', fontSize: '13px', color: ex.spots_left > 0 ? '#28a745' : '#d9534f', fontWeight: 700 }}>{ex.spots_left > 0 ? `Còn ${ex.spots_left} chỗ` : 'Hết chỗ'}</div>
+                            <div className="exam-info">
+                              <div className="exam-title">{ex.title || ex.type || 'Kỳ Thi'}</div>
+                              <div className="exam-location">{ex.location || ex.address || ''}</div>
+                              <div className="exam-time">Giờ: {timeText}</div>
+                              <div className={`exam-spots ${ex.spots_left > 0 ? 'exam-spots-available' : 'exam-spots-full'}`}>
+                                {ex.spots_left > 0 ? `Còn ${ex.spots_left} chỗ` : 'Hết chỗ'}
+                              </div>
                             </div>
                           </div>
                         );
@@ -496,136 +597,143 @@ function UAVLandingPage() {
           <h2 className="section-title" style={{ fontWeight: "800", marginBottom: "50px" }}>Các bước thực hiện</h2>
           
           {/* Row 1: Steps 1-4 (left to right) */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0', marginBottom: '0', position: 'relative', flexWrap: 'wrap' }}>
+          <div className="steps-row steps-row1">
             {/* Step 1 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/1.png" alt="Step 1" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/1.png" alt="Step 1" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Đăng ký tài khoản</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Tạo tài khoản với thông tin cá nhân và xác thực qua CCCD/CMND</div>
+              <div className="step-desc">Tạo tài khoản với thông tin cá nhân và xác thực qua CCCD/CMND</div>
             </div>
-            
+            <div className="step-arrow-vertical">↓</div>
+
             {/* Arrow 1→2 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 2 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/2.png" alt="Step 2" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/2.png" alt="Step 2" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Đăng nhập hệ thống</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Đăng nhập tài khoản và xác nhận thông tin cá nhân</div>
+              <div className="step-desc">Đăng nhập tài khoản và xác nhận thông tin cá nhân</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 2→3 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 3 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/3.png" alt="Step 3" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/3.png" alt="Step 3" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Đăng ký khóa học</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Chọn khóa học phù hợp (Hạng A hoặc Hạng B)</div>
+              <div className="step-desc">Chọn khóa học phù hợp (Hạng A hoặc Hạng B)</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 3→4 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 4 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/4.png" alt="Step 4" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/4.png" alt="Step 4" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Thanh toán học phí</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Hoàn tất thanh toán học phí khóa học</div>
+              <div className="step-desc">Hoàn tất thanh toán học phí khóa học</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
           </div>
 
           {/* Arrow Down from Step 4 to Step 5 */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: '90px', marginBottom: '0', marginTop: '-10px', minHeight: '60px' }}>
-            <svg height="80" viewBox="0 0 24 200" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8' }}>
-              <rect x="9" y="0" width="6" height="150" fill="currentColor"></rect>
-              <polygon points="12,150 3,150 12,165" fill="currentColor"></polygon>
+          <div className="step-arrow-down step-arrow-down-container">
+            <svg width="16" height="80" viewBox="0 0 24 100" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+              <rect x="11" y="0" width="2" height="50" rx="1" fill="currentColor"></rect>
+              <polygon points="8,52 16,52 12,60" fill="currentColor"></polygon>
             </svg>
           </div>
 
           {/* Row 2: Steps 8-5 (left to right) */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0', position: 'relative', flexWrap: 'wrap', marginTop: '-5px' }}>
+          <div className="steps-row steps-row2">
             {/* Step 8 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/8.png" alt="Step 8" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/8.png" alt="Step 8" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Nhận chứng chỉ</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Cấp chứng chỉ điều khiển UAV hợp lệ</div>
+              <div className="step-desc">Cấp chứng chỉ điều khiển UAV hợp lệ</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 8←7 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8', transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 7 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/7.png" alt="Step 7" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/7.png" alt="Step 7" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Thi lý thuyết & Bay thực hành</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Hoàn thành kỳ thi trắc nghiệm và bay thực hành</div>
+              <div className="step-desc">Hoàn thành kỳ thi trắc nghiệm và bay thực hành</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 7←6 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8', transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 6 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/6.png" alt="Step 6" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/6.png" alt="Step 6" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Đào tạo thực hành tại chỗ</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Học bay và điều khiển UAV tại trung tâm</div>
+              <div className="step-desc">Học bay và điều khiển UAV tại trung tâm</div>
             </div>
+            <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 6←5 */}
-            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginTop: '-25px' }}>
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#0050b8', transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="currentColor"></rect>
-                <polygon points="150,4 150,20 165,12" fill="currentColor"></polygon>
+            <div className="step-arrow">
+              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
+                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
+                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
               </svg>
             </div>
 
             {/* Step 5 */}
-            <div className="step-item" style={{ textAlign: 'center', flex: '0 0 auto', width: '180px' }}>
-              <div className="step-icon" style={{ width: '80px', height: '80px', margin: '0 auto 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                <img src="/images/5.png" alt="Step 5" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
+            <div className="step-item">
+              <div className="step-icon">
+                <img src="/images/5.png" alt="Step 5" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
               <div className="step-title">Hoàn thành khóa học online</div>
-              <div className="step-desc" style={{ fontSize: '13px' }}>Hoàn tất tất cả bài học và bài tập online</div>
+              <div className="step-desc">Hoàn tất tất cả bài học và bài tập online</div>
             </div>
           </div>
         </div>
@@ -658,7 +766,6 @@ function UAVLandingPage() {
                 <br />
               </div>
               <div className="uav-duration-box">Thời gian đào tạo: xx Tuần</div>
-              <button className="uav-cert-btn">Xem chi tiết</button>
             </div>
             <div className="uav-cert-card">
               <div>
@@ -700,33 +807,55 @@ function UAVLandingPage() {
                 <span className="cert-tabs-label">Các nghiệp vụ bao gồm:</span>
 
                 <div className="cert-tabs-header scroll-x">
-                  {Object.keys(certTabsData).map((key) => (
+                  {tabKeys.map((key) => (
                     <button
                       key={key}
                       className={`cert-tab-btn ${activeCertTab === key ? "active" : ""}`}
                       onClick={() => setActiveCertTab(key)}
                     >
-                      {key === 'map'
-                        ? 'Khảo sát bản đồ'
-                        : key === 'check'
-                          ? 'Kiểm tra công nghiệp'
-                          : key === 'agro'
-                            ? 'Nông Lâm Vận Tải'
-                            : 'Trình diễn nghệ thuật'}
+                      {hangBGroups[key] && hangBGroups[key].label ? hangBGroups[key].label : key}
                     </button>
                   ))}
                 </div>
 
                 <div className="cert-tab-content">
                   <ul className="sub-list-arrow">
-                    {certTabsData[activeCertTab].map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
+                    {(hangBGroups[activeCertTab] && hangBGroups[activeCertTab].items && hangBGroups[activeCertTab].items.length > 0)
+                      ? hangBGroups[activeCertTab].items.map((item) => (
+                          <li
+                            key={item.id || item.title}
+                            className="hangb-item"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => {
+                              const key = item.id ?? item.title;
+                              setExpandedItemId(expandedItemId === key ? null : key);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const key = item.id ?? item.title;
+                                setExpandedItemId(expandedItemId === key ? null : key);
+                              }
+                            }}
+                          >
+                            <div className="hangb-item-row">
+                              <span className="hangb-item-title">{item.title || 'Nghiệp vụ'}</span>
+                            </div>
+                            {expandedItemId === (item.id ?? item.title) && (
+                              <div className="hangb-item-desc">
+                                {item.description || 'Không có mô tả.'}
+                              </div>
+                            )}
+                          </li>
+                        ))
+                      : null
+                    }
                   </ul>
                 </div>
               </div>
 
-              <button className="uav-cert-btn-detail">Xem chi tiết</button>
+              {/* detail button removed */}
             </div>
           </div>
         </div>
@@ -746,7 +875,7 @@ function UAVLandingPage() {
       <section className="map-3d-section">
         <div className="map-3d-header">
           <h2 className="section-title">Cơ sở vật chất</h2>
-          <p style={{ color: "#000000", maxWidth: "800px", margin: "0 auto" }}>Khám phá cơ sở vật chất hiện đại qua mô hình 3D tương tác.</p>
+          <p className="map-header-desc">Khám phá cơ sở vật chất hiện đại qua mô hình 3D tương tác.</p>
         </div>
         <div className={`map-3d-container ${isFullscreen ? "fullscreen" : ""}`} id="map3d">
           <button className="fullscreen-btn" onClick={toggleFullscreen}>{isFullscreen ? "✕" : "⛶"}</button>
@@ -765,14 +894,14 @@ function UAVLandingPage() {
             <div className="map-info-header"><button className="close-btn" onClick={handleClosePanel}>✕</button></div>
             {selectedPointData && (
               <div className="map-info-body">
-                <div style={{ marginBottom: "20px", width: "100%" }}>
+                <div className="map-info-image-container">
                   {selectedPointData.panoramaUrl ? (
                     <div style={{ position: "relative" }}>
                       <PanoramaViewer key={selectedPointData.id} panoramaUrl={selectedPointData.panoramaUrl} />
-                      <div style={{ position: "absolute", bottom: "10px", left: "10px", background: "rgba(0,0,0,0.6)", color: "white", padding: "5px", borderRadius: "4px", fontSize: "11px", pointerEvents: "none" }}>Kéo để xoay 360°</div>
+                      <div className="panorama-overlay-hint">Kéo để xoay 360°</div>
                     </div>
                   ) : (
-                    <img className="map-info-image" src={selectedPointData.imageSrc || "/images/img-default.jpg"} alt={selectedPointData.title} style={{ width: "100%", height: "auto", borderRadius: "8px" }} />
+                    <img className="map-info-image" src={selectedPointData.imageSrc || "/images/img-default.jpg"} alt={selectedPointData.title} />
                   )}
                 </div>
                 <div className="map-info-content">
@@ -781,7 +910,6 @@ function UAVLandingPage() {
                     className="map-info-logo"
                     src={selectedPointData.logoSrc}
                     alt="logo"
-                    style={{ maxWidth: "150px", height: "auto", display: "block", marginBottom: "15px" }}
                     onError={(e) => (e.target.style.display = "none")}
                   />
                   <h3 className="map-info-title-new">{selectedPointData.title}</h3>
@@ -789,8 +917,8 @@ function UAVLandingPage() {
                     <div className="map-info-description-new html-content" dangerouslySetInnerHTML={{ __html: selectedPointData.description }} />
                   )}
                   {selectedPointData.website && (
-                    <div style={{ marginTop: "20px" }}>
-                      <a href={selectedPointData.website} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: "inline-block", fontSize: "14px" }}>Truy cập Website</a>
+                    <div className="map-website-btn-container">
+                      <a href={selectedPointData.website} target="_blank" rel="noopener noreferrer" className="btn btn-primary map-website-btn">Truy cập Website</a>
                     </div>
                   )}
                 </div>
@@ -805,7 +933,7 @@ function UAVLandingPage() {
         <div className="container">
           <h2 className="section-title solutions-section-title">Giải pháp cho các ngành nghề khác nhau</h2>
           {solutions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#ffffff" }}><p>Đang tải dữ liệu giải pháp...</p></div>
+            <div className="solutions-loading"><p>Đang tải dữ liệu giải pháp...</p></div>
           ) : (
             <div className="solutions-grid">
               {solutions.map((item) => (
@@ -815,7 +943,7 @@ function UAVLandingPage() {
                   </div>
                   <h3 className="service-title">{item.title}</h3>
                   <p className="service-desc">{item.description}</p>
-                  <Link to={item.link || "#"} className="service-btn" onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-2px)")} onMouseOut={(e) => (e.currentTarget.style.transform = "translateY(0)")}>
+                  <Link to={item.link || "#"} className="service-btn">
                     Xem chi tiết
                   </Link>
                 </div>
@@ -830,7 +958,7 @@ function UAVLandingPage() {
         <div className="container">
           <h2 className="section-title">Thông báo chính thức</h2>
           {notifications.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px", color: "#b0b0b0" }}>Chưa có thông báo nào.</div>
+            <div className="notifications-empty">Chưa có thông báo nào.</div>
           ) : (
             <div className="news-grid">
               {notifications.map((news) => (
@@ -848,6 +976,28 @@ function UAVLandingPage() {
           )}
         </div>
       </section>
+      {/* Certificate Details Modal */}
+      {showCertModal && modalGroup && (
+        <div className="cert-modal-overlay">
+          <div className="cert-modal-content">
+            <div className="cert-modal-header">
+              <h3 className="cert-modal-title">{modalGroup.label || 'Chi tiết nghiệp vụ'}</h3>
+              <button onClick={() => setShowCertModal(false)} className="cert-modal-close">✕</button>
+            </div>
+            <div className="cert-modal-body">
+              {modalGroup.items.map((it) => (
+                <div key={it.id} className="cert-modal-item">
+                  <h4 className="cert-modal-item-title">{it.title}</h4>
+                  <div className="cert-modal-item-desc">{it.description || 'Không có mô tả.'}</div>
+                </div>
+              ))}
+            </div>
+            <div className="cert-modal-footer">
+              <button className="btn cert-modal-close-btn" onClick={() => setShowCertModal(false)}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

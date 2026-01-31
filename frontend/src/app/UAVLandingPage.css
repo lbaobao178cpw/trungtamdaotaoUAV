@@ -421,7 +421,7 @@ h3.section-title {
   font-weight: 800;
   color: #ffffff !important;
   padding: 50px 10px;
-  margin-bottom: 80px;
+  margin-bottom: 10px !important; /* Giảm xuống 10px */
 }
 
 .steps-section .section-title,
@@ -431,11 +431,14 @@ h3.section-title {
   font-weight: 600;
 }
 
-.steps-container {
+.steps-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-top: 50px;
+  justify-content: center;
+  align-items: center;
+  gap: 5px; /* Giảm từ 10px xuống 5px */
+  position: relative;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
 .step-item {
@@ -443,8 +446,8 @@ h3.section-title {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 100%;
-  max-width: 260px;
+  width: 180px;
+  min-height: 200px;
   position: relative;
   z-index: 2;
 }
@@ -453,13 +456,12 @@ h3.section-title {
   width: 80px;
   height: 80px;
   background-color: var(--secondary-blue);
-  /* ✅ nền xanh dương */
   border: 2px solid var(--secondary-blue);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Giảm từ 20px xuống 15px */
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
@@ -467,7 +469,6 @@ h3.section-title {
 .step-item:hover .step-icon {
   transform: scale(1.05);
   background-color: transparent;
-  /* ❗ KHÔNG đổ nền */
 }
 
 .step-icon img {
@@ -483,33 +484,137 @@ h3.section-title {
 
 .step-title {
   font-size: 0.9rem;
-  /* ✅ nhỏ lại */
   font-weight: 600;
-  /* nhẹ hơn */
   color: var(--secondary-blue) !important;
   margin-bottom: 10px;
   line-height: 1.3;
   min-height: 36px;
-  /* ✅ giảm chiều cao */
 }
 
 .step-desc {
   font-size: 0.9rem;
   color: var(--text-gray);
   line-height: 1.5;
-  margin-top: -30px;
+  margin-top: -20px; /* Giảm từ -30px lên -20px để gần hơn */
 }
 
-.step-arrow-img {
-  width: 50px;
-  height: 20px;
-  object-fit: contain;
-  transform: scale(4.0) translateX(3px);
-  transform-origin: center center;
-  margin-top: 35px;
-  filter: invert(15%) sepia(95%) saturate(3474%) hue-rotate(211deg) brightness(93%) contrast(104%);
-  z-index: 1;
-  position: relative;
+.step-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 45px;
+  margin-top: -110px; /* nâng mũi tên lên thêm chút để căn giữa với logo */
+}
+
+.step-arrow svg {
+  display: block;
+}
+
+.step-arrow-vertical {
+  display: none;
+  font-size: 24px;
+  color: #0050b8;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.step-arrow-down {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 0 0; /* giảm khoảng cách trên để mũi tên gần icon hơn */
+  min-height: 80px; /* giảm chiều cao để kéo hàng dưới lên gần hơn */
+  overflow: visible; /* cho phép phần mũi tên không bị cắt */
+  color: #03367a; /* ensure down-arrow inherits the same blue color */
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .steps-row {
+    gap: 5px;
+  }
+  .step-item {
+    width: 160px;
+    min-height: 180px;
+  }
+  .step-arrow {
+    min-width: 35px;
+  }
+  .step-arrow svg {
+    width: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .steps-row {
+    flex-direction: column;
+    gap: 10px; /* Giảm từ 20px xuống 10px */
+    align-items: center;
+  }
+  .step-item {
+    width: 100%;
+    max-width: 400px; /* Tăng từ 350px lên 400px */
+    min-height: auto;
+    margin-bottom: 10px;
+    padding-bottom: 0px; /* Giảm padding để sát */
+    padding: 0; /* Loại bỏ padding */
+  }
+  .step-arrow {
+    display: none;
+  }
+  .step-arrow-down {
+    display: none;
+  }
+  .step-arrow-vertical {
+    display: block;
+  }
+  .step-icon {
+    margin-bottom: 0px !important; /* Gần nhất */
+  }
+  .step-title {
+    margin-bottom: 0px !important; /* Gần nhất */
+    min-height: auto !important; /* Loại bỏ min-height để sát */
+    line-height: 1.1 !important; /* Giảm line-height */
+    font-size: 1.4rem !important; /* Tăng từ 1.2rem lên 1.4rem */
+  }
+  .step-desc {
+    margin-top: 0px !important; /* Gần nhất */
+    font-size: 1.2rem !important; /* Tăng từ 1.1rem lên 1.2rem */
+    display: block !important; /* Đảm bảo hiện */
+    visibility: visible !important; /* Đảm bảo hiện */
+    line-height: 1.2 !important; /* Giảm line-height để sát */
+  }
+}
+
+@media (max-width: 480px) {
+  .step-item {
+    width: 100%;
+    max-width: 400px; /* Tăng width */
+  }
+  .step-icon {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0px !important; /* Gần nhất */
+  }
+  .step-icon img {
+    width: 35px;
+    height: 35px;
+  }
+  .step-arrow-vertical {
+    font-size: 20px;
+  }
+  .step-title {
+    margin-bottom: 0px !important;
+    min-height: auto !important; /* Loại bỏ min-height */
+    line-height: 1.1 !important; /* Giảm line-height */
+    font-size: 1.4rem !important; /* Tăng font-size */
+  }
+  .step-desc {
+    display: block !important; /* Override để hiện nội dung */
+    visibility: visible !important;
+    font-size: 1.2rem !important; /* Tăng font-size */
+    margin-top: 0px !important; /* Gần nhất */
+    line-height: 1.2 !important; /* Giảm line-height */
+  }
 }
 
 /* === CERTIFICATES SECTION === */
@@ -1288,9 +1393,9 @@ h3.section-title {
     margin-bottom: 2px;
   }
 
-  /* Ẩn mô tả dài để giữ bố cục ngang đẹp */
+  /* Hiện mô tả để người dùng thấy nội dung */
   .step-desc {
-    display: none;
+    display: block;
   }
 
   .step-arrow-img {
@@ -1587,4 +1692,503 @@ h3.section-title {
 .link-button {
   margin-top: 6px;
   /* đẩy xuống dưới */
+}
+
+/* =========================================================
+   LOADING SCREEN (THEME TRẮNG - XANH)
+   ========================================================= */
+.loading-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* ĐỔI: Nền trắng pha chút xám xanh nhẹ cho sang trọng */
+  background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /* Giữ hiệu ứng mờ nếu có lớp phía sau */
+  backdrop-filter: blur(10px); 
+}
+
+/* Small phones: ensure certificate section and cards occupy full viewport width */
+@media (max-width: 844px) {
+  .uav-cert-section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .uav-cert-section .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .uav-cert-grid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .uav-cert-card {
+    width: 100% !important;
+    padding: 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    border-radius: 6px !important;
+  }
+
+  .cert-tabs-header {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Fix image overlap in service/solutions cards on very small screens */
+  .service-image-wrapper {
+    height: 120px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  .service-image {
+    max-height: 100% !important;
+    width: auto !important;
+    transform: none !important;
+    position: relative !important;
+    z-index: 0 !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  .service-title {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 6px !important;
+    padding-top: 2px !important;
+
+  }
+
+}
+
+.loading-screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  /* ĐỔI: Viền nền màu xám nhạt để nổi bật trên nền trắng */
+  border: 4px solid #e6e6e6;
+  /* ĐỔI: Viền xoay màu Xanh chủ đạo (Primary Blue) */
+  border-top: 4px solid #0050b8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text-container {
+  text-align: center;
+  /* ĐỔI: Chữ màu Xanh chủ đạo thay vì màu trắng */
+  color: #0050b8;
+}
+
+.loading-title {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: 700; /* Tăng độ đậm */
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.loading-subtitle {
+  margin: 0;
+  /* ĐỔI: Chữ phụ màu xám đậm để dễ đọc trên nền trắng */
+  color: #555555; 
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.loading-dot {
+  width: 10px; /* Tăng nhẹ kích thước chấm */
+  height: 10px;
+  border-radius: 50%;
+  /* ĐỔI: Dùng màu Vàng (Secondary) để tạo điểm nhấn hoặc giữ màu Xanh */
+  background: #0050b8; 
+  animation: bounce 1.4s infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { opacity: 0.5; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+/* =========================================================
+   WEBGL FALLBACK
+   ========================================================= */
+.webgl-fallback-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  padding: 40px;
+}
+
+.webgl-fallback-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.webgl-fallback-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.webgl-fallback-desc {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 14px;
+  max-width: 300px;
+}
+
+/* =========================================================
+   PANORAMA VIEWER
+   ========================================================= */
+.panorama-viewer-container {
+  width: 100%;
+  height: 350px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #222;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  position: relative;
+  border: 1px solid #444;
+}
+
+.panorama-overlay-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* =========================================================
+   EXAM BANNER
+   ========================================================= */
+.exam-banner {
+  margin-bottom: 20px;
+}
+
+.exam-banner-title {
+  color: #0050B8;
+  margin: 0 0 12px 0;
+}
+
+.exam-marquee-wrapper {
+  overflow: hidden;
+}
+
+.exam-marquee-content {
+  display: block;
+  padding: 6px 0;
+}
+
+.exam-list-flex {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.exam-card {
+  display: flex;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  padding: 12px 14px;
+  align-items: center;
+  min-width: 380px;
+}
+
+.exam-date-box {
+  width: 62px;
+  text-align: center;
+  margin-right: 12px;
+}
+
+.exam-date-inner {
+  background: #f0f8ff;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.exam-day {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0050b8;
+}
+
+.exam-month {
+  font-size: 11px;
+  color: #666;
+}
+
+.exam-info {
+  flex: 1;
+}
+
+.exam-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b3d91;
+}
+
+.exam-location {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.exam-time {
+  font-size: 11px;
+  color: #0050b8;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.exam-spots {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.exam-spots-available {
+  color: #28a745;
+}
+
+.exam-spots-full {
+  color: #d9534f;
+}
+
+/* =========================================================
+   MISC COMPONENTS
+   ========================================================= */
+.star-icon-svg {
+  width: 16px;
+  height: 16px;
+  fill: #0050b8;
+}
+
+.course-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.course-inline-badge {
+  margin-bottom: 0 !important;
+  font-size: 10px !important;
+  padding: 4px 8px !important;
+  white-space: nowrap;
+}
+
+/* --- SỬA LỖI MŨI TÊN CHỈ XUỐNG --- */
+
+/* 1. Thiết lập container căn giữa màn hình */
+.step-arrow-down-container {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  width: 100%;
+  padding-left: 0 !important; 
+  margin-top: -30px; 
+  position: relative;
+  z-index: 10;
+  pointer-events: none; 
+}
+
+/* 2. Dịch chuyển mũi tên sang cột thứ 4 */
+.step-arrow-down-container svg {
+  transform: translateX(390px); 
+}
+
+/* 3. Điều chỉnh cho màn hình Laptop nhỏ / Tablet (Responsive) */
+@media (max-width: 1024px) {
+  .step-arrow-down-container svg {
+    transform: translateX(345px);
+  }
+}
+
+.map-header-desc {
+  color: #000000;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.map-info-image-container {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.map-info-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.map-info-logo {
+  max-width: 150px;
+  height: auto;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.map-website-btn-container {
+  margin-top: 20px;
+}
+
+.map-website-btn {
+  display: inline-block;
+  font-size: 14px;
+}
+
+.solutions-loading {
+  text-align: center;
+  padding: 40px;
+  color: #ffffff;
+}
+
+.notifications-empty {
+  text-align: center;
+  padding: 20px;
+  color: #b0b0b0;
+}
+
+/* =========================================================
+   CERTIFICATE MODAL
+   ========================================================= */
+.cert-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.cert-modal-content {
+  width: 90%;
+  max-width: 900px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+
+.cert-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cert-modal-title {
+  margin: 0;
+  color: var(--primary-blue);
+}
+
+.cert-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+.cert-modal-body {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.cert-modal-item {
+  margin-bottom: 18px;
+}
+
+.cert-modal-item-title {
+  margin: 0 0 6px 0;
+  color: #000;
+  font-weight: 700;
+}
+
+.cert-modal-item-desc {
+  color: #444;
+  line-height: 1.5;
+}
+
+.cert-modal-footer {
+  text-align: right;
+  margin-top: 12px;
+}
+
+.cert-modal-close-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+/* =========================================================
+   HANG B ITEMS
+   ========================================================= */
+.hangb-item {
+  cursor: pointer;
+  outline: none;
+}
+
+.hangb-item-row {
+  display: flex;
+  align-items: center;
+}
+
+.hangb-item-title {
+  font-weight: 600;
+}
+
+.hangb-item-desc {
+  margin-left: 16px;
+  margin-top: 8px;
+  color: #333;
 }

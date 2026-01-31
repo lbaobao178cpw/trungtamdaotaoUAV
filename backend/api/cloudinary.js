@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cloudinary = require('cloudinary').v2;
-const { verifyToken, verifyAdmin } = require('../middleware/verifyToken');
+const { verifyToken, verifyAdmin, verifyTokenOptional } = require('../middleware/verifyToken');
 const multer = require('multer');
 const fs = require('fs');
 const fsExtra = require('fs-extra');
@@ -90,7 +90,7 @@ router.post('/upload-cccd', upload.single('file'), async (req, res) => {
  * POST /api/cloudinary/upload
  * Upload file lên Cloudinary qua backend
  */
-router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
+router.post('/upload', upload.single('file'), verifyTokenOptional, async (req, res) => {
   try {
     console.log("Upload request received");
     console.log("File object:", req.file);
@@ -210,6 +210,7 @@ router.post('/upload', upload.single('file'), verifyToken, async (req, res) => {
             resource_type: resourceType,
             folder: folder,
             public_id: `${Date.now()}-${sanitized}`,
+            context: `display_name=${displayName}`,
             timeout: 60000, // Add timeout to upload stream
           },
           (error, result) => {
@@ -326,6 +327,49 @@ router.post('/delete', verifyAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('Cloudinary delete error:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
+/**
+ * GET /api/cloudinary/list-images
+ * Lấy danh sách hình ảnh từ Cloudinary
+ */
+router.get('/list-images', verifyTokenOptional, async (req, res) => {
+  try {
+    const folder = req.query.folder || 'uav-training/images';
+    const resourceType = req.query.resource_type || 'image';
+    const maxResults = parseInt(req.query.maxResults) || 100;
+
+    console.log("Listing resources from folder:", folder, "resource_type:", resourceType);
+
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: folder,
+      resource_type: resourceType,
+      max_results: maxResults
+    });
+
+    const resources = result.resources.map(r => ({
+      url: r.secure_url,
+      publicId: r.public_id,
+      displayName: r.context?.custom?.display_name || r.public_id.split('/').pop().split('-').slice(1).join('-') || r.public_id.split('/').pop(),
+      createdAt: r.created_at,
+      bytes: r.bytes,
+      resourceType: r.resource_type
+    }));
+
+    console.log(`Found ${resources.length} resources`);
+
+    res.json({
+      success: true,
+      images: resources
+    });
+  } catch (err) {
+    console.error('List resources error:', err);
     res.status(500).json({
       success: false,
       error: err.message

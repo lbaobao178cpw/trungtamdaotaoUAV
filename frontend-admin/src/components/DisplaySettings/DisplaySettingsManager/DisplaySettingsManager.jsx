@@ -13,6 +13,7 @@ import AuthoritiesManager from '../AuthoritiesManager/AuthoritiesManager';
 import FormsManager from '../FormsManager/FormsManager';
 import StudyMaterialsManager from '../StudyMaterialsManager/StudyMaterialsManager';
 import FAQManager from '../FAQManager/FAQManager';
+import NghiepVuHangBManager from '../NghiepVuHangBManager/NghiepVuHangBManager';
 
 // --- STATE MẶC ĐỊNH ---
 const initialFooterState = {
@@ -313,6 +314,9 @@ export default function DisplaySettingsManager() {
           <button style={tabBtnStyle(activeTab === 'faqs')} onClick={() => { setActiveTab('faqs'); }}>
             Câu hỏi Thường gặp
           </button>
+          <button style={tabBtnStyle(activeTab === 'nghiep-vu-hang-b')} onClick={() => { setActiveTab('nghiep-vu-hang-b'); }}>
+            Nghiệp vụ Hạng B
+          </button>
         </div>
 
         {activeTab === 'notifications' && (
@@ -481,6 +485,8 @@ export default function DisplaySettingsManager() {
             </div>
           </>
         )}
+
+        {activeTab === 'nghiep-vu-hang-b' && <NghiepVuHangBManager />}
 
         {/* TAB NOTIFICATIONS */}
         {activeTab === 'notifications' && (

@@ -14,7 +14,7 @@ import {
   MapPin,
   CreditCard,
   User,
-  Plane
+  
 } from "lucide-react";
 
 // URL API
@@ -28,6 +28,7 @@ function RegisterPage() {
   const [provinces, setProvinces] = useState([]);
   const [permanentWards, setPermanentWards] = useState([]);
   const [currentWards, setCurrentWards] = useState([]);
+  const [tierBServices, setTierBServices] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -48,7 +49,8 @@ function RegisterPage() {
     currentAddress: "", currentCityId: "", currentCityName: "", currentWardId: "", currentWardName: "",
     email: "", phone: "", password: "", confirmPassword: "",
     emergencyName: "", emergencyRelation: "", emergencyPhone: "",
-    uavTypes: [], uavPurpose: "", activityArea: "", experience: "", certificateType: preSelectedTier,
+    uavPurpose: "", activityArea: "", experience: "", certificateType: preSelectedTier,
+    tierBServices: [],
     confirmations: [],
   });
 
@@ -69,7 +71,21 @@ function RegisterPage() {
         console.error('Error loading provinces:', error);
       }
     };
+
+    const fetchTierBServices = async () => {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.BASE_URL}/nghiep-vu-hang-b`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTierBServices(data);
+        }
+      } catch (error) {
+        console.error('Error loading Tier B services:', error);
+      }
+    };
+
     fetchProvinces();
+    fetchTierBServices();
   }, []);
 
   useEffect(() => {
@@ -129,10 +145,7 @@ function RegisterPage() {
     if (errors[name] && name !== 'email') { setErrors(prev => { const newErrs = { ...prev }; delete newErrs[name]; return newErrs; }); }
 
     if (type === "checkbox") {
-      if (name === "uavType") {
-        const currentArray = formData.uavTypes;
-        setFormData((prev) => ({ ...prev, uavTypes: checked ? [...currentArray, value] : currentArray.filter((item) => item !== value), }));
-      } else if (name === "confirmation") {
+      if (name === "confirmation") {
         const currentConfirmations = formData.confirmations;
         setFormData((prev) => ({ ...prev, confirmations: checked ? [...currentConfirmations, value] : currentConfirmations.filter((item) => item !== value), }));
       } else if (name === "sameAsPermanent") {
@@ -145,6 +158,12 @@ function RegisterPage() {
           currentWardName: checked ? prev.permanentWardName : "",
         }));
       }
+    } else if (type === "radio" && name === "tierBService") {
+      const serviceId = Number(value);
+      setFormData((prev) => ({
+        ...prev,
+        tierBServices: [serviceId]
+      }));
     } else if (type === "file") {
       const file = files[0];
       if (file) {
@@ -222,7 +241,6 @@ function RegisterPage() {
     if (!formData.uavPurpose?.trim()) newErrors.uavPurpose = "Vui lòng nhập mục đích sử dụng";
     if (!formData.activityArea) newErrors.activityArea = "Vui lòng chọn khu vực hoạt động";
     if (!formData.experience) newErrors.experience = "Vui lòng chọn kinh nghiệm bay";
-    if (!formData.uavTypes || formData.uavTypes.length === 0) newErrors.uavTypes = "Vui lòng chọn ít nhất một loại thiết bị";
 
     // --- SỬA LỖI Ở ĐÂY: BẮT BUỘC CHỌN ---
     if (!formData.certificateType) newErrors.certificateType = "Vui lòng chọn hạng chứng chỉ";
@@ -273,7 +291,6 @@ function RegisterPage() {
       if (!formData.emergencyRelation?.trim()) allErrors.emergencyRelation = "Mối quan hệ không được bỏ trống";
       
       // Validate Step 4
-      if (!formData.uavTypes || formData.uavTypes.length === 0) allErrors.uavTypes = "Phải chọn ít nhất 1 loại UAV";
       if (!formData.uavPurpose?.trim()) allErrors.uavPurpose = "Mục đích sử dụng không được bỏ trống";
       if (!formData.activityArea) allErrors.activityArea = "Khu vực hoạt động không được bỏ trống";
       if (!formData.experience) allErrors.experience = "Kinh nghiệm bay không được bỏ trống";
@@ -591,46 +608,149 @@ function RegisterPage() {
 
   const renderStep4 = () => (
     <div className="register-step">
-      <h2 className="step-title">Kinh nghiệm & Thiết bị UAV</h2>
-      <div className="form-section"><h3>Thiết bị đang sử dụng</h3><div className="checkbox-grid" style={errors.uavTypes ? { border: '1px solid red', padding: '10px', borderRadius: '8px' } : {}}>{["DJI Mini", "DJI Mavic", "DJI Phantom", "DJI Inspire", "Autel", "FPV", "Cánh bằng", "Khác"].map(t => (<label key={t} className="checkbox-label"><input type="checkbox" name="uavType" value={t} checked={formData.uavTypes.includes(t)} onChange={handleInputChange} /> <span>{t}</span></label>))}</div>{errors.uavTypes && <p className="error-text">{errors.uavTypes}</p>}</div>
-      <div className="form-section"><h3>Mục đích sử dụng</h3><div className="form-group"><label>Mô tả mục đích sử dụng UAV của bạn</label><textarea name="uavPurpose" value={formData.uavPurpose} onChange={handleInputChange} className={`form-input ${errors.uavPurpose ? "input-error" : ""}`} placeholder="VD: Quay phim sự kiện, Khảo sát công trình, Phun thuốc nông nghiệp..." style={{ height: '80px', resize: 'vertical' }} />{errors.uavPurpose && <p className="error-text">{errors.uavPurpose}</p>}</div></div>
-      <div className="form-section"><h3>Khu vực hoạt động chính</h3><select name="activityArea" value={formData.activityArea} onChange={handleInputChange} className={`form-select ${errors.activityArea ? "input-error" : ""}`}><option value="">-- Chọn khu vực --</option><option value="hanoi">Hà Nội & Miền Bắc</option><option value="danang">Đà Nẵng & Miền Trung</option><option value="hcm">TP.HCM & Miền Nam</option></select>{errors.activityArea && <p className="error-text">{errors.activityArea}</p>}</div>
-      <div className="form-section"><h3><Plane size={18} style={{ display: 'inline', marginBottom: '-3px' }} /> Kinh nghiệm bay</h3><div className="radio-list" style={{ border: errors.experience ? '1px solid red' : 'none', padding: errors.experience ? '10px' : '0', borderRadius: '8px' }}>{["Chưa có kinh nghiệm", "Dưới 6 tháng", "6-12 tháng", "1-3 năm", "Trên 3 năm"].map((exp) => (<label key={exp} className="radio-option" style={{ padding: '10px', border: 'none', borderBottom: '1px solid #444' }}><input type="radio" name="experience" value={exp} checked={formData.experience === exp} onChange={handleInputChange} /><span style={{ marginLeft: '10px' }}>{exp}</span></label>))}</div>{errors.experience && <p className="error-text">{errors.experience}</p>}</div>
+      <h2 className="step-title">Kinh nghiệm</h2>
 
-      {/* KHU VỰC CHỌN HẠNG CÓ SỬA LỖI UI */}
       <div className="form-section">
         <h3>Đăng ký hạng chứng chỉ</h3>
-        {preSelectedTier && (<div style={{ marginBottom: '15px', padding: '12px', background: '#dcfce7', color: '#166534', borderRadius: '8px', border: '1px solid #86efac', display: 'flex', gap: '10px' }}><CheckCircle size={20} /><span>Hệ thống tự chọn <strong>Hạng {preSelectedTier}</strong> theo lịch thi.</span></div>)}
+        {preSelectedTier && (
+          <div style={{ marginBottom: '15px', padding: '12px', background: '#dcfce7', color: '#166534', borderRadius: '8px', border: '1px solid #86efac', display: 'flex', gap: '10px' }}>
+            <CheckCircle size={20} />
+            <span>Hệ thống tự chọn <strong>Hạng {preSelectedTier}</strong> theo lịch thi.</span>
+          </div>
+        )}
         <div className="radio-list" style={errors.certificateType ? { border: '1px solid red', padding: '10px', borderRadius: '8px' } : {}}>
-          <label className="radio-option" style={formData.certificateType === "A" ? { borderColor: '#0066cc', background: 'rgba(0, 80, 184, 0.1)' } : {}}><input type="radio" name="certificateType" value="A" checked={formData.certificateType === "A"} onChange={handleInputChange} /><div><span style={{ fontWeight: 'bold' }}>Hạng A (Cơ bản)</span><div style={{ fontSize: '0.85rem', color: '#b0b0b0' }}>Dành cho UAV &lt; 250g hoặc bay trong tầm nhìn.</div></div></label>
-          <label className="radio-option" style={formData.certificateType === "B" ? { borderColor: '#0066cc', background: 'rgba(0, 80, 184, 0.1)' } : {}}><input type="radio" name="certificateType" value="B" checked={formData.certificateType === "B"} onChange={handleInputChange} /><div><span style={{ fontWeight: 'bold' }}>Hạng B (Nâng cao)</span><div style={{ fontSize: '0.85rem', color: '#b0b0b0' }}>Dành cho UAV &gt; 250g, bay BVLOS hoặc bay phun thuốc.</div></div></label>
+          <label className="radio-option" style={formData.certificateType === "A" ? { borderColor: '#0066cc', background: 'rgba(0, 80, 184, 0.1)' } : {}}>
+            <input type="radio" name="certificateType" value="A" checked={formData.certificateType === "A"} onChange={handleInputChange} />
+            <div><span style={{ fontWeight: 'bold' }}>Hạng A (Cơ bản)</span><div style={{ fontSize: '0.85rem', color: '#b0b0b0' }}>Dành cho thiết bị &lt; 250g hoặc bay trong tầm nhìn.</div></div>
+          </label>
+          <label className="radio-option" style={formData.certificateType === "B" ? { borderColor: '#0066cc', background: 'rgba(0, 80, 184, 0.1)' } : {}}>
+            <input type="radio" name="certificateType" value="B" checked={formData.certificateType === "B"} onChange={handleInputChange} />
+            <div><span style={{ fontWeight: 'bold' }}>Hạng B (Nâng cao)</span><div style={{ fontSize: '0.85rem', color: '#b0b0b0' }}>Dành cho thiết bị &gt; 250g, bay BVLOS hoặc bay phun thuốc.</div></div>
+          </label>
         </div>
         {errors.certificateType && <p className="error-text">{errors.certificateType}</p>}
+
+        {formData.certificateType === "B" && (
+          <div className="tier-b-section">
+            <h4>Các nghiệp vụ Hạng B (Tùy chọn)</h4>
+            {tierBServices.length > 0 ? (
+              Object.entries(
+                tierBServices.reduce((acc, service) => {
+                  const category = service.category || 'Khác';
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(service);
+                  return acc;
+                }, {})
+              ).map(([category, services]) => (
+                <div key={category} className="tier-b-category">
+                  <h5 className="tier-b-category-title">{category}</h5>
+                  <div className="tier-b-grid">
+                    {services.map((service) => (
+                      <label key={service.id} className={`tier-b-option ${formData.tierBServices[0] === service.id ? 'selected' : ''}`}>
+                        <input
+                          type="radio"
+                          name="tierBService"
+                          value={service.id}
+                          checked={formData.tierBServices[0] === service.id}
+                          onChange={handleInputChange}
+                        />
+                        <span>{service.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: '#999', fontSize: '0.9rem' }}>Đang tải danh sách...</p>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="form-actions"><button type="button" onClick={handleBack} className="btn btn-secondary"><ArrowLeft size={20} /> Quay lại</button><button type="button" onClick={handleNext} className="btn btn-primary">Tiếp tục <ArrowRight size={20} /></button></div>
+      <div className="form-section">
+        <h3>Khu vực hoạt động chính</h3>
+        <select name="activityArea" value={formData.activityArea} onChange={handleInputChange} className={`form-select ${errors.activityArea ? "input-error" : ""}`}>
+          <option value="">-- Chọn khu vực --</option>
+          <option value="hanoi">Hà Nội & Miền Bắc</option>
+          <option value="danang">Đà Nẵng & Miền Trung</option>
+          <option value="hcm">TP.HCM & Miền Nam</option>
+        </select>
+        {errors.activityArea && <p className="error-text">{errors.activityArea}</p>}
+      </div>
+
+      <div className="form-section">
+        <h3>Mục đích sử dụng</h3>
+        <div className="form-group">
+          <label>Mô tả mục đích sử dụng</label>
+          <textarea name="uavPurpose" value={formData.uavPurpose} onChange={handleInputChange} className={`form-input ${errors.uavPurpose ? "input-error" : ""}`} placeholder="VD: Quay phim sự kiện, Khảo sát công trình, Phun thuốc nông nghiệp..." style={{ height: '80px', resize: 'vertical' }} />
+          {errors.uavPurpose && <p className="error-text">{errors.uavPurpose}</p>}
+        </div>
+      </div>
+
+      <div className="form-section">
+        <h3>Kinh nghiệm bay</h3>
+        <div className="radio-list" style={{ border: errors.experience ? '1px solid red' : 'none', padding: errors.experience ? '10px' : '0', borderRadius: '8px' }}>
+          {["Chưa có kinh nghiệm", "Dưới 6 tháng", "6-12 tháng", "1-3 năm", "Trên 3 năm"].map((exp) => (
+            <label key={exp} className="radio-option" style={{ padding: '10px', border: 'none', borderBottom: '1px solid #444' }}>
+              <input type="radio" name="experience" value={exp} checked={formData.experience === exp} onChange={handleInputChange} />
+              <span style={{ marginLeft: '10px' }}>{exp}</span>
+            </label>
+          ))}
+        </div>
+        {errors.experience && <p className="error-text">{errors.experience}</p>}
+      </div>
+
+      <div className="form-actions">
+        <button type="button" onClick={handleBack} className="btn btn-secondary"><ArrowLeft size={20} /> Quay lại</button>
+        <button type="button" onClick={handleNext} className="btn btn-primary">Tiếp tục <ArrowRight size={20} /></button>
+      </div>
     </div>
   );
 
-  const renderStep5 = () => (
-    <div className="register-step">
-      <h2 className="step-title">Xác nhận thông tin</h2>
-      <div className="summary-section">
-        <div className="summary-item"><strong>Họ tên:</strong> {formData.fullName.toUpperCase()}</div>
-        <div className="summary-item"><strong>CCCD:</strong> {formData.cccd} (Đã tải ảnh)</div>
-        <div className="summary-item"><strong>Thường trú:</strong> {formData.permanentAddress}, {formData.permanentWardName}, {formData.permanentCityName}</div>
-        <div className="summary-item"><strong>Nơi ở:</strong> {formData.sameAsPermanent ? "Giống thường trú" : `${formData.currentAddress}, ${formData.currentWardName}, ${formData.currentCityName}`}</div>
-        <div className="summary-item"><strong>Email:</strong> {formData.email}</div>
-        <div className="summary-item"><strong>SĐT:</strong> {formData.phone}</div>
-        <div className="summary-item"><strong>Khẩn cấp:</strong> {formData.emergencyName} - {formData.emergencyRelation} ({formData.emergencyPhone})</div>
-        <div className="summary-item"><strong>Kinh nghiệm:</strong> {formData.experience}</div>
-        <div className="summary-item"><strong>Mục đích:</strong> {formData.uavPurpose}</div>
-        <div className="summary-item"><strong>Chứng chỉ:</strong> Hạng {formData.certificateType}</div>
+  function renderStep5() {
+    return (
+      <div className="register-step">
+        <h2 className="step-title">Xác nhận thông tin</h2>
+
+        <div className="summary-section">
+          <div className="summary-item"><strong>Họ tên:</strong> {formData.fullName.toUpperCase()}</div>
+          <div className="summary-item"><strong>CCCD:</strong> {formData.cccd} (Đã tải ảnh)</div>
+          <div className="summary-item"><strong>Thường trú:</strong> {formData.permanentAddress}, {formData.permanentWardName}, {formData.permanentCityName}</div>
+          <div className="summary-item"><strong>Nơi ở:</strong> {formData.sameAsPermanent ? "Giống thường trú" : `${formData.currentAddress}, ${formData.currentWardName}, ${formData.currentCityName}`}</div>
+          <div className="summary-item"><strong>Email:</strong> {formData.email}</div>
+          <div className="summary-item"><strong>SĐT:</strong> {formData.phone}</div>
+          <div className="summary-item"><strong>Khẩn cấp:</strong> {formData.emergencyName} - {formData.emergencyRelation} ({formData.emergencyPhone})</div>
+          <div className="summary-item"><strong>Kinh nghiệm:</strong> {formData.experience}</div>
+          <div className="summary-item"><strong>Mục đích:</strong> {formData.uavPurpose}</div>
+          <div className="summary-item"><strong>Chứng chỉ:</strong> Hạng {formData.certificateType}</div>
+        </div>
+
+        <div className="form-section">
+          <label className="checkbox-label required-checkbox">
+            <input
+              type="checkbox"
+              name="confirmation"
+              value="confirmed"
+              onChange={(e) => {
+                if (e.target.checked) setFormData(prev => ({ ...prev, confirmations: ['confirmed'] }));
+                else setFormData(prev => ({ ...prev, confirmations: [] }));
+              }}
+            />
+            <span> Tôi xin cam đoan các thông tin trên là đúng sự thật và chịu trách nhiệm trước pháp luật.</span>
+          </label>
+        </div>
+
+        <div className="form-actions">
+          <button type="button" onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
+            <ArrowLeft size={20} /> Quay lại
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={isLoading || formData.confirmations.length === 0}>
+            {isLoading ? "Đang xử lý..." : "Hoàn tất đăng ký"} <ArrowRight size={20} />
+          </button>
+        </div>
       </div>
-      <div className="form-section"><label className="checkbox-label required-checkbox"><input type="checkbox" name="confirmation" value="confirmed" onChange={(e) => { if (e.target.checked) setFormData(prev => ({ ...prev, confirmations: ['confirmed'] })); else setFormData(prev => ({ ...prev, confirmations: [] })) }} /> <span>Tôi xin cam đoan các thông tin trên là đúng sự thật và chịu trách nhiệm trước pháp luật.</span></label></div>
-      <div className="form-actions"><button type="button" onClick={handleBack} className="btn btn-secondary" disabled={isLoading}><ArrowLeft size={20} /> Quay lại</button><button type="submit" className="btn btn-primary" disabled={isLoading || formData.confirmations.length === 0}>{isLoading ? "Đang xử lý..." : "Hoàn tất đăng ký"} <ArrowRight size={20} /></button></div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="register-page">

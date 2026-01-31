@@ -226,7 +226,7 @@ function CoursesPage() {
                 </svg>
               ))}
             </div>
-            <span style={{ color: "#b0b0b0" }}>
+            <span className="rating-text">
               {courseRatings[course.id]
                 ? `${courseRatings[course.id].average} (${course.totalViews || 0} lượt xem)`
                 : `${course.rating || "5.0"} (${course.totalViews || 0} lượt xem)`}

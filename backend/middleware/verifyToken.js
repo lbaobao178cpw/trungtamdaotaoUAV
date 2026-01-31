@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 // Hằng số
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key';
-const TOKEN_EXPIRY = '10h';  // Access token: 10 hours
-const REFRESH_TOKEN_EXPIRY = '7d';  // Refresh token: 7 days
+const TOKEN_EXPIRY = '10h';  // 10 hours - để test refresh logic
+const REFRESH_TOKEN_EXPIRY = '7d';  // Refresh token: 7 ngày
 
 /**
  * Generate JWT Token
@@ -53,14 +53,14 @@ const verifyToken = async (req, res, next) => {
     // === KIỂM TRA SESSION (Single Device Login) ===
     try {
       const [sessions] = await db.query(
-        "SELECT * FROM user_sessions WHERE user_id = ? AND token = ? AND is_active = TRUE",
-        [decoded.id, token]
+        "SELECT * FROM user_sessions WHERE user_id = ? AND is_active = TRUE",
+        [decoded.id]
       );
 
       if (sessions.length === 0) {
         return res.status(401).json({
           success: false,
-          error: "Phiên đăng nhập của bạn đã hết hạn hoặc bạn đã đăng nhập từ thiết bị khác",
+          error: "Phiên đăng nhập của bạn đã hết hạn hoặc bạn đã đăng xuất",
           code: 'SESSION_INVALID'
         });
       }

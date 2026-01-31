@@ -13,9 +13,38 @@ import LookupManager from "../../lookup/LookupManager";
 
 import "./Admin.css";
 
+// =====================================================================
+// LOADING SCREEN COMPONENT
+// =====================================================================
+const LoadingScreen = () => (
+  <div className="loading-screen-overlay">
+    <div className="loading-screen-content">
+      {/* Animated spinner */}
+      <div className="loading-spinner"></div>
+      
+      <div className="loading-text-container">
+        <h2 className="loading-title">Đang tải dữ liệu</h2>
+        <p className="loading-subtitle">Vui lòng chờ...</p>
+      </div>
+
+      {/* Dot animation */}
+      <div className="loading-dots">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="loading-dot"
+            style={{ animationDelay: `${i * 0.2}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 export default function Admin() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Đổi tab mặc định hoặc giữ nguyên tùy bạn
   const [activeTab, setActiveTab] = useState("model3d");
@@ -24,6 +53,13 @@ export default function Admin() {
     const token = localStorage.getItem("admin_token");
     if (!token) {
       navigate("/login", { replace: true });
+    } else {
+      // Simulate loading delay for initial load (optional)
+      const timer = setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 800); // Show loading screen for 800ms
+
+      return () => clearTimeout(timer);
     }
   }, [navigate]);
 
@@ -35,44 +71,25 @@ export default function Admin() {
 
   return (
     <div className="admin-container">
+      {/* Show loading screen during initial load */}
+      {isInitialLoading && <LoadingScreen />}
+
       {/* 1. HEADER & NAVIGATION */}
       <header className="admin-header">
-        <div className="header-brand" style={{ position: "relative" }}>
+        <div className="header-brand header-brand-wrapper">
           <div
             onClick={() => setOpenMenu(!openMenu)}
-            style={{
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
+            className="header-brand-trigger"
           >
-            <h1 style={{ margin: 0 }}>UAV ADMIN</h1>
-            <span style={{ fontSize: 12 }}>▼</span>
+            <h1 className="header-brand-title">UAV ADMIN</h1>
+            <span className="header-brand-arrow">▼</span>
           </div>
 
           {openMenu && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                marginTop: 6,
-                background: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: 6,
-                minWidth: 140,
-                zIndex: 999
-              }}
-            >
+            <div className="header-dropdown-menu">
               <div
                 onClick={handleLogout}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  color: "red",
-                  fontWeight: 600
-                }}
+                className="header-dropdown-item"
               >
                 Đăng xuất
               </div>
@@ -156,7 +173,7 @@ export default function Admin() {
 
         {/* === CẬP NHẬT RENDER COMPONENT MỚI === */}
         {activeTab === "display" && (
-          <div className="panel" style={{ border: "none", boxShadow: "none", background: "transparent", padding: 0 }}>
+          <div className="panel panel-transparent">
             {/* Component mới xử lý cả Footer và Thông báo */}
             <DisplaySettingsManager />
           </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 // Đảm bảo đường dẫn CSS đúng với cấu trúc dự án của bạn
-import "../admin/Admin/Admin.css";
+import "./SolutionManager.css";
 import MediaSelector from "../mediaSelector/MediaSelector";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
+import { uploadImage, uploadVideo, uploadSolutionImage, uploadIllustrationImage, uploadClientImage, listImages, uploadSolutionVideo, listVideos } from "../../lib/cloudinaryService";
 
 const initialSolutionState = {
   id: "",
@@ -67,6 +68,8 @@ export default function SolutionManager() {
 
   const [saving, setSaving] = useState(false);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [sections, setSections] = useState([]);
   const [clients, setClients] = useState([]);
 
@@ -76,6 +79,30 @@ export default function SolutionManager() {
     sectionIdx: null,
     imgIdx: null,
   });
+
+  // State cho thư viện hình ảnh
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryImages, setLibraryImages] = useState([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(false);
+
+  // State cho thư viện video
+  const [showVideoLibrary, setShowVideoLibrary] = useState(false);
+  const [libraryVideos, setLibraryVideos] = useState([]);
+  const [loadingVideoLibrary, setLoadingVideoLibrary] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [targetVideoType, setTargetVideoType] = useState(null); // 'hero' or 'footer'
+
+  // State cho thư viện hình ảnh minh họa
+  const [showIllustrationLibrary, setShowIllustrationLibrary] = useState(false);
+  const [libraryIllustrations, setLibraryIllustrations] = useState([]);
+  const [loadingIllustrationLibrary, setLoadingIllustrationLibrary] = useState(false);
+  const [uploadingIllustration, setUploadingIllustration] = useState(false);
+
+  // State cho thư viện logo khách hàng
+  const [showClientLibrary, setShowClientLibrary] = useState(false);
+  const [libraryClients, setLibraryClients] = useState([]);
+  const [loadingClientLibrary, setLoadingClientLibrary] = useState(false);
+  const [uploadingClient, setUploadingClient] = useState(false);
 
   // State để force refresh video preview
   const [videoPreviewKey, setVideoPreviewKey] = useState(0);
@@ -187,6 +214,213 @@ export default function SolutionManager() {
     setIsMediaModalOpen(false);
   };
 
+  const handleShowLibrary = async () => {
+    setShowLibrary(true);
+    setLoadingLibrary(true);
+    try {
+      const result = await listImages("uav-training/solutions");
+      if (result.success) {
+        setLibraryImages(result.images);
+      } else {
+        alert('Failed to load images: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading images: ' + err.message);
+    } finally {
+      setLoadingLibrary(false);
+    }
+  };
+
+  const handleSelectFromLibrary = (image) => {
+    setForm((p) => ({ ...p, image: image.url }));
+    setShowLibrary(false);
+  };
+
+  const handleShowVideoLibrary = async (videoType) => {
+    setTargetVideoType(videoType);
+    setShowVideoLibrary(true);
+    setLoadingVideoLibrary(true);
+    try {
+      const result = await listVideos("uav-training/solutions/videos");
+      if (result.success) {
+        setLibraryVideos(result.images);
+      } else {
+        alert('Failed to load videos: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading videos: ' + err.message);
+    } finally {
+      setLoadingVideoLibrary(false);
+    }
+  };
+
+  const handleSelectFromVideoLibrary = (video) => {
+    if (targetVideoType === 'hero') {
+      setForm((p) => ({ ...p, hero_video: video.url }));
+    } else if (targetVideoType === 'footer') {
+      setForm((p) => ({ ...p, video_url: video.url }));
+    }
+    setVideoPreviewKey(prev => prev + 1);
+    setShowVideoLibrary(false);
+  };
+
+  const handleShowIllustrationLibrary = async () => {
+    setShowIllustrationLibrary(true);
+    setLoadingIllustrationLibrary(true);
+    try {
+      const result = await listImages("uav-training/solutions/illustrations");
+      if (result.success) {
+        setLibraryIllustrations(result.images);
+      } else {
+        alert('Failed to load illustrations: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading illustrations: ' + err.message);
+    } finally {
+      setLoadingIllustrationLibrary(false);
+    }
+  };
+
+  const handleSelectFromIllustrationLibrary = (image) => {
+    updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, image.url);
+    setShowIllustrationLibrary(false);
+  };
+
+  const handleIllustrationUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setUploadingIllustration(true);
+      const res = await uploadIllustrationImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload ảnh thất bại');
+        return;
+      }
+
+      updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, res.url);
+      notifySuccess('Tải ảnh minh họa lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Illustration upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload ảnh');
+    } finally {
+      setUploadingIllustration(false);
+    }
+  };
+
+  const handleShowClientLibrary = async () => {
+    setShowClientLibrary(true);
+    setLoadingClientLibrary(true);
+    try {
+      const result = await listImages("uav-training/solutions/clients");
+      if (result.success) {
+        setLibraryClients(result.images);
+      } else {
+        alert('Failed to load client logos: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error loading client logos: ' + err.message);
+    } finally {
+      setLoadingClientLibrary(false);
+    }
+  };
+
+  const handleSelectFromClientLibrary = (image) => {
+    updateClient(targetContext.imgIdx, image.url);
+    setShowClientLibrary(false);
+  };
+
+  const handleClientUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setUploadingClient(true);
+      const res = await uploadClientImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload logo thất bại');
+        return;
+      }
+
+      updateClient(targetContext.imgIdx, res.url);
+      notifySuccess('Tải logo khách hàng lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Client upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload logo');
+    } finally {
+      setUploadingClient(false);
+    }
+  };
+
+  const handleVideoUpload = async (e, videoType) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      notifyError('Vui lòng chọn file video (MP4/AVI/MOV)');
+      return;
+    }
+
+    try {
+      setUploadingVideo(true);
+      const res = await uploadSolutionVideo(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload video thất bại');
+        return;
+      }
+
+      if (videoType === 'hero') {
+        setForm((p) => ({ ...p, hero_video: res.url }));
+      } else if (videoType === 'footer') {
+        setForm((p) => ({ ...p, video_url: res.url }));
+      }
+      setVideoPreviewKey(prev => prev + 1);
+      notifySuccess('Tải video giải pháp lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Video upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload video');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notifyError('Vui lòng chọn file hình ảnh (JPG/PNG/GIF)');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const res = await uploadSolutionImage(file);
+      if (!res.success) {
+        notifyError(res.error || 'Upload ảnh thất bại');
+        return;
+      }
+
+      setForm((p) => ({ ...p, image: res.url }));
+      notifySuccess('Tải ảnh giải pháp lên Cloudinary thành công');
+    } catch (err) {
+      console.error('Image upload error:', err);
+      notifyError(err.message || 'Lỗi khi upload ảnh');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -237,15 +471,7 @@ export default function SolutionManager() {
   };
 
   return (
-    <div
-      className="solution-manager-container"
-      style={{
-        display: "flex",
-        gap: "24px",
-        marginTop: "20px",
-        flexDirection: "row-reverse",
-      }}
-    >
+    <div className="solution-manager-container">
       {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
       <div className="panel" style={{ flex: 2 }}>
         <div
@@ -295,94 +521,304 @@ export default function SolutionManager() {
 
             <div className="form-group">
               <label className="form-label">Ảnh Hero (Thumbnail)</label>
-              <div className="input-group">
-                <input
-                  className="form-control"
-                  value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  placeholder="Link ảnh..."
-                />
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => openMedia("hero_img")}
-                >
-                  Chọn ảnh
-                </button>
+              <div className="center-text">
+                {!showLibrary ? (
+                  <>
+                    {!form.image ? (
+                      <div>
+                        <div className="no-image-text">
+                          Chưa có hình ảnh hero
+                        </div>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById("solutionImageInput")?.click()}
+                            className="btn btn-primary btn-sm"
+                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                            disabled={uploadingImage}
+                          >
+                            {uploadingImage ? 'Đang upload...' : 'Upload từ máy tính'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleShowLibrary}
+                            className="btn btn-secondary btn-sm"
+                            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                          >
+                            Chọn từ thư viện
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-info btn-sm"
+                            onClick={() => openMedia("hero_img")}
+                          >
+                            Chọn từ Media
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="center-text">
+                        <img
+                          src={getImageUrl(form.image)}
+                          alt="Ảnh Hero"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "250px",
+                            borderRadius: "6px",
+                            marginBottom: "12px",
+                          }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/images/img-default.jpg";
+                          }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById("solutionImageInput")?.click()}
+                            className="change-btn"
+                            disabled={uploadingImage}
+                          >
+                            {uploadingImage ? 'Đang upload...' : 'Thay đổi hình ảnh'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleShowLibrary}
+                            className="btn btn-secondary btn-sm library-btn"
+                          >
+                            Chọn từ thư viện
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-info btn-sm"
+                            onClick={() => openMedia("hero_img")}
+                          >
+                            Chọn từ Media
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, image: "" })}
+                            className="btn btn-danger btn-sm remove-btn"
+                          >
+                            Xóa hình ảnh
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="library-view" style={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "12px",
+                    padding: "24px",
+                    background: "#ffffff",
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
+                  }}>
+                    <div className="library-header" style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "24px",
+                      position: "sticky",
+                      top: 0,
+                      background: "#ffffff",
+                      borderBottom: "1px solid #f0f0f0",
+                      margin: "-12px -12px 24px -12px",
+                      padding: "12px",
+                      borderRadius: "12px 12px 0 0"
+                    }}>
+                      <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>Chọn từ thư viện giải pháp</h3>
+                      <button
+                        onClick={() => setShowLibrary(false)}
+                        style={{
+                          padding: "8px",
+                          background: "#f8f9fa",
+                          color: "#6c757d",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = "#e9ecef";
+                          e.target.style.color = "#495057";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = "#f8f9fa";
+                          e.target.style.color = "#6c757d";
+                        }}
+                        title="Đóng"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {loadingLibrary ? (
+                      <div className="loading-state">
+                        <div className="loading-icon">⏳</div>
+                        <div className="loading-text">Đang tải hình ảnh...</div>
+                      </div>
+                    ) : libraryImages.length === 0 ? (
+                      <div className="empty-state">
+                        <div className="empty-icon">📷</div>
+                        <div className="empty-text">
+                          Chưa có hình ảnh nào trong thư viện
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="image-grid">
+                        {libraryImages.map((image) => (
+                          <div
+                            key={image.publicId}
+                            className="image-item"
+                            onClick={() => handleSelectFromLibrary(image)}
+                          >
+                            <img
+                              src={image.url}
+                              alt={image.displayName}
+                            />
+                            <p>
+                              {image.displayName}
+                            </p>
+                            <div className="checkmark">
+                              ✓
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {form.image && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: 5,
-                    border: "1px dashed #ddd",
-                    borderRadius: 4,
-                    background: "#f9f9f9",
-                    textAlign: "center",
-                  }}
-                >
-                  <img
-                    src={getImageUrl(form.image)}
-                    alt="Xem trước hình ảnh giải pháp"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "200px",
-                      width: "auto",
-                      height: "auto",
-                      display: "block",
-                      margin: "0 auto",
-                    }}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/images/img-default.jpg";
-                    }}
-                  />
-                </div>
-              )}
+              <input
+                id="solutionImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: "none" }}
+              />
+              <input
+                id="illustrationImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleIllustrationUpload}
+                style={{ display: "none" }}
+              />
+              <input
+                id="clientImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleClientUpload}
+                style={{ display: "none" }}
+              />
             </div>
 
             <div className="form-group">
               <label className="form-label">Video Hero</label>
-              <div className="input-group">
-                <input
-                  className="form-control"
-                  value={form.hero_video}
-                  onChange={(e) =>
-                    setForm({ ...form, hero_video: e.target.value })
-                  }
-                  placeholder="Link Video (MP4/Youtube)..."
-                />
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => openMedia("hero_video")}
-                >
-                  Chọn Video
-                </button>
-              </div>
-
-              {form.hero_video && (
-                <div key={`hero-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
-                  {form.hero_video.includes("youtube.com") || form.hero_video.includes("youtu.be") ? (
-                    <iframe
-                      width="100%"
-                      height="200"
-                      src={getYouTubeEmbedUrl(form.hero_video)}
-                      title="Hero Video Preview"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{ borderRadius: 4 }}
-                    ></iframe>
-                  ) : (
-                    <video key={`hero-video-player-${videoPreviewKey}`} width="100%" height="200" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
-                      <source src={form.hero_video} type="video/mp4" />
-                      Trình duyệt không hỗ trợ thẻ video.
-                    </video>
-                  )}
+              {!form.hero_video ? (
+                <>
+                  <div className="flex-gap">
+                    <input
+                      className="form-control"
+                      value={form.hero_video}
+                      onChange={(e) =>
+                        setForm({ ...form, hero_video: e.target.value })
+                      }
+                      placeholder="Link Video (MP4/Youtube)..."
+                      style={{ flex: 1 }}
+                    />
+                    {uploadingVideo && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("heroVideoInput")?.click()}
+                      className="btn btn-primary btn-sm"
+                      disabled={uploadingVideo}
+                    >
+                      Upload từ máy tính
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShowVideoLibrary('hero')}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
+                      onClick={() => openMedia("hero_video")}
+                    >
+                      Chọn từ Media
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="center-text">
+                  <div key={`hero-video-${videoPreviewKey}`} style={{ marginBottom: 12, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
+                    {form.hero_video.includes("youtube.com") || form.hero_video.includes("youtu.be") ? (
+                      <iframe
+                        width="100%"
+                        height="200"
+                        src={getYouTubeEmbedUrl(form.hero_video)}
+                        title="Hero Video Preview"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ borderRadius: 4 }}
+                      ></iframe>
+                    ) : (
+                      <video key={`hero-video-player-${videoPreviewKey}`} width="100%" height="200" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
+                        <source src={form.hero_video} type="video/mp4" />
+                        Trình duyệt không hỗ trợ thẻ video.
+                      </video>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("heroVideoInput")?.click()}
+                      className="change-btn"
+                      disabled={uploadingVideo}
+                    >
+                      {uploadingVideo ? 'Đang upload...' : 'Thay đổi video'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShowVideoLibrary('hero')}
+                      className="btn btn-secondary btn-sm library-btn"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
+                      onClick={() => openMedia("hero_video")}
+                    >
+                      Chọn từ Media
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, hero_video: "" })}
+                      className="btn btn-danger btn-sm remove-btn"
+                    >
+                      Xóa video
+                    </button>
+                  </div>
                 </div>
               )}
+              <input
+                id="heroVideoInput"
+                type="file"
+                accept="video/*"
+                onChange={(e) => handleVideoUpload(e, 'hero')}
+                style={{ display: "none" }}
+              />
             </div>
 
             <div className="form-group">
@@ -463,27 +899,11 @@ export default function SolutionManager() {
                   />
                 </div>
 
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: "0.9em",
-                    fontWeight: "bold",
-                    marginBottom: 8,
-                    display: "block",
-                  }}
-                >
+                <label className="form-label">
                   Hình ảnh minh họa:
                 </label>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(180px, 1fr))",
-                    gap: 12,
-                    marginBottom: 12,
-                  }}
-                >
+                <div className="image-grid-section">
                   {sec.images.map((img, imgIdx) => (
                     <div
                       key={imgIdx}
@@ -497,75 +917,60 @@ export default function SolutionManager() {
                         gap: "8px",
                       }}
                     >
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "100px",
-                          background: "#f5f5f5",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                          borderRadius: "2px",
-                          border: "1px solid #eee",
-                        }}
-                      >
+                      <div className="image-preview center-text">
                         {img ? (
                           <img
                             src={getImageUrl(img)}
                             alt={`Slide ảnh giải pháp ${imgIdx + 1}`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "contain",
-                            }}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = "none";
-                            }}
                           />
                         ) : (
-                          <span style={{ fontSize: "11px", color: "#999" }}>
+                          <span className="no-image">
                             No Image
                           </span>
                         )}
                       </div>
 
                       <input
-                        className="form-control"
+                        className="image-url-input"
                         value={img}
                         onChange={(e) =>
                           updateSectionImage(idx, imgIdx, e.target.value)
                         }
                         placeholder="URL ảnh..."
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "4px 6px",
-                          height: "auto",
-                        }}
                       />
 
-                      <div style={{ display: "flex", gap: 4 }}>
+                      <div className="button-group-center">
                         <button
                           type="button"
-                          className="btn btn-primary btn-sm"
-                          style={{
-                            flex: 1,
-                            padding: "2px 0",
-                            fontSize: "11px",
+                          onClick={() => {
+                            setTargetContext({ type: "section", sectionIdx: idx, imgIdx });
+                            document.getElementById("illustrationImageInput")?.click();
                           }}
+                          className="btn btn-primary btn-sm"
+                          disabled={uploadingIllustration}
+                        >
+                          {uploadingIllustration ? 'Đang upload...' : 'Upload từ máy tính'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTargetContext({ type: "section", sectionIdx: idx, imgIdx });
+                            handleShowIllustrationLibrary();
+                          }}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Chọn từ thư viện
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-info btn-sm"
                           onClick={() => openMedia("section", idx, imgIdx)}
                         >
-                          Chọn
+                          Chọn từ Media
                         </button>
                         <button
                           type="button"
                           className="btn btn-danger btn-sm"
-                          style={{
-                            width: "30px",
-                            padding: "2px 0",
-                            fontSize: "12px",
-                          }}
                           onClick={() => removeSectionImage(idx, imgIdx)}
                         >
                           ×
@@ -577,25 +982,7 @@ export default function SolutionManager() {
                   <button
                     type="button"
                     onClick={() => addSectionImage(idx)}
-                    style={{
-                      border: "2px dashed #0066cc",
-                      background: "#f0f7ff",
-                      borderRadius: "4px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      color: "#0066cc",
-                      minHeight: "160px",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = "#e0f0ff";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = "#f0f7ff";
-                    }}
+                    className="add-image-btn"
                   >
                     <span style={{ fontSize: "24px", marginBottom: "4px" }}>
                       +
@@ -610,13 +997,8 @@ export default function SolutionManager() {
 
             <button
               type="button"
-              className="btn btn-secondary btn-block"
+              className="btn btn-secondary btn-block add-section-btn"
               onClick={addSection}
-              style={{
-                marginTop: "10px",
-                borderColor: "#0066cc",
-                color: "#0066cc",
-              }}
             >
               + Thêm khối dịch vụ mới
             </button>
@@ -659,46 +1041,72 @@ export default function SolutionManager() {
                 placeholder="Tiêu đề Video giới thiệu"
               />
 
-              <div className="input-group">
-                <input
-                  className="form-control"
-                  value={form.video_url}
-                  onChange={(e) =>
-                    setForm({ ...form, video_url: e.target.value })
-                  }
-                  placeholder="Link Video Embed giới thiệu"
-                />
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => openMedia("footer_video")}
-                >
-                  Chọn Video
-                </button>
-              </div>
-
-              {form.video_url && (
-                <div key={`footer-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
-                  {form.video_url.includes("youtube.com") || form.video_url.includes("youtu.be") ? (
-                    <iframe
-                      width="100%"
-                      height="250"
-                      src={getYouTubeEmbedUrl(form.video_url)}
-                      title="Footer Video Preview"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{ borderRadius: 4 }}
-                    ></iframe>
-                  ) : (
-                    <video key={`footer-video-player-${videoPreviewKey}`} width="100%" height="250" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
-                      <source src={form.video_url} type="video/mp4" />
-                      Trình duyệt không hỗ trợ thẻ video.
-                    </video>
-                  )}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                  <input
+                    className="form-control"
+                    value={form.video_url}
+                    onChange={(e) =>
+                      setForm({ ...form, video_url: e.target.value })
+                    }
+                    placeholder="Link Video Embed giới thiệu"
+                    style={{ flex: 1 }}
+                  />
+                  {uploadingVideo && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
                 </div>
-              )}
-            </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("footerVideoInput")?.click()}
+                    className="btn btn-primary btn-sm"
+                    disabled={uploadingVideo}
+                  >
+                    Upload từ máy tính
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleShowVideoLibrary('footer')}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Chọn từ thư viện
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-info btn-sm"
+                    onClick={() => openMedia("footer_video")}
+                  >
+                    Chọn từ Media
+                  </button>
+                </div>
+                <input
+                  id="footerVideoInput"
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => handleVideoUpload(e, 'footer')}
+                  style={{ display: "none" }}
+                />
+
+                {form.video_url && (
+                  <div key={`footer-video-${videoPreviewKey}`} style={{ marginTop: 15, padding: 10, border: "1px solid #ddd", borderRadius: 4, backgroundColor: "#f9f9f9" }}>
+                    {form.video_url.includes("youtube.com") || form.video_url.includes("youtu.be") ? (
+                      <iframe
+                        width="100%"
+                        height="250"
+                        src={getYouTubeEmbedUrl(form.video_url)}
+                        title="Footer Video Preview"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ borderRadius: 4 }}
+                      ></iframe>
+                    ) : (
+                      <video key={`footer-video-player-${videoPreviewKey}`} width="100%" height="250" controls style={{ borderRadius: 4, backgroundColor: "#000" }}>
+                        <source src={form.video_url} type="video/mp4" />
+                        Trình duyệt không hỗ trợ thẻ video.
+                      </video>
+                    )}
+                  </div>
+                )}
+              </div>
 
             <h3 className="section-title">4. Khách hàng</h3>
             <div className="form-group">
@@ -713,14 +1121,7 @@ export default function SolutionManager() {
               />
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-                gap: 10,
-                marginTop: 10,
-              }}
-            >
+            <div className="client-grid">
               {clients.map((url, idx) => (
                 <div
                   key={idx}
@@ -762,14 +1163,34 @@ export default function SolutionManager() {
                     onChange={(e) => updateClient(idx, e.target.value)}
                     style={{ fontSize: "0.7rem", padding: 2, marginBottom: 4 }}
                   />
-                  <div style={{ display: "flex", gap: 2 }}>
+                  <div className="button-group-center">
                     <button
                       type="button"
+                      onClick={() => {
+                        setTargetContext({ type: "client", imgIdx: idx });
+                        document.getElementById("clientImageInput")?.click();
+                      }}
                       className="btn btn-primary btn-sm"
-                      style={{ flex: 1 }}
+                      disabled={uploadingClient}
+                    >
+                      {uploadingClient ? 'Đang upload...' : 'Upload từ máy tính'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTargetContext({ type: "client", imgIdx: idx });
+                        handleShowClientLibrary();
+                      }}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Chọn từ thư viện
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-info btn-sm"
                       onClick={() => openMedia("client", null, idx)}
                     >
-                      ...
+                      Chọn từ Media
                     </button>
                     <button
                       type="button"
@@ -926,6 +1347,423 @@ export default function SolutionManager() {
               onSelect={handleMediaSelected}
               onClose={() => setIsMediaModalOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Modal thư viện video */}
+      {showVideoLibrary && (
+        <div className="legal-modal-overlay">
+          <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện video giải pháp</h3>
+              <button
+                onClick={() => setShowVideoLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingVideoLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải video...</div>
+                </div>
+              ) : libraryVideos.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🎥</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có video nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryVideos.map((video) => {
+                    // Làm sạch displayName để loại bỏ timestamp
+                    const cleanDisplayName = video.displayName
+                      .replace(/^\d+-\w+-\d+-/, '') // Loại bỏ pattern timestamp-name-timestamp-
+                      .replace(/^\d+-/, '') // Loại bỏ timestamp ở đầu
+                      .replace(/-\d+$/, ''); // Loại bỏ timestamp ở cuối
+                    
+                    return (
+                      <div
+                        key={video.publicId}
+                        onClick={() => handleSelectFromVideoLibrary(video)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <video
+                          src={video.url}
+                          style={{
+                            width: '100%',
+                            height: '120px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            marginBottom: '8px',
+                            backgroundColor: '#000'
+                          }}
+                          muted
+                          preload="metadata"
+                        />
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Video'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thư viện hình ảnh minh họa */}
+      {showIllustrationLibrary && (
+        <div className="legal-modal-overlay">
+          <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện hình ảnh minh họa</h3>
+              <button
+                onClick={() => setShowIllustrationLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingIllustrationLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải hình ảnh...</div>
+                </div>
+              ) : libraryIllustrations.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🖼️</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có hình ảnh minh họa nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryIllustrations.map((image) => {
+                    // Làm sạch displayName để loại bỏ timestamp và hash
+                    const cleanDisplayName = image.displayName
+                      .replace(/^\d+-[a-f0-9]+-/, '') // Loại bỏ timestamp-hash-
+                      .replace(/-origin-\d+/, '') // Loại bỏ -origin-timestamp
+                      .replace(/-\d+$/, '') // Loại bỏ -timestamp ở cuối
+                      .replace(/^-|-$/g, ''); // Loại bỏ - ở đầu và cuối
+                    
+                    return (
+                      <div
+                        key={image.publicId}
+                        onClick={() => handleSelectFromIllustrationLibrary(image)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <img
+                          src={image.url}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            objectFit: 'contain',
+                            borderRadius: '6px',
+                            marginBottom: '8px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                          alt={cleanDisplayName}
+                        />
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Image'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thư viện logo khách hàng */}
+      {showClientLibrary && (
+        <div className="legal-modal-overlay">
+          <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+            <div className="legal-modal-header">
+              <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện logo khách hàng</h3>
+              <button
+                onClick={() => setShowClientLibrary(false)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              >
+                X
+              </button>
+            </div>
+            <div className="legal-modal-body" style={{ padding: '20px' }}>
+              {loadingClientLibrary ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải logo...</div>
+                </div>
+              ) : libraryClients.length === 0 ? (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "40px",
+                  color: "#6c757d"
+                }}>
+                  <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏢</div>
+                  <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                    Chưa có logo khách hàng nào trong thư viện
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '16px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {libraryClients.map((image) => {
+                    // Làm sạch displayName để loại bỏ timestamp và hash
+                    const cleanDisplayName = image.displayName
+                      .replace(/^\d+-[a-f0-9]+-/, '') // Loại bỏ timestamp-hash-
+                      .replace(/-origin-\d+/, '') // Loại bỏ -origin-timestamp
+                      .replace(/-\d+$/, '') // Loại bỏ -timestamp ở cuối
+                      .replace(/^-|-$/g, ''); // Loại bỏ - ở đầu và cuối
+                    
+                    return (
+                      <div
+                        key={image.publicId}
+                        onClick={() => handleSelectFromClientLibrary(image)}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          background: 'white',
+                          textAlign: 'center',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                          e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                          e.target.style.transform = 'translateY(0)';
+                        }}
+                      >
+                        <img
+                          src={image.url}
+                          style={{
+                            width: '100%',
+                            height: '80px',
+                            objectFit: 'contain',
+                            borderRadius: '6px',
+                            marginBottom: '8px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                          alt={cleanDisplayName}
+                        />
+                        <p style={{
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#495057',
+                          wordBreak: 'break-word',
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {cleanDisplayName || 'Logo'}
+                        </p>
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'rgba(0, 123, 255, 0.8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          opacity: 0,
+                          transition: 'opacity 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.opacity = '1'}
+                        onMouseLeave={(e) => e.target.style.opacity = '0'}
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

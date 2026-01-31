@@ -4,6 +4,40 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const { generateToken, verifyTokenData } = require('../middleware/verifyToken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+
+// ===== RATE LIMITING CONFIGURATION =====
+// Rate limiter cho login endpoint
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 5, // Tối đa 5 lần thử/15 phút
+  message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 15 phút.',
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limit cho admin nếu cần (tùy chọn)
+    return false;
+  }
+  // Không custom keyGenerator - để mặc định sử dụng IP helper từ express-rate-limit
+});
+
+// Rate limiter cho register endpoint
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 giờ
+  max: 5, // Tối đa 5 lần đăng ký/giờ từ cùng 1 IP
+  message: 'Quá nhiều lần đăng ký từ địa chỉ này. Vui lòng thử lại sau 1 giờ.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Rate limiter cho refresh token endpoint
+const refreshTokenLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 phút
+  max: 10, // Tối đa 10 requests/phút
+  message: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 // Normalize gender for storage: map common variants to 'Nam' or 'Nữ', else capitalize
 function normalizeGenderForStorage(g) {
@@ -116,7 +150,7 @@ router.post("/check-existence", async (req, res) => {
 });
 
 // --- 2. API ĐĂNG KÝ (Đã sửa lỗi target_tier) ---
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
@@ -131,7 +165,7 @@ router.post("/register", async (req, res) => {
       currentCityId, currentWardId,
       emergencyName, emergencyPhone, emergencyRelation,
       uavTypes, uavPurpose, activityArea, experience, certificateType,
-      cccdFront, cccdBack
+      cccdFront, cccdBack, tierBServices
     } = req.body;
 
     // === VALIDATION: TẤT CẢ CÁC TRƯỜNG BẮT BUỘC ===
@@ -154,7 +188,6 @@ router.post("/register", async (req, res) => {
       emergencyName: 'Tên người liên hệ khẩn cấp',
       emergencyPhone: 'SĐT người liên hệ khẩn cấp',
       emergencyRelation: 'Mối quan hệ',
-      uavTypes: 'Loại UAV',
       uavPurpose: 'Mục đích sử dụng',
       activityArea: 'Khu vực hoạt động',
       experience: 'Kinh nghiệm',
@@ -189,7 +222,7 @@ router.post("/register", async (req, res) => {
     const newUserId = userResult.insertId;
 
     // Chuẩn bị data Profile
-    const uavTypeString = Array.isArray(uavTypes) ? uavTypes.join(', ') : uavTypes;
+    const uavTypeString = uavTypes ? (Array.isArray(uavTypes) ? uavTypes.join(', ') : uavTypes) : null;
     const dbCurrentAddress = currentAddress || [currentCity, currentWard, currentDistrict].filter(Boolean).join(', ');
     const dbPermanentAddress = permanentAddress || [permanentCity, permanentWard, permanentDistrict].filter(Boolean).join(', ');
 
@@ -201,9 +234,13 @@ router.post("/register", async (req, res) => {
         permanent_city_id, permanent_ward_id, current_city_id, current_ward_id,
         emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
         uav_type, usage_purpose, operation_area, uav_experience, target_tier,
-        identity_image_front, identity_image_back)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        identity_image_front, identity_image_back, tier_b_services)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
+    const tierBServicesJson = tierBServices && tierBServices.length > 0 
+      ? JSON.stringify(tierBServices) 
+      : null;
 
     await connection.query(insertProfileSql, [
       newUserId, 
@@ -222,14 +259,14 @@ router.post("/register", async (req, res) => {
       emergencyName, 
       emergencyPhone, 
       emergencyRelation,
-      uavTypeString, 
+      uavTypeString || null, 
       uavPurpose, 
       activityArea, 
       experience,
       certificateType || null,
       cccdFront || null,
-      cccdBack || null
-
+      cccdBack || null,
+      tierBServicesJson
     ]);
 
     await connection.commit();
@@ -245,7 +282,7 @@ router.post("/register", async (req, res) => {
 });
 
 // --- 3. API ĐĂNG NHẬP (User thường) ---
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { identifier, password } = req.body;
   const userAgent = req.get('user-agent') || '';
   const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -364,7 +401,7 @@ router.post("/login", async (req, res) => {
 });
 
 // --- 4. API ĐĂNG NHẬP ADMIN (ĐÂY LÀ PHẦN BỊ THIẾU TRƯỚC ĐÓ) ---
-router.post("/login-admin", async (req, res) => {
+router.post("/login-admin", loginLimiter, async (req, res) => {
   const { identifier, password } = req.body;
   const userAgent = req.get('user-agent') || '';
   const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -455,7 +492,7 @@ router.post("/login-admin", async (req, res) => {
 });
 
 // --- 5. REFRESH TOKEN ---
-router.post("/refresh-token", async (req, res) => {
+router.post("/refresh-token", refreshTokenLimiter, async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) return res.status(400).json({ success: false, error: "Thiếu token", code: 'NO_REFRESH_TOKEN' });

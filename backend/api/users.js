@@ -6,7 +6,7 @@ const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verif
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
-// Normalize gender for storage: map common variants to 'Nam' or 'Nữ', else capitalize
+// Normalize gender for storage: accept only 'Nam' or 'Nữ' (case/diacritics-insensitive)
 function normalizeGenderForStorage(g) {
   if (!g) return null;
   try {
@@ -14,11 +14,11 @@ function normalizeGenderForStorage(g) {
     if (s === '') return null;
     const lowered = s.toLowerCase();
     const stripped = lowered.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (['nam', 'n', 'male', 'm'].includes(stripped)) return 'Nam';
-    if (['nu', 'nu', 'female', 'f'].includes(stripped) || stripped === 'nu') return 'Nữ';
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    if (stripped === 'nam') return 'Nam';
+    if (stripped === 'nu') return 'Nữ';
+    return null;
   } catch (e) {
-    return g;
+    return null;
   }
 }
 
@@ -48,7 +48,7 @@ router.get("/", verifyAdmin, async (req, res) => {
         prov_curr.name as current_city_name, ward_curr.name as current_ward_name,
         p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relation,
         p.uav_type, p.usage_purpose, p.operation_area, p.uav_experience,
-        p.identity_image_front, p.identity_image_back
+        p.identity_image_front, p.identity_image_back, p.tier_b_services
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       LEFT JOIN provinces prov_perm ON p.permanent_city_id = prov_perm.id
@@ -105,7 +105,8 @@ router.get("/:id/profile", verifyStudent, async (req, res) => {
         p.operation_area,
         p.uav_experience,
         p.identity_image_front,
-        p.identity_image_back
+        p.identity_image_back,
+        p.tier_b_services
         
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
@@ -212,6 +213,19 @@ router.put("/:id", verifyAdmin, async (req, res) => {
   } = req.body;
 
   try {
+    // Validate unique fields before attempting update
+    if (email) {
+      const [existing] = await db.query(`SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1`, [email, id]);
+      if (existing.length > 0) {
+        return res.status(409).json({ error: 'Email này đã được sử dụng bởi người dùng khác' });
+      }
+    }
+    if (phone) {
+      const [existingPhone] = await db.query(`SELECT id FROM users WHERE phone = ? AND id != ? LIMIT 1`, [phone, id]);
+      if (existingPhone.length > 0) {
+        return res.status(409).json({ error: 'Số điện thoại này đã được sử dụng bởi người dùng khác' });
+      }
+    }
     // Cập nhật các trường trong bảng users (cho phép admin chỉnh)
     const isActiveParam = typeof is_active !== 'undefined' ? (is_active ? 1 : 0) : null;
     await db.query(
@@ -248,7 +262,8 @@ router.put("/:id", verifyAdmin, async (req, res) => {
       operation_area: operation_area || null,
       uav_experience: uav_experience || null,
       identity_image_front: identity_image_front || null,
-      identity_image_back: identity_image_back || null
+      identity_image_back: identity_image_back || null,
+      tier_b_services: tier_b_services ? JSON.stringify(tier_b_services) : null
     };
 
     // Cập nhật/tao profile trong bảng user_profiles
@@ -275,7 +290,8 @@ router.put("/:id", verifyAdmin, async (req, res) => {
            operation_area = COALESCE(?, operation_area),
            uav_experience = COALESCE(?, uav_experience),
            identity_image_front = COALESCE(?, identity_image_front),
-           identity_image_back = COALESCE(?, identity_image_back)
+           identity_image_back = COALESCE(?, identity_image_back),
+           tier_b_services = COALESCE(?, tier_b_services)
        WHERE user_id = ?`,
       [
         profileData.identity_number, 
@@ -300,6 +316,7 @@ router.put("/:id", verifyAdmin, async (req, res) => {
         profileData.uav_experience,
         profileData.identity_image_front,
         profileData.identity_image_back,
+        profileData.tier_b_services,
         id
       ]
     );
@@ -307,9 +324,9 @@ router.put("/:id", verifyAdmin, async (req, res) => {
     // Nếu chưa có profile (affectedRows === 0), tạo mới
     if (profileUpdateResult && profileUpdateResult.affectedRows === 0) {
       await db.query(
-        `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type, job_title, work_place, current_address, permanent_address, permanent_city_id, permanent_ward_id, current_city_id, current_ward_id, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, usage_purpose, operation_area, uav_experience, identity_image_front, identity_image_back)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, profileData.identity_number, profileData.gender, profileData.birth_date, profileData.address, profileData.target_tier, profileData.uav_type, profileData.job_title, profileData.work_place, profileData.current_address, profileData.permanent_address, profileData.permanent_city_id, profileData.permanent_ward_id, profileData.current_city_id, profileData.current_ward_id, profileData.emergency_contact_name, profileData.emergency_contact_phone, profileData.emergency_contact_relation, profileData.usage_purpose, profileData.operation_area, profileData.uav_experience, profileData.identity_image_front, profileData.identity_image_back]
+        `INSERT INTO user_profiles (user_id, identity_number, gender, birth_date, address, target_tier, uav_type, job_title, work_place, current_address, permanent_address, permanent_city_id, permanent_ward_id, current_city_id, current_ward_id, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, usage_purpose, operation_area, uav_experience, identity_image_front, identity_image_back, tier_b_services)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, profileData.identity_number, profileData.gender, profileData.birth_date, profileData.address, profileData.target_tier, profileData.uav_type, profileData.job_title, profileData.work_place, profileData.current_address, profileData.permanent_address, profileData.permanent_city_id, profileData.permanent_ward_id, profileData.current_city_id, profileData.current_ward_id, profileData.emergency_contact_name, profileData.emergency_contact_phone, profileData.emergency_contact_relation, profileData.usage_purpose, profileData.operation_area, profileData.uav_experience, profileData.identity_image_front, profileData.identity_image_back, profileData.tier_b_services]
       );
     }
 
@@ -321,6 +338,10 @@ router.put("/:id", verifyAdmin, async (req, res) => {
     res.json({ message: "Cập nhật thành công" });
   } catch (error) {
     console.error(error);
+    if (error && error.code === 'ER_DUP_ENTRY') {
+      // MySQL duplicate key - return conflict with helpful message
+      return res.status(409).json({ error: 'Dữ liệu trùng lặp (email hoặc phone đã tồn tại)' });
+    }
     res.status(500).json({ error: "Lỗi cập nhật người dùng" });
   }
 });
@@ -440,9 +461,9 @@ router.get("/:id/learning-history", verifyStudent, async (req, res) => {
     const [stats] = await db.query(`
       SELECT 
         COUNT(DISTINCT ucp.course_id) as total_courses,
-        COALESCE(AVG(ucp.overall_score), 0) as avg_overall_score,
-        COALESCE(AVG(ucp.quiz_score), 0) as avg_quiz_score,
-        COALESCE(AVG(ucp.progress_percentage), 0) as avg_progress
+        COALESCE(MAX(ucp.overall_score), 0) as avg_overall_score,
+        COALESCE(MAX(ucp.quiz_score), 0) as avg_quiz_score,
+        COALESCE(MAX(ucp.progress_percentage), 0) as avg_progress
       FROM user_course_progress ucp
       INNER JOIN courses c ON ucp.course_id = c.id
       WHERE ucp.user_id = ?
@@ -476,9 +497,9 @@ router.get("/scores/all", verifyAdmin, async (req, res) => {
         u.phone,
         p.target_tier,
         (SELECT COUNT(DISTINCT ucp.course_id) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as enrolled_courses,
-        (SELECT COALESCE(AVG(ucp.overall_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_overall_score,
-        (SELECT COALESCE(AVG(ucp.quiz_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_quiz_score,
-        (SELECT COALESCE(AVG(ucp.progress_percentage), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_progress
+        (SELECT COALESCE(MAX(ucp.overall_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_overall_score,
+        (SELECT COALESCE(MAX(ucp.quiz_score), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_quiz_score,
+        (SELECT COALESCE(MAX(ucp.progress_percentage), 0) FROM user_course_progress ucp INNER JOIN courses c ON ucp.course_id = c.id WHERE ucp.user_id = u.id) as avg_progress
       FROM users u
       LEFT JOIN user_profiles p ON u.id = p.user_id
       WHERE u.role = 'student'
