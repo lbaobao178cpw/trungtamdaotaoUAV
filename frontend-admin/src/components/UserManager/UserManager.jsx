@@ -734,16 +734,18 @@ export default function UserManager() {
         </div>
 
         <div className="user-search-section">
-          <Search size={18} color="#999" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên, email, SĐT, ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-            onFocus={(e) => e.target.style.borderColor = "#0066cc"}
-            onBlur={(e) => e.target.style.borderColor = "#ddd"}
-          />
+          <div className="search-input-wrapper">
+            <Search size={18} color="#999" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên, email, SĐT, ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+              onFocus={(e) => e.target.style.borderColor = "#0066cc"}
+              onBlur={(e) => e.target.style.borderColor = "#ddd"}
+            />
+          </div>
 
           <select
             value={approvalFilter}
