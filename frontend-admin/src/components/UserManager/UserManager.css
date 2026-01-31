@@ -649,6 +649,9 @@
 
 .rounded {
   border-radius: 4px;
+  width: 80%;
+  height: 50%;
+  margin-left : 200px ;
 }
 
 .cursor-pointer {
