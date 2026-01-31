@@ -21,7 +21,7 @@ const LoadingScreen = () => (
     <div className="loading-screen-content">
       {/* Animated spinner */}
       <div className="loading-spinner"></div>
-      
+
       <div className="loading-text-container">
         <h2 className="loading-title">Đang tải dữ liệu</h2>
         <p className="loading-subtitle">Vui lòng chờ...</p>
@@ -139,7 +139,12 @@ export default function Admin() {
           >
             Quản lý Giải pháp
           </button>
-
+          <button
+            className={`nav-item ${activeTab === "lookup" ? "active" : ""}`}
+            onClick={() => setActiveTab("lookup")}
+          >
+            Quản lý Giấy phép
+          </button>
           {/* === CẬP NHẬT TAB NÀY === */}
           <button
             className={`nav-item ${activeTab === "display" ? "active" : ""}`}
@@ -148,12 +153,7 @@ export default function Admin() {
             Giao diện & Thông báo
           </button>
 
-          <button
-            className={`nav-item ${activeTab === "lookup" ? "active" : ""}`}
-            onClick={() => setActiveTab("lookup")}
-          >
-            Quản lý Giấy phép
-          </button>
+
         </nav>
       </header>
 
