@@ -401,7 +401,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 });
 
 // --- 4. API ĐĂNG NHẬP ADMIN (ĐÂY LÀ PHẦN BỊ THIẾU TRƯỚC ĐÓ) ---
-router.post("/login-admin", loginLimiter, async (req, res) => {
+router.post("/login-admin", async (req, res) => {
   const { identifier, password } = req.body;
   const userAgent = req.get('user-agent') || '';
   const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';

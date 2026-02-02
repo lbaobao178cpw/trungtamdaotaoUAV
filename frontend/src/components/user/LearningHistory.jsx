@@ -133,6 +133,9 @@ function LearningHistory() {
                                 const grade = getGrade(course.overall_score || 0);
                                 return (
                                     <div key={course.course_id} className="course-card">
+                                        <Link to={`/khoa-hoc/${course.course_id}`} className="btn-secondary btn-sm review-btn">
+                                            Xem lại
+                                        </Link>
                                         <div className="course-image">
                                             {course.course_image ? (
                                                 <img src={course.course_image} alt={`Khóa học: ${course.course_title}`} />
