@@ -79,18 +79,14 @@ const refreshAccessToken = async () => {
 apiClient.interceptors.request.use(
     async (config) => {
         const token = localStorage.getItem('user_token');
-        console.log("📤 [apiClient] Requesting:", config.url, "| Token:", token ? '✅' : '❌');
 
         // Nếu token hết hạn, refresh ngay trước khi gửi request
         if (token && isTokenExpired(token)) {
-            console.log("⏰ [apiClient] Token expired, attempting refresh...");
             try {
                 const newToken = await refreshAccessToken();
                 config.headers.Authorization = `Bearer ${newToken}`;
-                console.log("✅ [apiClient] Token refreshed");
                 return config;
             } catch (err) {
-                console.error("❌ [apiClient] Refresh failed:", err.message);
                 // Nếu refresh thất bại, logout
                 localStorage.removeItem('user_token');
                 localStorage.removeItem('refresh_token');
@@ -104,14 +100,10 @@ apiClient.interceptors.request.use(
         // Token còn hợp lệ, thêm vào header
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log("✅ [apiClient] Authorization header added");
-        } else {
-            console.log("⚠️ [apiClient] No token, request sent without auth");
         }
         return config;
     },
     (error) => {
-        console.error("❌ [apiClient] Request interceptor error:", error);
         return Promise.reject(error);
     }
 );
@@ -126,11 +118,8 @@ apiClient.interceptors.response.use(
         const errorCode = error.response?.data?.code;
         const statusCode = error.response?.status;
 
-        console.log(`❌ [apiClient] Response error - Status: ${statusCode}, Code: ${errorCode}, URL: ${error.config?.url}`);
-
         // === Kiểm tra SESSION_INVALID (đăng nhập từ thiết bị khác) ===
         if (errorCode === 'SESSION_INVALID') {
-            console.log("🔐 [apiClient] Session invalid - Logged in from another device");
             localStorage.removeItem('user_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('user');
@@ -144,8 +133,6 @@ apiClient.interceptors.response.use(
         const hasToken = !!localStorage.getItem('user_token');
 
         if ((statusCode === 401 || errorCode === 'TOKEN_EXPIRED') && !originalRequest._retry && hasToken) {
-            console.log("⚠️ [apiClient] 401 Unauthorized - Token may be expired");
-
             // Nếu đang refresh, chờ trong queue
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
@@ -165,7 +152,6 @@ apiClient.interceptors.response.use(
 
             // Nếu không có refresh token, logout
             if (!refreshToken) {
-                console.log("❌ [apiClient] No refresh token - logging out");
                 localStorage.removeItem('user_token');
                 localStorage.removeItem('refresh_token');
                 localStorage.removeItem('user');
@@ -190,13 +176,11 @@ apiClient.interceptors.response.use(
                     apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
                     originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
-                    console.log("✅ [apiClient] Token refreshed successfully");
                     processQueue(null, newAccessToken);
                     return apiClient(originalRequest);
                 })
                 .catch((err) => {
                     // Refresh token cũng hết hạn → logout
-                    console.log("❌ [apiClient] Refresh token failed - logging out");
                     localStorage.removeItem('user_token');
                     localStorage.removeItem('refresh_token');
                     localStorage.removeItem('user');
@@ -204,11 +188,6 @@ apiClient.interceptors.response.use(
                     processQueue(err, null);
                     return Promise.reject(err);
                 });
-        }
-
-        // Nếu là 401 nhưng người dùng không có token, không redirect - để cho component xử lý
-        if (statusCode === 401 && !hasToken) {
-            console.log("⚠️ [apiClient] 401 without token - likely public API error");
         }
 
         return Promise.reject(error);

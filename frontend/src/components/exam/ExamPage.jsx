@@ -70,20 +70,14 @@ const ExamPage = () => {
         try {
           let examEndpoint = "/exams";
           if (user) {
-            console.log("👤 User logged in:", { id: user.id, name: user.name });
-            console.log("🔑 Token in localStorage:", localStorage.getItem('user_token') ? '✅ EXISTS' : '❌ NOT FOUND');
             examEndpoint = `/exams?user_id=${user.id}`;
           } else {
-            console.log("👤 No user logged in - public view");
           }
-          console.log("🔗 Fetching exam endpoint:", examEndpoint);
           const examResponse = await apiClient.get(examEndpoint);
           const data = examResponse.data;
           const activeExams = Array.isArray(data)
             ? data.filter(exam => exam.is_active === 1 || exam.is_active === true)
             : [];
-          console.log("📋 Fetched exams:", activeExams.length, "exams total");
-          console.log("📋 Exam types:", activeExams.map(e => e.type).join(", "));
           setUpcomingExams(activeExams);
         } catch (err) {
           console.error("❌ Error fetching exams:", err);

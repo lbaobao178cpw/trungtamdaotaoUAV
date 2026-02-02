@@ -169,7 +169,6 @@ function CourseDetailPage() {
         });
 
         if (res.ok) {
-          console.log('Đã ghi nhận lượt xem');
         }
       } catch (err) {
         console.error('Lỗi ghi nhận lượt xem:', err);
