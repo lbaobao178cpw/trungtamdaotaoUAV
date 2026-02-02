@@ -32,10 +32,13 @@ export default function ExamRegistrations() {
       case "registered":
         return "Đã đăng ký";
       case "approved":
+      case "passed":
         return "Đã phê duyệt";
       case "cancelled":
       case "canceled":
         return "Đã hủy";
+      case "failed":
+        return "Không đạt";
       default:
         return s;
     }
@@ -53,8 +56,55 @@ export default function ExamRegistrations() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const exportToCSV = () => {
+    if (!registrations || registrations.length === 0) {
+      alert('Không có dữ liệu để xuất.');
+      return;
+    }
+
+    const headers = [
+      'Mã',
+      'Người dùng',
+      'Email',
+      'Lịch thi',
+      'Ngày & giờ',
+      'Địa điểm',
+      'Trạng thái',
+      'Thời gian đăng ký',
+    ];
+
+    const rows = registrations.map((r) => {
+      const vals = [
+        r.registration_id,
+        r.full_name || '-',
+        r.email || '-',
+        r.type || '-',
+        r.exam_date ? `${formatDateTime(r.exam_date)} ${r.exam_time || ''}` : '-',
+        r.location || r.address || '-',
+        translateStatus(r.registration_status),
+        formatDateTime(r.created_at),
+      ];
+      // Escape double quotes
+      return vals.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    // Add BOM so Excel recognizes UTF-8
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `exam_registrations_${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const updateStatus = async (id, newStatus) => {
-    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${newStatus}' không?`)) return;
+    const statusDisplay = newStatus === 'passed' ? 'Phê duyệt' : 'Hủy';
+    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${statusDisplay}' không?`)) return;
     try {
       const res = await fetch(`${API_BASE_URL}/exams/registrations/${id}`, {
         method: "PUT",
@@ -77,7 +127,14 @@ export default function ExamRegistrations() {
 
   return (
     <div className="panel">
-      <h2>Quản lý đăng ký lịch thi</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ margin: 0 }}>Quản lý đăng ký lịch thi</h2>
+        <div>
+          <button className="export" onClick={exportToCSV} disabled={loading || registrations.length===0}>
+            Xuất Excel
+          </button>
+        </div>
+      </div>
       {loading ? (
         <p>Đang tải...</p>
       ) : (
@@ -113,7 +170,7 @@ export default function ExamRegistrations() {
                   <td>{translateStatus(r.registration_status)}</td>
                   <td>{formatDateTime(r.created_at)}</td>
                   <td className="actions">
-                    <button className="approve" onClick={() => updateStatus(r.registration_id, "approved")}>
+                    <button className="approve" onClick={() => updateStatus(r.registration_id, "passed")}>
                       Phê duyệt
                     </button>
                     <button className="cancel" onClick={() => updateStatus(r.registration_id, "cancelled")}>Hủy</button>
