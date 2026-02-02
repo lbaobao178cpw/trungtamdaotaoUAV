@@ -7,6 +7,7 @@ import SolutionManager from "../../Solutions/SolutionManager";
 import Model3DManager from "../../Model3D/Model3DManager";
 import CourseManager from "../../course/CourseManager";
 import ExamManager from "../../exam/ExamManager";
+import ExamRegistrations from "../../ExamRegistrations/ExamRegistrations";
 import UserManager from "../../UserManager/UserManager";
 import DisplaySettingsManager from "../../DisplaySettings/DisplaySettingsManager/DisplaySettingsManager";
 import LookupManager from "../../lookup/LookupManager";
@@ -120,6 +121,13 @@ export default function Admin() {
           </button>
 
           <button
+            className={`nav-item ${activeTab === "exam_registrations" ? "active" : ""}`}
+            onClick={() => setActiveTab("exam_registrations")}
+          >
+            Quản lý Đăng ký thi
+          </button>
+
+          <button
             className={`nav-item ${activeTab === "users" ? "active" : ""}`}
             onClick={() => setActiveTab("users")}
           >
@@ -164,6 +172,8 @@ export default function Admin() {
         {activeTab === "training" && <CourseManager />}
 
         {activeTab === "exams" && <ExamManager />}
+
+        {activeTab === "exam_registrations" && <ExamRegistrations />}
 
         {activeTab === "users" && <UserManager />}
 
