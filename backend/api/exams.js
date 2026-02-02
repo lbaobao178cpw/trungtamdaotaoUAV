@@ -336,27 +336,6 @@ router.put("/registrations/:id", verifyAdmin, async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // Validate status against DB enum definition to avoid truncation warnings
-    try {
-      const [colInfo] = await connection.query("SHOW COLUMNS FROM exam_registrations LIKE 'status'");
-      if (colInfo && colInfo.length > 0) {
-        const typeDef = colInfo[0].Type; // e.g. "enum('registered','cancelled')"
-        const matches = typeDef.match(/enum\((.*)\)/i);
-        if (matches && matches[1]) {
-          const allowed = matches[1]
-            .split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
-            .map(s => s.trim().replace(/^'|'$/g, ''));
-          if (status && !allowed.includes(status)) {
-            await connection.rollback();
-            return res.status(400).json({ error: `Giá trị trạng thái không hợp lệ. Giá trị hợp lệ: ${allowed.join(', ')}` });
-          }
-        }
-      }
-    } catch (e) {
-      // If introspection fails, continue but log
-      console.warn('Could not validate status enum:', e.message);
-    }
-
     const [existingRows] = await connection.query(
       `SELECT r.id, r.status, r.exam_schedule_id, s.spots_left FROM exam_registrations r JOIN exam_schedules s ON r.exam_schedule_id = s.id WHERE r.id = ?`,
       [id]
