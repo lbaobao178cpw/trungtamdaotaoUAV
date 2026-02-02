@@ -307,4 +307,109 @@ router.get("/my-registrations", verifyToken, async (req, res) => {
   }
 });
 
+// --- GET: DANH SÁCH ĐĂNG KÝ (ADMIN) ---
+router.get("/registrations", verifyAdmin, async (req, res) => {
+  try {
+    const query = `
+      SELECT r.id AS registration_id, r.status AS registration_status, r.created_at,
+             u.id AS user_id, u.email, u.full_name,
+             s.id AS schedule_id, s.type, s.location, s.address, s.exam_date, s.exam_time
+      FROM exam_registrations r
+      JOIN users u ON r.user_id = u.id
+      JOIN exam_schedules s ON r.exam_schedule_id = s.id
+      ORDER BY r.created_at DESC
+    `;
+    const [rows] = await db.query(query);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error in /registrations:", error);
+    res.status(500).json({ error: "Lỗi lấy danh sách đăng ký", details: error.message });
+  }
+});
+
+// --- PUT: CẬP NHẬT TRẠNG THÁI ĐĂNG KÝ (ADMIN) ---
+router.put("/registrations/:id", verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // expected values: 'registered', 'approved', 'cancelled'
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Validate status against DB enum definition to avoid truncation warnings
+    try {
+      const [colInfo] = await connection.query("SHOW COLUMNS FROM exam_registrations LIKE 'status'");
+      if (colInfo && colInfo.length > 0) {
+        const typeDef = colInfo[0].Type; // e.g. "enum('registered','cancelled')"
+        const matches = typeDef.match(/enum\((.*)\)/i);
+        if (matches && matches[1]) {
+          const allowed = matches[1]
+            .split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
+            .map(s => s.trim().replace(/^'|'$/g, ''));
+          if (status && !allowed.includes(status)) {
+            await connection.rollback();
+            return res.status(400).json({ error: `Giá trị trạng thái không hợp lệ. Giá trị hợp lệ: ${allowed.join(', ')}` });
+          }
+        }
+      }
+    } catch (e) {
+      // If introspection fails, continue but log
+      console.warn('Could not validate status enum:', e.message);
+    }
+
+    const [existingRows] = await connection.query(
+      `SELECT r.id, r.status, r.exam_schedule_id, s.spots_left FROM exam_registrations r JOIN exam_schedules s ON r.exam_schedule_id = s.id WHERE r.id = ?`,
+      [id]
+    );
+
+    if (existingRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: "Không tìm thấy đăng ký." });
+    }
+
+    const existing = existingRows[0];
+    const prevStatus = existing.status;
+    const scheduleId = existing.exam_schedule_id;
+
+    // Nếu thay đổi sang 'cancelled' từ trạng thái khác thì trả lại chỗ
+    if (status === 'cancelled' && prevStatus !== 'cancelled') {
+      await connection.query(
+        "UPDATE exam_schedules SET spots_left = spots_left + 1 WHERE id = ?",
+        [scheduleId]
+      );
+    }
+
+    // Nếu thay đổi từ 'cancelled' sang 'registered' hoặc 'approved' thì trừ chỗ nếu còn
+    if ((status === 'registered' || status === 'approved') && prevStatus === 'cancelled') {
+      const [sRows] = await connection.query(
+        "SELECT spots_left FROM exam_schedules WHERE id = ?",
+        [scheduleId]
+      );
+      if (sRows.length === 0) {
+        await connection.rollback();
+        return res.status(404).json({ error: "Không tìm thấy lịch thi." });
+      }
+      if (sRows[0].spots_left <= 0) {
+        await connection.rollback();
+        return res.status(400).json({ error: "Không còn chỗ trong lịch thi." });
+      }
+      await connection.query(
+        "UPDATE exam_schedules SET spots_left = spots_left - 1 WHERE id = ?",
+        [scheduleId]
+      );
+    }
+
+    await connection.query("UPDATE exam_registrations SET status = ? WHERE id = ?", [status, id]);
+
+    await connection.commit();
+    res.json({ message: "Cập nhật trạng thái thành công" });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Error updating registration status:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật trạng thái", details: error.message });
+  } finally {
+    connection.release();
+  }
+});
+
 module.exports = router;
