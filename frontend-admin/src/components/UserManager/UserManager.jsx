@@ -183,11 +183,9 @@ export default function UserManager() {
     setForm(prev => ({ ...prev, address: user.address || '' }));
     // Set location selects for permanent address
     if (user.permanent_city_id) {
-      // Load wards for permanent city
       (async () => {
-        const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
-          ? import.meta.env.VITE_API_BASE
-          : `${window.location.protocol}//${window.location.hostname}:5000`;
+        const base = getApiBase();
+        if (!base) return;
         const url = `${base}/api/location/wards?province_id=${user.permanent_city_id}`;
         try {
           const res = await fetch(url);
@@ -203,11 +201,9 @@ export default function UserManager() {
 
     // Set location selects for current address
     if (user.current_city_id) {
-      // Load wards for current city
       (async () => {
-        const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
-          ? import.meta.env.VITE_API_BASE
-          : `${window.location.protocol}//${window.location.hostname}:5000`;
+        const base = getApiBase();
+        if (!base) return;
         const url = `${base}/api/location/wards?province_id=${user.current_city_id}`;
         try {
           const res = await fetch(url);
@@ -255,22 +251,42 @@ export default function UserManager() {
   };
 
   // location helpers
+  const getApiBase = () => {
+    // Check both VITE_API_BASE_URL and VITE_API_BASE
+    const envBase = (typeof import.meta !== 'undefined' && import.meta.env) 
+      ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE)
+      : null;
+    
+    if (envBase) {
+      return envBase.replace(/\/api\/?$/, ''); // Remove /api suffix if present
+    }
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `${window.location.protocol}//localhost:5000`;
+    }
+    console.warn('⚠️ VITE_API_BASE_URL or VITE_API_BASE not set!');
+    return null;
+  };
+
   const fetchProvinces = async () => {
     try {
-      const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
-        ? import.meta.env.VITE_API_BASE
-        : `${window.location.protocol}//${window.location.hostname}:5000`;
+      const base = getApiBase();
+      if (!base) {
+        console.error('❌ API base URL not configured');
+        return [];
+      }
       const url = `${base}/api/location/provinces`;
-      const res = await fetch(url);
+      console.log('📋 Fetching provinces from:', url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) {
-        console.error('fetchProvinces bad status', res.status, url);
+        console.error('❌ fetchProvinces bad status', res.status, url);
         return [];
       }
       const data = await res.json();
+      console.log('✅ Provinces loaded:', data?.length || 0);
       setProvinces(data || []);
       return data || [];
     } catch (e) {
-      console.error('fetchProvinces', e);
+      console.error('❌ fetchProvinces error:', e);
       return [];
     }
   };
@@ -343,9 +359,8 @@ export default function UserManager() {
     // Fetch tier B services
     const fetchTierBServices = async () => {
       try {
-        const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
-          ? import.meta.env.VITE_API_BASE
-          : `${window.location.protocol}//${window.location.hostname}:5000`;
+        const base = getApiBase();
+        if (!base) return;
         const res = await fetch(`${base}/api/nghiep-vu-hang-b`);
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -372,11 +387,10 @@ export default function UserManager() {
 
   // Load wards when current city changes
   useEffect(() => {
-    if (selectedCurrentCity) {
+    if (form.current_city_id) {
       (async () => {
-        const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
-          ? import.meta.env.VITE_API_BASE
-          : `${window.location.protocol}//${window.location.hostname}:5000`;
+        const base = getApiBase();
+        if (!base) return;
         const url = `${base}/api/location/wards?province_id=${form.current_city_id}`;
         try {
           const res = await fetch(url);

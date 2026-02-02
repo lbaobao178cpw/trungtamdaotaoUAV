@@ -1178,3 +1178,12 @@
     order: -1;
   }
 }
+
+/* Sticky sidebar for form */
+.solution-manager-container .panel:first-child {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 24px);
+  max-height: calc(100vh - var(--header-height, 64px) - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
