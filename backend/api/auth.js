@@ -9,9 +9,9 @@ const rateLimit = require('express-rate-limit');
 // ===== RATE LIMITING CONFIGURATION =====
 // Rate limiter cho login endpoint
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
-  max: 5, // Tối đa 5 lần thử/15 phút
-  message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 15 phút.',
+  windowMs: 5 * 60 * 1000, // 5 phút
+  max: 5, // Tối đa 5 lần thử/5 phút
+  message: { error: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 5 phút.' },
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
   skip: (req) => {
