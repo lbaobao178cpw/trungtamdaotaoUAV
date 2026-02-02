@@ -599,7 +599,16 @@ export default function UserManager() {
                       <option value="hcm">TP.HCM & Miền Nam</option>
                     </select>
                   </div>
-                  <div className="form-group"><label className="form-label">Kinh nghiệm</label><input className="form-control" value={form.uav_experience || ''} onChange={(e) => setForm({ ...form, uav_experience: e.target.value })} placeholder="Mô tả kinh nghiệm" /></div>
+                  <div className="form-group"><label className="form-label">Kinh nghiệm</label>
+                    <select className="form-control" value={form.uav_experience || ''} onChange={(e) => setForm({ ...form, uav_experience: e.target.value })}>
+                      <option value="">-- Chọn kinh nghiệm --</option>
+                      <option value="Chưa có kinh nghiệm">Chưa có kinh nghiệm</option>
+                      <option value="Dưới 6 tháng">Dưới 6 tháng</option>
+                      <option value="6-12 tháng">6-12 tháng</option>
+                      <option value="1-3 năm">1-3 năm</option>
+                      <option value="Trên 3 năm">Trên 3 năm</option>
+                    </select>
+                  </div>
 
                   {(form.identity_image_front || form.identity_image_back) && (
                     <div className="grid-span-2 grid-2-cols">
@@ -927,24 +936,6 @@ export default function UserManager() {
                         </div>
                       </div>
                     )}
-
-                    {/* Thông tin bảo mật */}
-                    <div style={{ marginTop: '12px', padding: '10px', background: '#fff', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                      <strong style={{ fontSize: '13px', color: '#1f2937', display: 'block', marginBottom: '6px' }}>Thông tin bảo mật</strong>
-                      <div style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span><strong>Trạng thái:</strong> {(user.is_active !== 0 && user.is_active !== '0' && user.is_active !== false) ? <span style={{ color: '#10b981' }}>✓ Hoạt động</span> : <span style={{ color: '#ef4444' }}>✗ Khóa</span>}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span><strong>Phê duyệt:</strong> {String(user.is_approved) === '1' ? <span style={{ color: '#10b981' }}>Đã duyệt</span> : <span style={{ color: '#f97316' }}>Chờ duyệt</span>}</span>
-                        </div>
-                        {user.failed_login_attempts !== undefined && user.failed_login_attempts > 0 && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px', background: user.failed_login_attempts >= 5 ? '#fee2e2' : '#fef3c7', borderRadius: '4px' }}>
-                            <span><strong>Lần nhập sai:</strong> <span style={{ color: user.failed_login_attempts >= 5 ? '#dc2626' : '#d97706' }}>{user.failed_login_attempts}/5</span></span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
                     {/* CCCD Images */}
                     {(user.identity_image_front || user.identity_image_back) && (
