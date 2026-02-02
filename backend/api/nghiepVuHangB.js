@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const { verifyAdmin } = require('../middleware/verifyToken');
 
 // GET /api/nghiep-vu-hang-b - list (optionally filter by category)
 // Note: duration_minutes and price are intentionally excluded from responses
 router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
-    let sql = `SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+    let sql = `SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
                FROM nghiep_vu_hang_b WHERE is_active = 1`;
     const params = [];
     if (category) {
@@ -28,7 +29,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
@@ -41,13 +42,13 @@ router.get('/:id', async (req, res) => {
 
 // POST create (admin)
 // duration_minutes and price are ignored/omitted
-router.post('/', async (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   try {
-    const { code, title, description, category, is_active = 1, sort_order = 0 } = req.body;
-    const sql = `INSERT INTO nghiep_vu_hang_b (code, title, description, category, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.execute(sql, [code, title, description, category, is_active ? 1 : 0, sort_order]);
+    const { title, description, category, is_active = 1, sort_order = 0 } = req.body;
+    const sql = `INSERT INTO nghiep_vu_hang_b (title, description, category, is_active, sort_order) VALUES (?, ?, ?, ?, ?)`;
+    const [result] = await pool.execute(sql, [title, description, category, is_active ? 1 : 0, sort_order]);
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [result.insertId]);
     res.status(201).json(rows[0]);
@@ -59,15 +60,15 @@ router.post('/', async (req, res) => {
 
 // PUT update
 // duration_minutes and price are ignored/omitted
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, title, description, category, is_active, sort_order } = req.body;
-    const sql = `UPDATE nghiep_vu_hang_b SET code = ?, title = ?, description = ?, category = ?, is_active = ?, sort_order = ?, updated_at = NOW() WHERE id = ?`;
-    const [result] = await pool.execute(sql, [code, title, description, category, is_active ? 1 : 0, sort_order, id]);
+    const { title, description, category, is_active, sort_order } = req.body;
+    const sql = `UPDATE nghiep_vu_hang_b SET title = ?, description = ?, category = ?, is_active = ?, sort_order = ?, updated_at = NOW() WHERE id = ?`;
+    const [result] = await pool.execute(sql, [ title, description, category, is_active ? 1 : 0, sort_order, id]);
     if (result.affectedRows === 0) return res.status(404).json({ message: 'Not found' });
     const [rows] = await pool.execute(`
-      SELECT id, code, title, description, category, is_active, sort_order, created_at, updated_at
+      SELECT id, title, description, category, is_active, sort_order, created_at, updated_at
       FROM nghiep_vu_hang_b WHERE id = ?
     `, [id]);
     res.json(rows[0]);
@@ -78,7 +79,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const [result] = await pool.execute('DELETE FROM nghiep_vu_hang_b WHERE id = ?', [id]);

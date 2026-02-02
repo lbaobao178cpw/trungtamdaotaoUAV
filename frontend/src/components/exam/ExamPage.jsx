@@ -152,6 +152,40 @@ const ExamPage = () => {
     return "bg-accent text-accent-foreground";
   };
 
+  // Handle study materials download with proper PDF MIME type
+  const handleStudyMaterialDownload = async (doc) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.STUDY_MATERIALS}/${doc.id}/download`);
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+      
+      const blob = await response.blob();
+      // Create a new blob with explicit PDF MIME type
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const url = URL.createObjectURL(pdfBlob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback to direct link
+      const a = document.createElement('a');
+      a.href = `${API_ENDPOINTS.STUDY_MATERIALS}/${doc.id}/download`;
+      a.download = `${doc.title}.pdf`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
   const processSteps = [
     { label: "Đăng ký dự thi", icon: FileText, desc: "Hoàn thành đăng ký và thanh toán lệ phí thi trực tuyến hoặc tại văn phòng." },
     { label: "Xác nhận tư cách dự thi", icon: CheckCircle2, desc: "Hệ thống xác nhận bạn đã hoàn thành các khóa học bắt buộc và đủ điều kiện dự thi." },
@@ -547,8 +581,8 @@ const ExamPage = () => {
                           {doc.title}
                         </p>
                         {doc.file_url && (
-                          <a
-                            href={`${API_ENDPOINTS.STUDY_MATERIALS}/${doc.id}/download`}
+                          <button
+                            onClick={() => handleStudyMaterialDownload(doc)}
                             title="Tải xuống"
                             style={{
                               color: 'var(--primary-color, #0050b8)',
@@ -566,6 +600,8 @@ const ExamPage = () => {
                               borderRadius: '6px',
                               background: 'rgba(0, 80, 184, 0.08)',
                               padding: '0',
+                              border: 'none',
+                              cursor: 'pointer',
                               zIndex: 10
                             }}
                             onMouseEnter={(e) => {
@@ -578,7 +614,7 @@ const ExamPage = () => {
                             }}
                           >
                             <FileDown size={18} />
-                          </a>
+                          </button>
                         )}
                       </div>
                     ))
@@ -597,13 +633,13 @@ const ExamPage = () => {
                         <p className="exam-doc-title">{doc.title}</p>
 
                         {doc.file_url && (
-                          <a
-                            href={`${API_ENDPOINTS.STUDY_MATERIALS}/${doc.id}/download`}
+                          <button
+                            onClick={() => handleStudyMaterialDownload(doc)}
                             title="Tải xuống"
                             className="exam-doc-download"
                           >
                             <FileDown size={18} />
-                          </a>
+                          </button>
                         )}
                       </div>
                     ))

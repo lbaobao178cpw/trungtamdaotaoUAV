@@ -17,8 +17,8 @@ import {
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { notifySuccess, notifyError } from "../../lib/notifications";
-import { uploadImage } from "../../lib/cloudinaryService";
-import "../admin/Admin/Admin.css";
+import { uploadLicenseImage, listImages } from "../../lib/cloudinaryService";
+import "./LookupManager.css";
 
 const initialLicenseState = {
     id: "",
@@ -41,6 +41,11 @@ export default function LookupManager() {
     const [userSearchInput, setUserSearchInput] = useState("");
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [message, setMessage] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
+    const [showLibrary, setShowLibrary] = useState(false);
+    const [libraryImages, setLibraryImages] = useState([]);
+    const [loadingLibrary, setLoadingLibrary] = useState(false);
     const userSearchRef = useRef(null);
 
     // === FETCH DATA WITH CUSTOM HOOK ===
@@ -74,16 +79,43 @@ export default function LookupManager() {
         return licenses.find(l => l.userId === userId);
     };
 
-    // === CLOSE DROPDOWN ON OUTSIDE CLICK ===
+    // === CHECK AND UPDATE EXPIRED LICENSES ===
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (userSearchRef.current && !userSearchRef.current.contains(e.target)) {
-                setShowUserDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        if (licenses.length > 0 && users.length > 0) {
+            const today = new Date();
+            const userIds = new Set(users.map(u => u.id));
+            licenses.forEach(license => {
+                if (!license.expireDate || !userIds.has(license.userId)) return;
+
+                const expireDate = new Date(license.expireDate);
+                const isExpired = expireDate < today;
+
+                if (isExpired && license.status !== 'expired') {
+                    // Update status to expired
+                    saveLicense({
+                        url: `${API_ENDPOINTS.LICENSES}/${license.licenseNumber}`,
+                        method: 'PUT',
+                        data: { ...license, status: 'expired' }
+                    }).then(() => {
+                        refreshLicenses();
+                    }).catch(error => {
+                        console.error('Error updating expired license:', error);
+                    });
+                } else if (!isExpired && license.status === 'expired') {
+                    // Update status to active if previously expired but now valid
+                    saveLicense({
+                        url: `${API_ENDPOINTS.LICENSES}/${license.licenseNumber}`,
+                        method: 'PUT',
+                        data: { ...license, status: 'active' }
+                    }).then(() => {
+                        refreshLicenses();
+                    }).catch(error => {
+                        console.error('Error updating active license:', error);
+                    });
+                }
+            });
+        }
+    }, [licenses, users, saveLicense, refreshLicenses]);
 
     // === SELECT USER HANDLER ===
     const handleSelectUser = (user) => {
@@ -119,6 +151,7 @@ export default function LookupManager() {
         setForm({
             ...license,
             status: license.status || "active",
+            licenseImage: license.portraitImage || null,
         });
         setUserSearchInput(selectedUser?.full_name || String(license.userId) || "");
         setShowUserDropdown(false);
@@ -149,6 +182,10 @@ export default function LookupManager() {
                 ? `${API_ENDPOINTS.LICENSES}/${form.licenseNumber}`
                 : API_ENDPOINTS.LICENSES;
 
+            const today = new Date();
+            const isExpired = new Date(form.expireDate) < today;
+            const autoStatus = isExpired ? 'expired' : 'active';
+
             const payload = {
                 licenseNumber: form.licenseNumber,
                 userId: form.userId || null,
@@ -157,7 +194,7 @@ export default function LookupManager() {
                 idNumber: form.idNumber,
                 issueDate: form.issueDate,
                 expireDate: form.expireDate,
-                status: form.status,
+                status: autoStatus, // Auto-set based on expire date
                 drones: form.drones || [],
                 portraitImage: form.licenseImage || null, // backend expects portraitImage
             };
@@ -228,7 +265,7 @@ export default function LookupManager() {
 
         try {
             setUploadingImage(true);
-            const res = await uploadImage(file);
+            const res = await uploadLicenseImage(file);
             if (!res.success) {
                 notifyError(res.error || 'Upload ảnh thất bại');
                 return;
@@ -252,6 +289,36 @@ export default function LookupManager() {
             ...form,
             licenseImage: null,
         });
+    };
+
+    const handleImageClick = (imageUrl) => {
+        setSelectedImage(imageUrl);
+        setIsModalOpen(true);
+    };
+
+    const handleShowLibrary = async () => {
+        setShowLibrary(true);
+        setLoadingLibrary(true);
+        try {
+            const result = await listImages("uav-training/licenses");
+            if (result.success) {
+                setLibraryImages(result.images);
+            } else {
+                alert('Failed to load images: ' + result.error);
+            }
+        } catch (err) {
+            alert('Error loading images: ' + err.message);
+        } finally {
+            setLoadingLibrary(false);
+        }
+    };
+
+    const handleSelectFromLibrary = (image) => {
+        setForm({
+            ...form,
+            licenseImage: image.url
+        });
+        setShowLibrary(false);
     };
 
     const handleUpdateDrone = (index, field, value) => {
@@ -306,18 +373,19 @@ export default function LookupManager() {
 
 
     return (
-        <div
-            className="solution-manager-container"
-            style={{
-                display: "flex",
-                gap: "24px",
-                marginTop: "20px",
-                flexDirection: "row-reverse",
-            }}
-        >
+        <>
+            <div
+                className="solution-manager-container"
+                style={{
+                    display: "flex",
+                    gap: "24px",
+                    marginTop: "20px",
+                    flexDirection: "row-reverse",
+                }}
+            >
             {/* --- PANEL 1: FORM NHẬP LIỆU --- */}
-            <div className="panel" style={{ flex: 1 }}>
-                <div className="panel-header" style={{ justifyContent: "space-between" }}>
+            <div className="panel flex-1">
+                <div className="panel-header justify-between">
                     <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {isEditing ? <Edit size={18} /> : <Plus size={18} />}
                         {isEditing
@@ -509,8 +577,8 @@ export default function LookupManager() {
                             />
                         </div>
 
-                        <div style={{ display: "flex", gap: "10px" }}>
-                            <div className="form-group" style={{ flex: 1 }}>
+                        <div className="flex-gap-10">
+                            <div className="form-group flex-1">
                                 <label className="form-label">Ngày cấp</label>
                                 <input
                                     type="date"
@@ -522,7 +590,7 @@ export default function LookupManager() {
                                     required
                                 />
                             </div>
-                            <div className="form-group" style={{ flex: 1 }}>
+                            <div className="form-group flex-1">
                                 <label className="form-label">Ngày hết hạn</label>
                                 <input
                                     type="date"
@@ -551,64 +619,257 @@ export default function LookupManager() {
                         {/* --- IMAGE SECTION --- */}
                         <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #eee" }}>
                             <label className="form-label" style={{ marginBottom: "12px" }}>Hình ảnh Giấy phép</label>
-                            <div style={{
-                                border: "2px dashed #ccc",
-                                borderRadius: "8px",
-                                padding: "24px",
-                                textAlign: "center",
-                                backgroundColor: "#fafafa",
-                                cursor: "pointer",
-                                transition: "all 0.3s",
-                            }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = "#0066cc";
-                                    e.currentTarget.style.backgroundColor = "#f0f7ff";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = "#ccc";
-                                    e.currentTarget.style.backgroundColor = "#fafafa";
-                                }}
-                                onClick={() => document.getElementById("licenseImageInput")?.click()}
-                            >
-                                { uploadingImage ? (
-                                    <div>
-                                        <div style={{ fontSize: "20px", marginBottom: "8px" }}>⏳</div>
-                                        <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "4px" }}>
-                                            Đang tải ảnh lên...
-                                        </div>
-                                    </div>
-                                ) : !form.licenseImage ? (
-                                    <div>
-                                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "6px" }}>
-                                            Nhấp để chọn hình ảnh
-                                        </div>
-                                        <div style={{ fontSize: "12px", color: "#999" }}>
-                                            PNG, JPG, GIF (Tối đa 5MB)
-                                        </div>
-                                    </div>
+                            <div style={{ textAlign: "center" }}>
+                                {!showLibrary ? (
+                                    <>
+                                        {uploadingImage ? (
+                                            <div>
+                                                <div style={{ fontSize: "20px", marginBottom: "8px" }}>⏳</div>
+                                                <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "4px" }}>
+                                                    Đang tải ảnh lên...
+                                                </div>
+                                            </div>
+                                        ) : !form.licenseImage ? (
+                                            <div>
+                                                <div style={{ fontSize: "14px", fontWeight: "500", color: "#333", marginBottom: "12px" }}>
+                                                    Chưa có hình ảnh giấy phép
+                                                </div>
+                                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                                        className="btn btn-primary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        <FileCheck size={14} /> Upload từ máy tính
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleShowLibrary}
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        Chọn từ thư viện
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <img
+                                                    src={form.licenseImage}
+                                                    alt="Giấy phép điều khiển"
+                                                    style={{
+                                                        maxWidth: "100%",
+                                                        maxHeight: "250px",
+                                                        borderRadius: "6px",
+                                                        marginBottom: "12px",
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={() => handleImageClick(form.licenseImage)}
+                                                />
+                                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById("licenseImageInput")?.click()}
+                                                        className="btn btn-sm"
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "4px",
+                                                            backgroundColor: "#007bff",
+                                                            color: "white",
+                                                            border: "none",
+                                                            borderRadius: "6px",
+                                                            padding: "6px 12px",
+                                                            cursor: "pointer",
+                                                            fontSize: "14px",
+                                                            transition: "background-color 0.2s",
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.backgroundColor = "#0056b3"}
+                                                        onMouseLeave={(e) => e.target.style.backgroundColor = "#007bff"}
+                                                    >
+                                                        <FileCheck size={14} /> Thay đổi hình ảnh
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleShowLibrary}
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        Chọn từ thư viện
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveImage}
+                                                        className="btn btn-danger btn-sm"
+                                                        style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                                                    >
+                                                        <Trash2 size={14} /> Xóa hình ảnh
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
-                                    <div>
-                                        <img
-                                            src={form.licenseImage}
-                                            alt="Giấy phép điều khiển"
-                                            style={{
-                                                maxWidth: "100%",
-                                                maxHeight: "250px",
-                                                borderRadius: "6px",
-                                                marginBottom: "12px"
-                                            }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRemoveImage();
-                                            }}
-                                            className="btn btn-danger btn-sm"
-                                            style={{ display: "flex", alignItems: "center", gap: "4px", margin: "0 auto" }}
-                                        >
-                                            <Trash2 size={14} /> Xóa hình ảnh
-                                        </button>
+                                    <div className="library-view" style={{
+                                        border: "1px solid #e0e0e0",
+                                        borderRadius: "12px",
+                                        padding: "24px",
+                                        background: "#ffffff",
+                                        maxHeight: "500px",
+                                        overflowY: "auto",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
+                                    }}>
+                                        <div className="library-header" style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            marginBottom: "24px",
+                                            position: "sticky",
+                                            top: 0,
+                                            background: "#ffffff",
+                                            padding: "12px",
+                                            borderBottom: "1px solid #f0f0f0",
+                                            margin: "-12px -12px 24px -12px",
+                                            borderRadius: "12px 12px 0 0"
+                                        }}>
+                                            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>Chọn từ thư viện hình ảnh</h3>
+                                            <button
+                                                onClick={() => setShowLibrary(false)}
+                                                style={{
+                                                    padding: "8px",
+                                                    background: "#f8f9fa",
+                                                    color: "#6c757d",
+                                                    border: "1px solid #e0e0e0",
+                                                    borderRadius: "6px",
+                                                    cursor: "pointer",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    transition: "all 0.2s"
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = "#e9ecef";
+                                                    e.target.style.color = "#495057";
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = "#f8f9fa";
+                                                    e.target.style.color = "#6c757d";
+                                                }}
+                                                title="Đóng"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                        {loadingLibrary ? (
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "40px",
+                                                color: "#6c757d"
+                                            }}>
+                                                <div style={{ fontSize: "24px", marginBottom: "12px" }}>⏳</div>
+                                                <div style={{ fontSize: "16px", fontWeight: "500" }}>Đang tải hình ảnh...</div>
+                                            </div>
+                                        ) : libraryImages.length === 0 ? (
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "40px",
+                                                color: "#6c757d"
+                                            }}>
+                                                <div style={{ fontSize: "48px", marginBottom: "12px" }}>📷</div>
+                                                <div style={{ fontSize: "16px", fontWeight: "500", textAlign: "center" }}>
+                                                    Chưa có hình ảnh nào trong thư viện
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="image-grid" style={{
+                                                display: "grid",
+                                                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                                                gap: "16px"
+                                            }}>
+                                                {libraryImages.map((image) => (
+                                                    <div
+                                                        key={image.publicId}
+                                                        className="image-item"
+                                                        onClick={() => handleSelectFromLibrary(image)}
+                                                        style={{
+                                                            border: "1px solid #e0e0e0",
+                                                            borderRadius: "8px",
+                                                            padding: "12px",
+                                                            cursor: "pointer",
+                                                            transition: "all 0.3s ease",
+                                                            background: "white",
+                                                            textAlign: "center",
+                                                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                                                            position: "relative",
+                                                            overflow: "hidden"
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.target.style.borderColor = "#007bff";
+                                                            e.target.style.boxShadow = "0 4px 12px rgba(0, 123, 255, 0.15)";
+                                                            e.target.style.transform = "translateY(-2px)";
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.target.style.borderColor = "#e0e0e0";
+                                                            e.target.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.05)";
+                                                            e.target.style.transform = "translateY(0)";
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={image.url}
+                                                            alt={image.displayName}
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "120px",
+                                                                objectFit: "cover",
+                                                                borderRadius: "6px",
+                                                                marginBottom: "8px"
+                                                            }}
+                                                        />
+                                                        <p style={{
+                                                            margin: 0,
+                                                            fontSize: "12px",
+                                                            color: "#495057",
+                                                            wordBreak: "break-word",
+                                                            lineHeight: "1.4",
+                                                            display: "-webkit-box",
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: "vertical",
+                                                            overflow: "hidden"
+                                                        }}>
+                                                            {image.displayName}
+                                                        </p>
+                                                        <div style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px",
+                                                            background: "rgba(0, 123, 255, 0.8)",
+                                                            color: "white",
+                                                            borderRadius: "50%",
+                                                            width: "20px",
+                                                            height: "20px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "12px",
+                                                            opacity: 0,
+                                                            transition: "opacity 0.3s"
+                                                        }}
+                                                        onMouseEnter={(e) => e.target.style.opacity = "1"}
+                                                        onMouseLeave={(e) => e.target.style.opacity = "0"}
+                                                        >
+                                                            ✓
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -791,8 +1052,9 @@ export default function LookupManager() {
                             <div
                                 key={license.id}
                                 className="list-item"
-                                style={{ alignItems: "flex-start", padding: "15px" }}
+                                style={{ alignItems: "flex-start", padding: "15px", display: "flex", justifyContent: "space-between" }}
                             >
+                                <div style={{ display: "flex", alignItems: "flex-start" }}>
                                 {license.portraitImage ? (
                                     <img
                                         src={license.portraitImage}
@@ -804,7 +1066,9 @@ export default function LookupManager() {
                                             objectFit: "cover",
                                             marginRight: "15px",
                                             flexShrink: 0,
+                                            cursor: "pointer",
                                         }}
+                                        onClick={() => handleImageClick(license.portraitImage)}
                                     />
                                 ) : (
                                     <div
@@ -832,36 +1096,14 @@ export default function LookupManager() {
                                     </div>
                                 )}
 
-                                <div style={{ flex: 1 }}>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            marginBottom: "6px",
-                                        }}
-                                    >
+                                <div className="flex-1">
+                                    <div className="justify-between" style={{ marginBottom: "6px" }}>
                                         <div
                                             className="item-title"
                                             style={{ fontSize: "15px", fontWeight: "bold" }}
                                         >
                                             {license.licenseNumber}
                                         </div>
-                                        <span
-                                            style={{
-                                                fontSize: "10px",
-                                                padding: "2px 8px",
-                                                borderRadius: "10px",
-                                                color: "#fff",
-                                                backgroundColor: getStatusBadgeColor(license.status),
-                                                height: "fit-content",
-                                                whiteSpace: "nowrap",
-                                                fontWeight: "600",
-                                            }}
-                                        >
-                                            {license.status === "active"
-                                                ? "Đang hoạt động"
-                                                : "Hết hạn"}
-                                        </span>
                                     </div>
 
                                     <div
@@ -947,11 +1189,86 @@ export default function LookupManager() {
                                         </button>
                                     </div>
                                 </div>
+                                </div>
+
+                                {/* Status badge ở ngoài cùng bên phải */}
+                                <span
+                                    style={{
+                                        fontSize: "10px",
+                                        padding: "2px 8px",
+                                        borderRadius: "10px",
+                                        color: "#fff",
+                                        backgroundColor: getStatusBadgeColor(license.status),
+                                        height: "fit-content",
+                                        whiteSpace: "nowrap",
+                                        fontWeight: "600",
+                                        marginLeft: "auto",
+                                        alignSelf: "flex-start",
+                                    }}
+                                >
+                                    {license.status === "active"
+                                        ? "Đang hoạt động"
+                                        : "Hết hạn"}
+                                </span>
                             </div>
                         );
                     })}
                 </div>
             </div>
         </div>
+
+        {/* Modal for viewing full image */}
+        {isModalOpen && (
+            <div
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10000,
+                    cursor: 'pointer',
+                }}
+                onClick={() => setIsModalOpen(false)}
+            >
+                <img
+                    src={selectedImage}
+                    alt="Giấy phép điều khiển - Xem đầy đủ"
+                    style={{
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        background: 'rgba(0,0,0,0.7)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    ×
+                </button>
+            </div>
+        )}
+        </>
     );
 }

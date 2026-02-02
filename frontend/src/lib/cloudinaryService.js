@@ -80,3 +80,13 @@ export const deleteFromCloudinary = async (publicId) => {
     return { success: false, error: err.message };
   }
 };
+
+export const listImages = async (folder = "uav-training/images") => {
+  try {
+    const response = await apiClient.get('/cloudinary/list-images', { params: { folder } });
+    return response.data;
+  } catch (err) {
+    console.error("List images error:", err);
+    return { success: false, error: err.message };
+  }
+};

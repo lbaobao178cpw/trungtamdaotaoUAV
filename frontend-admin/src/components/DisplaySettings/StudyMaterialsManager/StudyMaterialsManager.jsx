@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient } from "../../../lib/apiInterceptor";
+import { uploadDocument, listDocuments } from "../../../lib/cloudinaryService";
 import { notifySuccess, notifyError } from '../../../lib/notifications';
 import "../LegalManagement/LegalManagement.css";
 import { API_ENDPOINTS } from '../../../config/apiConfig';
@@ -15,6 +15,9 @@ export default function StudyMaterialsManager() {
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [uploading, setUploading] = useState(false);
     const [uploadedFileName, setUploadedFileName] = useState('');
+    const [showLibrary, setShowLibrary] = useState(false);
+    const [libraryDocuments, setLibraryDocuments] = useState([]);
+    const [loadingLibrary, setLoadingLibrary] = useState(false);
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 10,
@@ -76,50 +79,17 @@ export default function StudyMaterialsManager() {
 
         setUploading(true);
         try {
-            const token = localStorage.getItem('admin_token');
-            console.log('📝 Token retrieved:', token ? `${token.substring(0, 20)}...` : 'NULL');
-            console.log('📄 File name:', file.name);
-
-            if (!token) {
-                notifyError('Lỗi: Token không tìm thấy. Vui lòng đăng nhập lại!');
-                setUploading(false);
-                return;
-            }
-
-            const formDataCloud = new FormData();
-            formDataCloud.append('file', file);
-            formDataCloud.append('folder', 'uav-study-materials');
-
-            // Encode filename as UTF-8 explicitly
-            const encoder = new TextEncoder();
-            const utf8Bytes = encoder.encode(file.name);
-            const utf8FileName = new TextDecoder('utf-8').decode(utf8Bytes);
-
-            formDataCloud.append('originalFilename', utf8FileName);
-            formDataCloud.append('displayName', utf8FileName);
-
-            console.log('🚀 Gửi upload request với apiClient');
-            // Dùng apiClient có request interceptor để tự động refresh token
-            const res = await apiClient.post('/cloudinary/upload', formDataCloud, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            console.log('📥 Response status:', res.status);
-            const data = res.data;
-            console.log('📦 Response data:', data);
-
-            if (data.success && data.url) {
+            const result = await uploadDocument(file);
+            if (result.success) {
                 setFormData(prev => ({
                     ...prev,
-                    file_url: data.url,
-                    display_name: data.displayName || data.originalFilename || file.name
+                    file_url: result.url,
+                    display_name: result.originalFilename || file.name
                 }));
-                setUploadedFileName(data.displayName || data.originalFilename || file.name);
+                setUploadedFileName(result.originalFilename || file.name);
                 notifySuccess('Upload file thành công!');
             } else {
-                notifyError('Upload thất bại: ' + (data.error || 'Không rõ lý do'));
+                notifyError('Upload thất bại: ' + (result.error || 'Không rõ lý do'));
             }
         } catch (error) {
             console.error('Lỗi upload:', error);
@@ -127,6 +97,33 @@ export default function StudyMaterialsManager() {
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleShowLibrary = async () => {
+        setShowLibrary(true);
+        setLoadingLibrary(true);
+        try {
+            const result = await listDocuments("uav-training/documents");
+            if (result.success) {
+                setLibraryDocuments(result.images);
+            } else {
+                alert('Failed to load documents: ' + result.error);
+            }
+        } catch (err) {
+            alert('Error loading documents: ' + err.message);
+        } finally {
+            setLoadingLibrary(false);
+        }
+    };
+
+    const handleSelectFromLibrary = (document) => {
+        setFormData({
+            ...formData,
+            file_url: document.url,
+            display_name: document.displayName
+        });
+        setUploadedFileName(document.displayName);
+        setShowLibrary(false);
     };
 
     const handleClearFile = async () => {
@@ -535,6 +532,25 @@ export default function StudyMaterialsManager() {
                                         {uploading && <span style={{ color: '#17a2b8' }}>Đang upload...</span>}
                                         {formData.file_url && <span style={{ color: '#28a745', fontSize: '12px' }}>✓ Đã upload</span>}
                                     </div>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => document.querySelector('input[type="file"]').click()}
+                                            className="legal-btn legal-btn-primary"
+                                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                                            disabled={uploading}
+                                        >
+                                            Upload từ máy tính
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleShowLibrary}
+                                            className="legal-btn legal-btn-secondary"
+                                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                                        >
+                                            Chọn từ thư viện
+                                        </button>
+                                    </div>
                                     {formData.file_url && (
                                         <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '6px' }}>
                                             File: {uploadedFileName || formData.file_url.split('/').pop()}
@@ -588,6 +604,110 @@ export default function StudyMaterialsManager() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal thư viện tài liệu */}
+            {showLibrary && (
+                <div className="legal-modal-overlay">
+                    <div className="legal-modal-content" style={{ maxWidth: '800px', maxHeight: '80vh' }}>
+                        <div className="legal-modal-header">
+                            <h3 style={{ margin: 0, color: '#0066cc' }}>Chọn từ thư viện tài liệu</h3>
+                            <button
+                                onClick={() => setShowLibrary(false)}
+                                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+                            >
+                                X
+                            </button>
+                        </div>
+                        <div className="legal-modal-body" style={{ padding: '20px' }}>
+                            {loadingLibrary ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '14px', color: '#666' }}>Đang tải tài liệu...</div>
+                                </div>
+                            ) : libraryDocuments.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
+                                    <div style={{ fontSize: '16px', fontWeight: '500', color: '#6c757d' }}>
+                                        Chưa có tài liệu nào trong thư viện
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                    gap: '16px',
+                                    maxHeight: '400px',
+                                    overflowY: 'auto'
+                                }}>
+                                    {libraryDocuments.map((document) => (
+                                        <div
+                                            key={document.publicId}
+                                            onClick={() => handleSelectFromLibrary(document)}
+                                            style={{
+                                                border: '1px solid #e0e0e0',
+                                                borderRadius: '8px',
+                                                padding: '12px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                background: 'white',
+                                                textAlign: 'center',
+                                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.borderColor = '#007bff';
+                                                e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.15)';
+                                                e.target.style.transform = 'translateY(-2px)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.borderColor = '#e0e0e0';
+                                                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                                                e.target.style.transform = 'translateY(0)';
+                                            }}
+                                        >
+                                            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📄</div>
+                                            <p style={{
+                                                margin: 0,
+                                                fontSize: '12px',
+                                                color: '#495057',
+                                                wordBreak: 'break-word',
+                                                lineHeight: '1.4',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                            }}>
+                                                {document.displayName}
+                                            </p>
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '8px',
+                                                right: '8px',
+                                                background: 'rgba(0, 123, 255, 0.8)',
+                                                color: 'white',
+                                                borderRadius: '50%',
+                                                width: '20px',
+                                                height: '20px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '12px',
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.opacity = '1'}
+                                            onMouseLeave={(e) => e.target.style.opacity = '0'}
+                                            >
+                                                ✓
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

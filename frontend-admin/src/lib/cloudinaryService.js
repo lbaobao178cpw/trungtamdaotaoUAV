@@ -76,24 +76,108 @@ export const uploadVideo = async (file) => {
   return uploadToCloudinary(file, "uav-training/videos");
 };
 
-export const uploadDocument = async (file) => {
-  const allowedTypes = [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-  ];
-
-  if (!allowedTypes.includes(file.type)) {
+export const uploadSolutionImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
     return {
       success: false,
-      error: "Chỉ hỗ trợ file PDF, Word, Excel, PowerPoint",
+      error: "Chỉ hỗ trợ file ảnh",
     };
   }
+  return uploadToCloudinary(file, "uav-training/solutions");
+};
+
+export const uploadIllustrationImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/solutions/illustrations");
+};
+
+export const uploadClientImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/solutions/clients");
+};
+
+export const uploadSolutionVideo = async (file) => {
+  if (!file.type.startsWith("video/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file video",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/solutions/videos");
+};
+
+export const uploadCourseImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/courses/thumbnails");
+};
+
+export const uploadCourseVideo = async (file) => {
+  if (!file.type.startsWith("video/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file video",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/courses/videos");
+};
+
+export const listVideos = async (folder = "uav-training/videos") => {
+  try {
+    const response = await apiClient.get('/cloudinary/list-images', { params: { folder, resource_type: 'video' } });
+    return response.data;
+  } catch (err) {
+    console.error("List videos error:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const uploadLicenseImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/licenses");
+};
+
+export const uploadDocument = async (file) => {
   return uploadToCloudinary(file, "uav-training/documents");
+};
+
+export const uploadPointImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/quản lí điểm 3D");
+};
+
+export const uploadPanoramaImage = async (file) => {
+  if (!file.type.startsWith("image/")) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file ảnh",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/quản lí điểm 3D/panoramas");
 };
 
 export const deleteFromCloudinary = async (publicId) => {
@@ -103,6 +187,85 @@ export const deleteFromCloudinary = async (publicId) => {
     return response.data;
   } catch (err) {
     console.error("Delete error:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const listImages = async (folder = "uav-training/images") => {
+  try {
+    const response = await apiClient.get('/cloudinary/list-images', { params: { folder } });
+    return response.data;
+  } catch (err) {
+    console.error("List images error:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const listDocuments = async (folder = "uav-training/documents") => {
+  try {
+    const response = await apiClient.get('/cloudinary/list-images', { params: { folder, resource_type: 'raw' } });
+    return response.data;
+  } catch (err) {
+    console.error("List documents error:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const uploadModel3D = async (file) => {
+  if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+    return {
+      success: false,
+      error: "Chỉ hỗ trợ file .glb hoặc .gltf",
+    };
+  }
+  return uploadToCloudinary(file, "uav-training/models");
+};
+
+export const listModel3Ds = async (folder = "uav-training/models") => {
+  try {
+    // First try to get from Cloudinary
+    const cloudinaryResult = await apiClient.get('/cloudinary/list-images', { 
+      params: { folder, resource_type: 'raw' } 
+    });
+    
+    let allModels = cloudinaryResult.data.images || [];
+    console.log("Cloudinary models:", allModels);
+    
+    // If no models from Cloudinary, try to get from local storage
+    if (allModels.length === 0) {
+      console.log("No Cloudinary models, trying local storage...");
+      try {
+        const localResult = await apiClient.get('/files/files', { 
+          params: { folder: 'course-uploads' } 
+        });
+        console.log("Local API result:", localResult.data);
+        
+        if (Array.isArray(localResult.data)) {
+          // Filter for .glb and .gltf files
+          const modelFiles = localResult.data.filter(file => 
+            file.filename && 
+            (file.filename.toLowerCase().endsWith('.glb') || file.filename.toLowerCase().endsWith('.gltf'))
+          );
+          console.log("Filtered model files:", modelFiles);
+          
+          allModels = modelFiles.map(file => ({
+            url: file.url,
+            publicId: file.filename,
+            displayName: file.filename.replace(/^\d+-/, '').replace(/-\d+$/, ''),
+            createdAt: new Date().toISOString(), // Local files don't have creation date
+            bytes: 0, // Local files don't have size info
+            resourceType: 'raw'
+          }));
+          console.log("Mapped models:", allModels);
+        }
+      } catch (localError) {
+        console.warn("Could not load local models:", localError.message);
+      }
+    }
+    
+    return { success: true, images: allModels };
+  } catch (err) {
+    console.error("List models error:", err);
     return { success: false, error: err.message };
   }
 };

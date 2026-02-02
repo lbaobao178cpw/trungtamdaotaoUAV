@@ -4,6 +4,7 @@ import { Search, FileText, CreditCard, Smartphone, Camera, CheckCircle, XCircle,
 import jsQR from 'jsqr';
 import QRCode from 'qrcode';
 import { API_BASE_URL } from '../../config/apiConfig';
+import { notifyError } from '../../lib/notifications';
 
 function LookupPage() {
     const [activeTab, setActiveTab] = useState('so-giay-phep');
@@ -184,7 +185,7 @@ function LookupPage() {
         else if (activeTab === 'ma-thiet-bi') searchValue = formData.droneSerial;
 
         if (!searchValue.trim()) {
-            alert('Vui lòng nhập thông tin tìm kiếm');
+            notifyError('Vui lòng nhập thông tin tìm kiếm');
             return;
         }
 
@@ -206,6 +207,32 @@ function LookupPage() {
                 : activeTab === 'cccd' ? 'cccd'
                     : 'device';
 
+            // Kiểm tra trạng thái giấy phép trước khi gửi OTP
+            let checkResponse;
+            if (activeTab === 'so-giay-phep') {
+                checkResponse = await fetch(`${API_BASE_URL}/licenses/lookup/license/${searchValue}`);
+            } else if (activeTab === 'cccd') {
+                checkResponse = await fetch(`${API_BASE_URL}/licenses/lookup/cccd/${searchValue}`);
+            } else if (activeTab === 'ma-thiet-bi') {
+                checkResponse = await fetch(`${API_BASE_URL}/licenses/lookup/device/${searchValue}`);
+            }
+
+            if (checkResponse && checkResponse.ok) {
+                const checkData = await checkResponse.json();
+                
+                // Kiểm tra trạng thái giấy phép
+                if (checkData.license?.license_status === 'expired') {
+                    throw new Error('Giấy phép này đã hết hạn và không thể tra cứu được');
+                }
+
+                // Kiểm tra ngày hết hạn
+                if (checkData.license?.expiry_date && new Date(checkData.license.expiry_date) < new Date()) {
+                    throw new Error('Giấy phép này đã hết hạn và không thể tra cứu được');
+                }
+            }
+            // Nếu không tìm thấy hoặc lỗi khác, vẫn cho phép gửi OTP (có thể sai thông tin)
+
+            // Gửi OTP
             const response = await fetch(`${API_BASE_URL}/otp/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -228,7 +255,7 @@ function LookupPage() {
         } catch (err) {
             console.error('Send OTP error:', err);
             setOtpError(err.message);
-            alert(err.message || 'Không thể gửi OTP. Vui lòng thử lại.');
+            notifyError(err.message || 'Không thể gửi OTP. Vui lòng thử lại.');
         } finally {
             setOtpSending(false);
         }
@@ -285,7 +312,7 @@ function LookupPage() {
             setCameraActive(true);
         } catch (err) {
             console.error('Lỗi khi bật camera:', err);
-            alert('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.');
+            notifyError('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.');
         }
     };
 
@@ -489,7 +516,7 @@ function LookupPage() {
             } catch (err) {
                 console.error('QR Lookup error:', err);
                 setError(err.message || 'Không thể tra cứu thông tin từ QR');
-                alert(err.message || 'Không thể tra cứu thông tin từ QR');
+                notifyError(err.message || 'Không thể tra cứu thông tin từ QR');
             } finally {
                 setLoading(false);
             }
