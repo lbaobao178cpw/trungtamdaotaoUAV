@@ -183,7 +183,6 @@ export default function UserManager() {
     setForm(prev => ({ ...prev, address: user.address || '' }));
     // Set location selects for permanent address
     if (user.permanent_city_id) {
-      setSelectedPermanentCity(String(user.permanent_city_id));
       // Load wards for permanent city
       (async () => {
         const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
@@ -200,14 +199,10 @@ export default function UserManager() {
           console.error('Error loading permanent wards:', e);
         }
       })();
-      if (user.permanent_ward_id) {
-        setSelectedPermanentWard(String(user.permanent_ward_id));
-      }
     }
 
     // Set location selects for current address
     if (user.current_city_id) {
-      setSelectedCurrentCity(String(user.current_city_id));
       // Load wards for current city
       (async () => {
         const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
@@ -224,9 +219,6 @@ export default function UserManager() {
           console.error('Error loading current wards:', e);
         }
       })();
-      if (user.current_ward_id) {
-        setSelectedCurrentWard(String(user.current_ward_id));
-      }
     }
     setIsEditing(true);
     // Cuộn lên đầu form
@@ -322,7 +314,6 @@ export default function UserManager() {
   // Handler for permanent city (tỉnh hộ khẩu) selection
   const handlePermanentCityChange = (e) => {
     const provinceId = e.target.value;
-    setSelectedPermanentCity(provinceId);
     setForm(prev => ({ ...prev, permanent_city_id: provinceId }));
     setSelectedPermanentWard('');
   };
@@ -330,14 +321,12 @@ export default function UserManager() {
   // Handler for permanent ward (phường hộ khẩu) selection
   const handlePermanentWardChange = (e) => {
     const wardId = e.target.value;
-    setSelectedPermanentWard(wardId);
     setForm(prev => ({ ...prev, permanent_ward_id: wardId }));
   };
 
   // Handler for current city (tỉnh hiện tại) selection
   const handleCurrentCityChange = (e) => {
     const provinceId = e.target.value;
-    setSelectedCurrentCity(provinceId);
     setForm(prev => ({ ...prev, current_city_id: provinceId }));
     setSelectedCurrentWard('');
   };
@@ -345,7 +334,6 @@ export default function UserManager() {
   // Handler for current ward (phường hiện tại) selection
   const handleCurrentWardChange = (e) => {
     const wardId = e.target.value;
-    setSelectedCurrentWard(wardId);
     setForm(prev => ({ ...prev, current_ward_id: wardId }));
   };
 
@@ -372,15 +360,15 @@ export default function UserManager() {
 
   // Load wards when permanent city changes
   useEffect(() => {
-    if (selectedPermanentCity) {
+    if (form.permanent_city_id) {
       (async () => {
-        await fetchWards(selectedPermanentCity);
+        await fetchWards(form.permanent_city_id);
       })();
     } else {
       setPermanentWards([]);
       setSelectedPermanentWard('');
     }
-  }, [selectedPermanentCity]);
+  }, [form.permanent_city_id]);
 
   // Load wards when current city changes
   useEffect(() => {
@@ -389,7 +377,7 @@ export default function UserManager() {
         const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
           ? import.meta.env.VITE_API_BASE
           : `${window.location.protocol}//${window.location.hostname}:5000`;
-        const url = `${base}/api/location/wards?province_id=${selectedCurrentCity}`;
+        const url = `${base}/api/location/wards?province_id=${form.current_city_id}`;
         try {
           const res = await fetch(url);
           if (res.ok) {
@@ -404,7 +392,7 @@ export default function UserManager() {
       setCurrentWards([]);
       setSelectedCurrentWard('');
     }
-  }, [selectedCurrentCity]);
+  }, [form.current_city_id]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -645,7 +633,7 @@ export default function UserManager() {
                         <label className="form-label">Tỉnh/Thành phố</label>
                         <select 
                           className="form-control" 
-                          value={selectedPermanentCity} 
+                          value={form.permanent_city_id || ''} 
                           onChange={handlePermanentCityChange}
                         >
                           <option value="">-- Chọn Tỉnh/Thành --</option>
@@ -658,9 +646,9 @@ export default function UserManager() {
                         <label className="form-label">Phường/Xã</label>
                         <select 
                           className="form-control" 
-                          value={selectedPermanentWard} 
+                          value={form.permanent_ward_id || ''} 
                           onChange={handlePermanentWardChange}
-                          disabled={!selectedPermanentCity}
+                          disabled={!form.permanent_city_id}
                         >
                           <option value="">-- Chọn Phường/Xã --</option>
                           {permanentWards.map(w => (
@@ -689,7 +677,7 @@ export default function UserManager() {
                         <label className="form-label">Tỉnh/Thành phố</label>
                         <select 
                           className="form-control" 
-                          value={selectedCurrentCity} 
+                          value={form.current_city_id || ''} 
                           onChange={handleCurrentCityChange}
                         >
                           <option value="">-- Chọn Tỉnh/Thành --</option>
@@ -702,9 +690,9 @@ export default function UserManager() {
                         <label className="form-label">Phường/Xã</label>
                         <select 
                           className="form-control" 
-                          value={selectedCurrentWard} 
+                          value={form.current_ward_id || ''} 
                           onChange={handleCurrentWardChange}
-                          disabled={!selectedCurrentCity}
+                          disabled={!form.current_city_id}
                         >
                           <option value="">-- Chọn Phường/Xã --</option>
                           {currentWards.map(w => (
