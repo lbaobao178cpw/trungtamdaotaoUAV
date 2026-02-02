@@ -542,7 +542,7 @@ export default function SolutionManager() {
                           <button
                             type="button"
                             onClick={handleShowLibrary}
-                            className="btn btn-secondary btn-sm"
+                            className="btn btn-primary btn-sm"
                             style={{ display: "flex", alignItems: "center", gap: "4px" }}
                           >
                             Chọn từ thư viện
@@ -584,7 +584,7 @@ export default function SolutionManager() {
                           <button
                             type="button"
                             onClick={handleShowLibrary}
-                            className="btn btn-secondary btn-sm library-btn"
+                            className="btn btn-primary btn-sm library-btn"
                           >
                             Chọn từ thư viện
                           </button>
@@ -745,7 +745,7 @@ export default function SolutionManager() {
                     <button
                       type="button"
                       onClick={() => handleShowVideoLibrary('hero')}
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-primary btn-sm"
                     >
                       Chọn từ thư viện
                     </button>
@@ -791,7 +791,7 @@ export default function SolutionManager() {
                     <button
                       type="button"
                       onClick={() => handleShowVideoLibrary('hero')}
-                      className="btn btn-secondary btn-sm library-btn"
+                      className="btn btn-primary btn-sm"
                     >
                       Chọn từ thư viện
                     </button>
@@ -957,7 +957,7 @@ export default function SolutionManager() {
                             setTargetContext({ type: "section", sectionIdx: idx, imgIdx });
                             handleShowIllustrationLibrary();
                           }}
-                          className="btn btn-secondary btn-sm"
+                          className="btn btn-primary btn-sm"
                         >
                           Chọn từ thư viện
                         </button>
@@ -997,7 +997,7 @@ export default function SolutionManager() {
 
             <button
               type="button"
-              className="btn btn-secondary btn-block add-section-btn"
+              className="btn btn-primary btn-block add-section-btn"
               onClick={addSection}
             >
               + Thêm khối dịch vụ mới
@@ -1065,7 +1065,7 @@ export default function SolutionManager() {
                   <button
                     type="button"
                     onClick={() => handleShowVideoLibrary('footer')}
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-primary btn-sm"
                   >
                     Chọn từ thư viện
                   </button>
@@ -1181,7 +1181,7 @@ export default function SolutionManager() {
                         setTargetContext({ type: "client", imgIdx: idx });
                         handleShowClientLibrary();
                       }}
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-primary btn-sm"
                     >
                       Chọn từ thư viện
                     </button>
