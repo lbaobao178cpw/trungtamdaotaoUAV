@@ -372,7 +372,7 @@ export default function UserManager() {
 
   // Load wards when current city changes
   useEffect(() => {
-    if (selectedCurrentCity) {
+    if (form.current_city_id) {
       (async () => {
         const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE)
           ? import.meta.env.VITE_API_BASE
