@@ -209,7 +209,7 @@ router.put("/:id", verifyAdmin, async (req, res) => {
     permanent_city_id, permanent_ward_id, current_city_id, current_ward_id,
     emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
     usage_purpose, operation_area, uav_experience,
-    identity_image_front, identity_image_back
+    identity_image_front, identity_image_back, tier_b_services
   } = req.body;
 
   try {
