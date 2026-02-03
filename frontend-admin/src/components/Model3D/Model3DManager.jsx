@@ -43,7 +43,7 @@ class ErrorBoundary3D extends React.Component {
     return { hasError: true };
   }
   componentDidCatch(error) {
-    console.error("3D Error:", error);
+    // 3D Error
   }
   render() {
     if (this.state.hasError) {
@@ -175,7 +175,7 @@ export default function Model3DManager() {
       try {
         setDefaultView(JSON.parse(defaultViewData.value));
       } catch (e) {
-        console.error("Invalid camera view data:", e);
+        // Invalid camera view data
       }
     }
   }, [defaultViewData]);
@@ -203,21 +203,17 @@ export default function Model3DManager() {
 
   // === MODEL LIBRARY FUNCTIONS ===
   const handleShowModelLibrary = useCallback(async () => {
-    console.log("Opening model library modal");
     setShowModelLibrary(true);
     setLoadingLibrary(true);
     
     try {
       const result = await listModel3Ds();
-      console.log("Model library result:", result);
       if (result.success) {
         setLibraryModels(result.images || []);
-        console.log("Set library models:", result.images);
       } else {
         notifyError("Không thể tải thư viện model");
       }
     } catch (error) {
-      console.error("Load model library error:", error);
       notifyError("Lỗi tải thư viện model");
     } finally {
       setLoadingLibrary(false);
@@ -271,7 +267,6 @@ export default function Model3DManager() {
         notifyError(result.error || "Upload thất bại");
       }
     } catch (error) {
-      console.error("Upload model error:", error);
       notifyError("Lỗi upload model");
     } finally {
       setUploadingModel(false);
