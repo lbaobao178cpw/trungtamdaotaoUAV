@@ -39,9 +39,3 @@ export const API_ENDPOINTS = {
     POINTS: `${API_BASE_URL}/points`,
     CLOUDINARY: `${API_BASE_URL}/cloudinary`,
 };
-
-console.log('API Config initialized:', {
-    API_BASE_URL,
-    MEDIA_BASE_URL,
-    ENV: import.meta.env.MODE
-});

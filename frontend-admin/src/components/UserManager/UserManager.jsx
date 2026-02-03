@@ -90,7 +90,6 @@ export default function UserManager() {
         setUserScores(prev => ({ ...prev, [userId]: data }));
       }
     } catch (error) {
-      console.error('Lỗi lấy điểm số:', error);
     } finally {
       setLoadingScores(prev => ({ ...prev, [userId]: false }));
     }
@@ -194,7 +193,6 @@ export default function UserManager() {
             setPermanentWards(data || []);
           }
         } catch (e) {
-          console.error('Error loading permanent wards:', e);
         }
       })();
     }
@@ -212,7 +210,6 @@ export default function UserManager() {
             setCurrentWards(data || []);
           }
         } catch (e) {
-          console.error('Error loading current wards:', e);
         }
       })();
     }
@@ -263,7 +260,6 @@ export default function UserManager() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return `${window.location.protocol}//localhost:5000`;
     }
-    console.warn('⚠️ VITE_API_BASE_URL or VITE_API_BASE not set!');
     return null;
   };
 
@@ -271,22 +267,17 @@ export default function UserManager() {
     try {
       const base = getApiBase();
       if (!base) {
-        console.error('❌ API base URL not configured');
         return [];
       }
       const url = `${base}/api/location/provinces`;
-      console.log('📋 Fetching provinces from:', url);
       const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) {
-        console.error('❌ fetchProvinces bad status', res.status, url);
         return [];
       }
       const data = await res.json();
-      console.log('✅ Provinces loaded:', data?.length || 0);
       setProvinces(data || []);
       return data || [];
     } catch (e) {
-      console.error('❌ fetchProvinces error:', e);
       return [];
     }
   };
@@ -303,7 +294,6 @@ export default function UserManager() {
       const url = `${base}/api/location/wards?province_id=${provinceId}`;
       const res = await fetch(url);
       if (!res.ok) {
-        console.error('fetchWards bad status', res.status, url);
         setWards([]);
         return [];
       }
@@ -311,7 +301,6 @@ export default function UserManager() {
       setWards(data || []);
       return data || [];
     } catch (e) {
-      console.error('fetchWards', e);
       setWards([]);
       return [];
     }
@@ -367,7 +356,6 @@ export default function UserManager() {
           setTierBServices(data);
         }
       } catch (error) {
-        console.error('Error loading Tier B services:', error);
       }
     };
     fetchTierBServices();
@@ -399,7 +387,6 @@ export default function UserManager() {
             setCurrentWards(data || []);
           }
         } catch (e) {
-          console.error('fetchCurrentWards', e);
         }
       })();
     } else {

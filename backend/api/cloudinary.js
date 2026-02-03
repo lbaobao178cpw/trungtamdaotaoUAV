@@ -30,8 +30,8 @@ const upload = multer({
  */
 router.post('/upload-cccd', upload.single('file'), async (req, res) => {
   try {
-    console.log("CCCD upload request received");
-    console.log("File:", req.file?.originalname, "Size:", req.file?.size);
+    // console.log("CCCD upload request received");
+    // console.log("File:", req.file?.originalname, "Size:", req.file?.size);
 
     if (!req.file) {
       return res.status(400).json({
@@ -69,7 +69,7 @@ router.post('/upload-cccd', upload.single('file'), async (req, res) => {
       stream.end(req.file.buffer);
     });
 
-    console.log("✅ CCCD uploaded:", uploadResult.secure_url);
+    // console.log("✅ CCCD uploaded:", uploadResult.secure_url);
 
     res.json({
       success: true,
@@ -78,7 +78,7 @@ router.post('/upload-cccd', upload.single('file'), async (req, res) => {
       url: uploadResult.secure_url
     });
   } catch (error) {
-    console.error('CCCD upload error:', error);
+    // console.error('CCCD upload error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Upload failed'
@@ -92,12 +92,12 @@ router.post('/upload-cccd', upload.single('file'), async (req, res) => {
  */
 router.post('/upload', upload.single('file'), verifyTokenOptional, async (req, res) => {
   try {
-    console.log("Upload request received");
-    console.log("File object:", req.file);
-    console.log("File size:", req.file?.size);
-    console.log("File buffer length:", req.file?.buffer?.length);
-    console.log("File original name:", req.file?.originalname);
-    console.log("Folder:", req.body.folder);
+    // console.log("Upload request received");
+    // console.log("File object:", req.file);
+    // console.log("File size:", req.file?.size);
+    // console.log("File buffer length:", req.file?.buffer?.length);
+    // console.log("File original name:", req.file?.originalname);
+    // console.log("Folder:", req.body.folder);
 
     if (!req.file) {
       return res.status(400).json({

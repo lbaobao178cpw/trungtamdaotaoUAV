@@ -87,7 +87,7 @@ router.post("/", verifyStudent, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi tạo comment:", error);
+    // console.error("Lỗi tạo comment:", error);
     res.status(500).json({ error: "Lỗi server khi tạo comment" });
   }
 });
@@ -144,7 +144,7 @@ router.get("/course/:course_id", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi lấy comments:", error);
+    // console.error("Lỗi lấy comments:", error);
     res.status(500).json({ error: "Lỗi server khi lấy comments" });
   }
 });
@@ -193,7 +193,7 @@ router.get("/my-comments", verifyStudent, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi lấy comments của user:", error);
+    // console.error("Lỗi lấy comments của user:", error);
     res.status(500).json({ error: "Lỗi server khi lấy comments" });
   }
 });
@@ -228,7 +228,7 @@ router.get("/:id", verifyAdmin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi lấy comment:", error);
+    // console.error("Lỗi lấy comment:", error);
     res.status(500).json({ error: "Lỗi server khi lấy comment" });
   }
 });
@@ -286,7 +286,7 @@ router.put("/:id", verifyStudent, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi cập nhật comment:", error);
+    // console.error("Lỗi cập nhật comment:", error);
     res.status(500).json({ error: "Lỗi server khi cập nhật comment" });
   }
 });
@@ -324,7 +324,7 @@ router.delete("/:id", verifyStudent, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi xóa comment:", error);
+    // console.error("Lỗi xóa comment:", error);
     res.status(500).json({ error: "Lỗi server khi xóa comment" });
   }
 });

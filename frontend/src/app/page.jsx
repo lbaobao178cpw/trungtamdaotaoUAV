@@ -354,7 +354,6 @@ useEffect(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 1-based
-    console.log("📋 [LandingPage] Fetching all exams | User:", user?.id || 'null', "| Token:", localStorage.getItem('user_token') ? '✅' : '❌');
 
     // Fetch exams for the current month (include past dates in month)
     const endpoint = `/exams/month?year=${year}&month=${month}`;
@@ -362,7 +361,6 @@ useEffect(() => {
     apiClient.get(endpoint)
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
-        console.log("✅ [LandingPage] Fetched", data.length, "exams");
         setMonthlyExams(data);
       })
       .catch((err) => console.error("❌ [LandingPage] Lỗi fetch exams:", err));
@@ -372,7 +370,6 @@ useEffect(() => {
   useEffect(() => {
     const handleUserChange = () => {
       const updatedUser = JSON.parse(localStorage.getItem("user"));
-      console.log("📢 [LandingPage] User changed:", updatedUser?.id || 'null');
       setUser(updatedUser);
     };
 

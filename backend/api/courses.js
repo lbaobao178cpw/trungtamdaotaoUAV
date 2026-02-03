@@ -12,7 +12,7 @@ const { verifyToken, verifyAdmin, verifyStudent, verifyTokenOptional } = require
     );
     if (columns1.length === 0) {
       await db.query("ALTER TABLE lessons ADD COLUMN max_attempts INT DEFAULT 0");
-      console.log('✅ Added max_attempts column to lessons table');
+      // console.log('✅ Added max_attempts column to lessons table');
     }
 
     // Kiểm tra và thêm cột pass_score
@@ -21,10 +21,10 @@ const { verifyToken, verifyAdmin, verifyStudent, verifyTokenOptional } = require
     );
     if (columns2.length === 0) {
       await db.query("ALTER TABLE lessons ADD COLUMN pass_score INT DEFAULT 0");
-      console.log('✅ Added pass_score column to lessons table');
+      // console.log('✅ Added pass_score column to lessons table');
     }
   } catch (error) {
-    console.error('Migration error:', error.message);
+    // console.error('Migration error:', error.message);
   }
 })();
 
@@ -63,7 +63,7 @@ router.get("/:id/view-stats", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi lấy thống kê lượt xem:", error);
+    // console.error("Lỗi lấy thống kê lượt xem:", error);
     res.status(500).json({ error: "Lỗi server khi lấy thống kê lượt xem" });
   }
 });
@@ -118,7 +118,7 @@ router.post("/:id/record-view", verifyStudent, async (req, res) => {
     }
 
   } catch (error) {
-    console.error("Lỗi ghi nhận lượt xem:", error);
+    // console.error("Lỗi ghi nhận lượt xem:", error);
     res.status(500).json({ error: "Lỗi server khi ghi nhận lượt xem" });
   }
 });
@@ -173,7 +173,7 @@ router.get("/related/level/:id", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Lỗi lấy khóa học liên quan:", error);
+    // console.error("Lỗi lấy khóa học liên quan:", error);
     res.status(500).json({ error: "Lỗi server khi lấy khóa học liên quan" });
   }
 });

@@ -15,12 +15,8 @@ const THUMB_ROOT = path.join(UPLOAD_ROOT, "thumbs");
 let sharp;
 try {
   sharp = require("sharp");
-  // Chỉ log khi ở môi trường dev để đỡ rác log trên server
-  if (process.env.NODE_ENV !== 'production') {
-      console.log("✅ Sharp: OK");
-  }
 } catch (e) {
-  console.warn("⚠️ Sharp: Missing - Thumbnail feature disabled");
+  // sharp not available — silently continue (thumbnail feature disabled)
 }
 
 // Tạo thư mục nếu chưa có
@@ -28,7 +24,7 @@ try {
     fs.ensureDirSync(UPLOAD_ROOT);
     fs.ensureDirSync(THUMB_ROOT);
 } catch (error) {
-    console.error("❌ Lỗi tạo thư mục upload. Kiểm tra quyền ghi (Permission 755/777) trên Server!", error);
+  // fail silently — directory creation errors handled by upstream
 }
 
 const resolvePath = (clientPath = "") => {
@@ -66,9 +62,7 @@ const generateThumbnail = async (fileFullPath, relativeFolder) => {
       .jpeg({ quality: 50 })
       .toFile(path.join(targetThumbFolder, filename));
   } catch (e) {
-    // Trên hosting, lỗi sharp thường xuyên xảy ra do thiếu resource, 
-    // ta catch nhẹ nhàng để không crash server
-    console.error(`Thumb error (${filename}):`, e.message);
+    // ignore thumbnail generation errors
   }
 };
 

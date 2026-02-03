@@ -1,4 +1,13 @@
+// Temporarily suppress console output while loading dotenv (some packages print tips)
+const _origLog = console.log;
+const _origWarn = console.warn;
+const _origError = console.error;
+console.log = console.warn = console.error = () => {};
 require('dotenv').config();
+// restore console
+console.log = _origLog;
+console.warn = _origWarn;
+console.error = _origError;
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -46,11 +55,6 @@ const getCorsOrigins = () => {
 };
 
 const allowedOrigins = getCorsOrigins();
-
-console.log('📋 CORS Configuration:');
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-console.log('CORS_ORIGINS:', process.env.CORS_ORIGINS);
-console.log('✅ Allowed Origins:', allowedOrigins);
 
 // --- CẤU HÌNH CORS ---
 // Simple CORS: Allow all origins with credentials
@@ -117,28 +121,26 @@ app.use("/api/otp", otpRoute);
 app.use("/api/nghiep-vu-hang-b", nghiepVuHangBRoute);
 
 // --- KHỞI ĐỘNG SERVER & KIỂM TRA DB ---
+// Silence runtime console output by default; keep originals to print only the server port
+const __origConsoleLog = console.log;
+const __origConsoleWarn = console.warn;
+const __origConsoleError = console.error;
+console.log = console.warn = console.error = () => {};
+
 const startServer = async () => {
   try {
     // Test connection
     const [result] = await db.execute("SELECT 1");
-    console.log("✅ Database connected successfully via Aiven!");
 
     // NOTE: Automatic DB alteration/migration code removed per request.
     // Server will only test DB connection and start; it will not modify schema or seed data.
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on PORT: ${PORT}`);
-      console.log(`📂 Upload Storage Path: ${UPLOAD_ROOT}`);
+      // print only the server started message using original console.log
+      __origConsoleLog(`🚀 Server is running on PORT: ${PORT}`);
     });
 
   } catch (error) {
-    console.error("❌ Database Connection Failed:");
-    console.error("Message:", error.message);
-    console.error("Code:", error.code);
-
-    if (error.code === 'HANDSHAKE_SSL_ERROR' || error.code === 'ER_NOT_SUPPORTED_AUTH_MODE') {
-      console.warn("⚠️  LƯU Ý: Aiven yêu cầu SSL. Hãy kiểm tra lại file config/db.js.");
-    }
   }
 };
 

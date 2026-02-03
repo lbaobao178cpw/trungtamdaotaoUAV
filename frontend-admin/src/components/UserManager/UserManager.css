@@ -673,3 +673,12 @@
   font-weight: 600;
   color: #1f2937;
 }
+
+/* Sticky sidebar for list */
+.solution-manager-container .panel:last-child {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 24px);
+  max-height: calc(100vh - var(--header-height, 64px) - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}

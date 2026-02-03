@@ -69,7 +69,6 @@ function LoginPage() {
             // === Lưu deviceId để xác định thiết bị ===
             if (data.deviceId) {
                 localStorage.setItem('deviceId', data.deviceId);
-                console.log('✅ Device ID saved:', data.deviceId, '- Device:', data.deviceName);
             }
 
             // 2a. Trigger event để các component lắng nghe

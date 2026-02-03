@@ -17,7 +17,6 @@ export default function ExamRegistrations() {
       const data = await res.json();
       setRegistrations(data);
     } catch (err) {
-      console.error("Error fetching registrations:", err);
       setRegistrations([]);
     } finally {
       setLoading(false);
@@ -120,7 +119,6 @@ export default function ExamRegistrations() {
       }
       await fetchRegistrations();
     } catch (err) {
-      console.error("Error updating status:", err);
       alert("Cập nhật thất bại: " + (err.message || "Lỗi"));
     }
   };

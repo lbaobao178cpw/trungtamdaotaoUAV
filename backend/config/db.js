@@ -14,12 +14,8 @@ try {
             ca: fs.readFileSync(caCertPath),
             rejectUnauthorized: true // Có chứng chỉ -> Bảo mật cao
         };
-        console.log("🔒 Đã tìm thấy chứng chỉ SSL (ca.pem).");
-    } else {
-        console.log("⚠️ Không tìm thấy file ca.pem, đang chạy chế độ không an toàn.");
     }
 } catch (err) {
-    console.error("Lỗi đọc file cert:", err.message);
 }
 
 const pool = mysql.createPool({
@@ -32,8 +28,7 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     ssl: sslOptions, // Dùng SSL cấu hình ở trên
-    charset: 'utf8mb4', // Hỗ trợ emoji và ký tự Unicode đầy đủ
-    collation: 'utf8mb4_unicode_ci' // Collation hỗ trợ UTF-8
+    charset: 'utf8mb4' // Hỗ trợ emoji và ký tự Unicode đầy đủ
 });
 
 module.exports = pool;

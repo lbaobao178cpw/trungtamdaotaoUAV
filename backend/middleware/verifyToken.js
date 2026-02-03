@@ -65,7 +65,7 @@ const verifyToken = async (req, res, next) => {
         });
       }
     } catch (dbError) {
-      console.log('Lỗi kiểm tra session (bảng chưa tồn tại):', dbError.message);
+      // console.log('Lỗi kiểm tra session (bảng chưa tồn tại):', dbError.message);
       // Nếu bảng user_sessions chưa tồn tại thì bỏ qua kiểm tra
     }
 
