@@ -1,13 +1,4 @@
-// Temporarily suppress console output while loading dotenv (some packages print tips)
-const _origLog = console.log;
-const _origWarn = console.warn;
-const _origError = console.error;
-console.log = console.warn = console.error = () => {};
 require('dotenv').config();
-// restore console
-console.log = _origLog;
-console.warn = _origWarn;
-console.error = _origError;
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
