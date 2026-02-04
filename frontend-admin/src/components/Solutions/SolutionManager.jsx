@@ -306,7 +306,6 @@ export default function SolutionManager() {
       updateSectionImage(targetContext.sectionIdx, targetContext.imgIdx, res.url);
       notifySuccess('Tải ảnh minh họa lên Cloudinary thành công');
     } catch (err) {
-      console.error('Illustration upload error:', err);
       notifyError(err.message || 'Lỗi khi upload ảnh');
     } finally {
       setUploadingIllustration(false);
@@ -355,7 +354,6 @@ export default function SolutionManager() {
       updateClient(targetContext.imgIdx, res.url);
       notifySuccess('Tải logo khách hàng lên Cloudinary thành công');
     } catch (err) {
-      console.error('Client upload error:', err);
       notifyError(err.message || 'Lỗi khi upload logo');
     } finally {
       setUploadingClient(false);
@@ -387,7 +385,6 @@ export default function SolutionManager() {
       setVideoPreviewKey(prev => prev + 1);
       notifySuccess('Tải video giải pháp lên Cloudinary thành công');
     } catch (err) {
-      console.error('Video upload error:', err);
       notifyError(err.message || 'Lỗi khi upload video');
     } finally {
       setUploadingVideo(false);
@@ -414,7 +411,6 @@ export default function SolutionManager() {
       setForm((p) => ({ ...p, image: res.url }));
       notifySuccess('Tải ảnh giải pháp lên Cloudinary thành công');
     } catch (err) {
-      console.error('Image upload error:', err);
       notifyError(err.message || 'Lỗi khi upload ảnh');
     } finally {
       setUploadingImage(false);
@@ -465,7 +461,6 @@ export default function SolutionManager() {
       refreshSolutions();
       if (form.id === id) handleAddNew();
     } catch (error) {
-      console.error(error);
       notifyError("Lỗi khi xóa");
     }
   };
