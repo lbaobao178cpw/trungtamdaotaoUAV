@@ -131,6 +131,16 @@ a:hover {
   gap: 8px;
 }
 
+/* Swiper styles for navigation */
+.header-nav-swiper {
+  flex: 1;
+  max-width: none;
+}
+
+.header-nav-swiper .swiper-slide {
+  width: auto;
+}
+
 .nav-item {
   padding: 10px 20px;
   border-radius: var(--radius);
@@ -580,7 +590,7 @@ a:hover {
   max-height: 36px;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
 }
 

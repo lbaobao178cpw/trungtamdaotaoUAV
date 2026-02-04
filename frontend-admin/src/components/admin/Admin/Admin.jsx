@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Import Swiper
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/free-mode';
+
 // --- IMPORT MANAGERS ---
 import PointManager from "../../points/PointManager";
 import SolutionManager from "../../Solutions/SolutionManager";
@@ -98,71 +106,95 @@ export default function Admin() {
           )}
         </div>
 
-        <nav className="header-nav">
-          <button
-            className={`nav-item ${activeTab === "model3d" ? "active" : ""}`}
-            onClick={() => setActiveTab("model3d")}
-          >
-            Quản lý Model 3D
-          </button>
+        <Swiper
+          modules={[FreeMode]}
+          spaceBetween={8}
+          slidesPerView="auto"
+          freeMode={true}
+          grabCursor={true}
+          className="header-nav-swiper"
+        >
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "model3d" ? "active" : ""}`}
+              onClick={() => setActiveTab("model3d")}
+            >
+              Quản lý Model 3D
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "training" ? "active" : ""}`}
-            onClick={() => setActiveTab("training")}
-          >
-            Đào tạo & Khóa học
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "training" ? "active" : ""}`}
+              onClick={() => setActiveTab("training")}
+            >
+              Đào tạo & Khóa học
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "exams" ? "active" : ""}`}
-            onClick={() => setActiveTab("exams")}
-          >
-            Quản lý Lịch thi
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "exams" ? "active" : ""}`}
+              onClick={() => setActiveTab("exams")}
+            >
+              Quản lý Lịch thi
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "exam_registrations" ? "active" : ""}`}
-            onClick={() => setActiveTab("exam_registrations")}
-          >
-            Quản lý Đăng ký thi
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "exam_registrations" ? "active" : ""}`}
+              onClick={() => setActiveTab("exam_registrations")}
+            >
+              Quản lý Đăng ký thi
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "users" ? "active" : ""}`}
-            onClick={() => setActiveTab("users")}
-          >
-            Quản lý Người dùng
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "users" ? "active" : ""}`}
+              onClick={() => setActiveTab("users")}
+            >
+              Quản lý Người dùng
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "points" ? "active" : ""}`}
-            onClick={() => setActiveTab("points")}
-          >
-            Quản lý Điểm 3D
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "points" ? "active" : ""}`}
+              onClick={() => setActiveTab("points")}
+            >
+              Quản lý Điểm 3D
+            </button>
+          </SwiperSlide>
 
-          <button
-            className={`nav-item ${activeTab === "solutions" ? "active" : ""}`}
-            onClick={() => setActiveTab("solutions")}
-          >
-            Quản lý Giải pháp
-          </button>
-          <button
-            className={`nav-item ${activeTab === "lookup" ? "active" : ""}`}
-            onClick={() => setActiveTab("lookup")}
-          >
-            Quản lý Giấy phép
-          </button>
-          {/* === CẬP NHẬT TAB NÀY === */}
-          <button
-            className={`nav-item ${activeTab === "display" ? "active" : ""}`}
-            onClick={() => setActiveTab("display")}
-          >
-            Giao diện & Thông báo
-          </button>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "solutions" ? "active" : ""}`}
+              onClick={() => setActiveTab("solutions")}
+            >
+              Quản lý Giải pháp
+            </button>
+          </SwiperSlide>
 
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "lookup" ? "active" : ""}`}
+              onClick={() => setActiveTab("lookup")}
+            >
+              Quản lý Giấy phép
+            </button>
+          </SwiperSlide>
 
-        </nav>
+          <SwiperSlide>
+            <button
+              className={`nav-item ${activeTab === "display" ? "active" : ""}`}
+              onClick={() => setActiveTab("display")}
+            >
+              Giao diện & Thông báo
+            </button>
+          </SwiperSlide>
+        </Swiper>
       </header>
 
       {/* 2. MAIN CONTENT AREA */}
