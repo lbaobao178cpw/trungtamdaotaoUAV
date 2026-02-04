@@ -370,14 +370,15 @@
 }
 
 .btn-outline {
-  background: transparent;
+  background: #dbeafe;
   border: 1px solid #d1d5db;
-  color: #6b7280;
+  color: #1e40af;
   padding: 6px 10px;
+  transition: background-color 0.2s ease;
 }
 
 .btn-outline:hover {
-  background: #f9fafb;
+  background: #bfdbfe;
   border-color: #9ca3af;
 }
 
