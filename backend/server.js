@@ -20,8 +20,6 @@ const getCorsOrigins = () => {
   origins.push("http://localhost:5173");
   origins.push("http://localhost:5174");
   origins.push("http://localhost:3000");
-  origins.push("http://127.0.0.1:5173");
-  origins.push("http://127.0.0.1:5174");
 
   // Production origins từ .env
   if (process.env.FRONTEND_URL) {
@@ -128,7 +126,7 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       // print only the server started message using original console.log
-      __origConsoleLog(`🚀 Server is running on PORT: ${PORT}`);
+      __origConsoleLog(`Server is running on PORT: ${PORT}`);
     });
 
   } catch (error) {
