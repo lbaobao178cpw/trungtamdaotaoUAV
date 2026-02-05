@@ -261,8 +261,58 @@
 }
 
 @media (max-width: 900px) {
-  .video-watermark .wm-text { font-size: 20px; }
-  .video-watermark .wm-text:nth-child(2) { top: 12%; }
+  .video-watermark .wm-text { 
+    font-size: 22px; 
+  }
+  .video-watermark .wm-text:nth-child(1) {
+    top: 20%;
+    left: 5%;
+  }
+  .video-watermark .wm-text:nth-child(2) { 
+    top: 40%;
+  }
+  .video-watermark .wm-text:nth-child(3) {
+    top: 70%;
+    right: 10%;
+  }
+}
+
+@media (max-width: 768px) {
+  .video-watermark .wm-text { 
+    font-size: 16px;
+  }
+  .video-watermark .wm-text:nth-child(1) {
+    top: 15%;
+    left: 5%;
+  }
+  .video-watermark .wm-text:nth-child(2) { 
+    top: 35%;
+    left: 50%;
+  }
+  .video-watermark .wm-text:nth-child(3) {
+    top: 65%;
+    right: 8%;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-watermark .wm-text { 
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+  }
+  .video-watermark .wm-text:nth-child(1) {
+    top: 10%;
+    left: 3%;
+  }
+  .video-watermark .wm-text:nth-child(2) { 
+    top: 30%;
+    left: 50%;
+    font-size: 12px;
+  }
+  .video-watermark .wm-text:nth-child(3) {
+    top: 60%;
+    right: 5%;
+  }
 }
 
 /* YouTube iframe - centered with max dimensions (giống video upload) */
