@@ -1174,15 +1174,22 @@ h3.section-title {
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s;
+  position: relative;
 }
 
 .news-badge {
+  position: absolute;   /* 👈 thêm */
+  top: 12px;            /* chỉnh khoảng cách */
+  right: 12px;
+
   background: var(--primary-yellow);
   color: #ffffff;
-  padding: 8px 15px;
-  font-size: 0.85rem;
+  padding: 6px 12px;
+  font-size: 0.75rem;
   font-weight: 600;
+  border-radius: 20px;
 }
+
 
 .news-content {
   padding: 25px;
@@ -1649,7 +1656,7 @@ h3.section-title {
 
 .cert-tabs-header {
   display: flex;
-  gap: 21px;
+  gap: 16px;
   overflow-x: auto;
   /* bật trượt ngang */
   white-space: nowrap;
