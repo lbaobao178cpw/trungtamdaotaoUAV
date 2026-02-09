@@ -1003,7 +1003,10 @@ function CourseDetailPage() {
                     ref={videoRef}
                     key={activeLesson.id}
                     controls
-                    controlsList="nofullscreen"
+                    controlsList="nofullscreen nodownload noplaybackrate"
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    onContextMenu={(e) => e.preventDefault()}
                     autoPlay
                     className="main-video-player"
                     onTimeUpdate={handleVideoTimeUpdate}

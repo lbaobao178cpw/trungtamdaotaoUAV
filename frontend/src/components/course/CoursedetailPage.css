@@ -236,7 +236,7 @@
   position: absolute;
   transform: rotate(-45deg);
   transform-origin: center center;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 900;
   color: rgba(255,255,255,0.36);
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
@@ -250,69 +250,19 @@
 }
 
 .video-watermark .wm-text:nth-child(2) {
-  top: 40%;
+  top: 45%;
   left: 45%;
   transform: translateX(-50%) rotate(-45deg);
 }
 
 .video-watermark .wm-text:nth-child(3) {
-  top:65%;
+  top:78%;
   right: 7%;
 }
 
 @media (max-width: 900px) {
-  .video-watermark .wm-text { 
-    font-size: 22px; 
-  }
-  .video-watermark .wm-text:nth-child(1) {
-    top: 20%;
-    left: 5%;
-  }
-  .video-watermark .wm-text:nth-child(2) { 
-    top: 40%;
-  }
-  .video-watermark .wm-text:nth-child(3) {
-    top: 70%;
-    right: 10%;
-  }
-}
-
-@media (max-width: 768px) {
-  .video-watermark .wm-text { 
-    font-size: 16px;
-  }
-  .video-watermark .wm-text:nth-child(1) {
-    top: 15%;
-    left: 5%;
-  }
-  .video-watermark .wm-text:nth-child(2) { 
-    top: 35%;
-    left: 50%;
-  }
-  .video-watermark .wm-text:nth-child(3) {
-    top: 65%;
-    right: 8%;
-  }
-}
-
-@media (max-width: 480px) {
-  .video-watermark .wm-text { 
-    font-size: 13px;
-    color: rgba(255,255,255,0.3);
-  }
-  .video-watermark .wm-text:nth-child(1) {
-    top: 10%;
-    left: 3%;
-  }
-  .video-watermark .wm-text:nth-child(2) { 
-    top: 30%;
-    left: 50%;
-    font-size: 12px;
-  }
-  .video-watermark .wm-text:nth-child(3) {
-    top: 60%;
-    right: 5%;
-  }
+  .video-watermark .wm-text { font-size: 20px; }
+  .video-watermark .wm-text:nth-child(2) { top: 12%; }
 }
 
 /* YouTube iframe - centered with max dimensions (giống video upload) */
@@ -336,19 +286,53 @@
   object-fit: contain;
 }
 
-/* Hide fullscreen button on video controls */
+/* Hide fullscreen button */
 .video-wrapper video::-webkit-media-controls-fullscreen-button,
 .main-video-player::-webkit-media-controls-fullscreen-button {
   display: none !important;
 }
-
-.video-wrapper video::-moz-media-controls-fullscreen-button,
-.main-video-player::-moz-media-controls-fullscreen-button {
+video::-webkit-media-controls-fullscreen-button {
   display: none !important;
 }
 
-.video-wrapper video::-ms-media-controls-fullscreen-button,
-.main-video-player::-ms-media-controls-fullscreen-button {
+/* Hide overflow menu (3 chấm) */
+.video-wrapper video::-webkit-media-controls-overflow-button,
+.main-video-player::-webkit-media-controls-overflow-button {
+  display: none !important;
+}
+video::-webkit-media-controls-overflow-button {
+  display: none !important;
+}
+
+/* Hide download button */
+.video-wrapper video::-webkit-media-controls-download-button,
+.main-video-player::-webkit-media-controls-download-button {
+  display: none !important;
+}
+video::-webkit-media-controls-download-button {
+  display: none !important;
+}
+
+/* Hide picture-in-picture button */
+.video-wrapper video::-webkit-media-controls-picture-in-picture-button,
+.main-video-player::-webkit-media-controls-picture-in-picture-button {
+  display: none !important;
+}
+video::-webkit-media-controls-picture-in-picture-button {
+  display: none !important;
+}
+
+/* Hide playback rate / speed button */
+.video-wrapper video::-webkit-media-controls-playback-speed-button,
+.main-video-player::-webkit-media-controls-playback-speed-button {
+  display: none !important;
+}
+video::-webkit-media-controls-playback-speed-button {
+  display: none !important;
+}
+
+/* Firefox: hide all extra buttons */
+video::-moz-media-controls-fullscreen-button {
   display: none !important;
 }
 
