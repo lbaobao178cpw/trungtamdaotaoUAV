@@ -84,6 +84,7 @@ body {
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-y: scroll; /* Luôn hiển thị scrollbar để tránh layout shift */
 }
 
 a {
@@ -129,6 +130,16 @@ a:hover {
 .header-nav {
   display: flex;
   gap: 8px;
+}
+
+/* Swiper styles for navigation */
+.header-nav-swiper {
+  flex: 1;
+  max-width: none;
+}
+
+.header-nav-swiper .swiper-slide {
+  width: auto;
 }
 
 .nav-item {
@@ -580,7 +591,7 @@ a:hover {
   max-height: 36px;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
 }
 

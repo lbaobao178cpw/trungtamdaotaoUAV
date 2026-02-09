@@ -62,6 +62,9 @@ function CourseDetailPage() {
 
   const [scoreRefreshTrigger, setScoreRefreshTrigger] = useState(0);
 
+  // === FULLSCREEN STATE ===
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   // === VIDEO TRACKING STATE ===
   const videoRef = useRef(null);
   const videoTrackingTimeoutRef = useRef(null);
@@ -72,6 +75,12 @@ function CourseDetailPage() {
   // otherwise prefer user's email, then displayName or username.
   const watermarkBase = (localStorage.getItem('watermark_text') || (currentUser && (currentUser.email || currentUser.displayName || currentUser.username)) || 'Guest');
   const watermarkText = `${watermarkBase} • ${new Date().toLocaleDateString()}${course ? ' • ' + (course.title || '') : ''}`;
+
+  // Function to generate watermark SVG
+  const generateWatermarkSVG = (text) => {
+    const encodedText = encodeURIComponent(text);
+    return `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3e%3ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='20' font-weight='900' fill='rgba(255,255,255,0.36)' text-anchor='middle' dominant-baseline='middle' transform='rotate(-45 180 90)'%3e${encodedText}%3c/text%3e%3c/svg%3e`;
+  };
 
   const handleEditComment = (comment) => {
     setEditingCommentId(comment.id);
@@ -171,7 +180,7 @@ function CourseDetailPage() {
         if (res.ok) {
         }
       } catch (err) {
-        console.error('Lỗi ghi nhận lượt xem:', err);
+        // Lỗi ghi nhận lượt xem
       }
     };
 
@@ -184,6 +193,44 @@ function CourseDetailPage() {
     return () => clearInterval(interval); // cleanup khi rời trang
   }, [id, token]);
 
+  // === FULLSCREEN DETECTION ===
+  useEffect(() => {
+    let fullscreenOverlay = null;
+
+    const handleFullscreenChange = () => {
+      const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      const isFs = !!fsElement;
+      setIsFullscreen(isFs);
+
+      if (isFs && !fullscreenOverlay) {
+        // Create overlay and append to body
+        fullscreenOverlay = document.createElement('div');
+        fullscreenOverlay.className = 'fullscreen-watermark';
+        fullscreenOverlay.setAttribute('aria-hidden', 'true');
+        fullscreenOverlay.innerHTML = `
+          <span class="wm-text">${watermarkText}</span>
+          <span class="wm-text">${watermarkText}</span>
+          <span class="wm-text">${watermarkText}</span>
+        `;
+        document.body.appendChild(fullscreenOverlay);
+      } else if (!isFs && fullscreenOverlay) {
+        // Remove overlay
+        document.body.removeChild(fullscreenOverlay);
+        fullscreenOverlay = null;
+      }
+    };
+
+    const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+    events.forEach(event => document.addEventListener(event, handleFullscreenChange));
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, handleFullscreenChange));
+      if (fullscreenOverlay) {
+        document.body.removeChild(fullscreenOverlay);
+      }
+    };
+  }, [watermarkText]);
+
 
   // === UTILITY: Decode JWT để lấy user info ===
   const decodeToken = (token) => {
@@ -192,7 +239,6 @@ function CourseDetailPage() {
       const decoded = JSON.parse(atob(payload));
       return decoded;
     } catch (e) {
-      console.error('Lỗi decode token:', e);
       return null;
     }
   };
@@ -215,7 +261,7 @@ function CourseDetailPage() {
         setComments(data.comments || []);
       }
     } catch (err) {
-      console.error("Lỗi tải comments:", err);
+      // Lỗi tải comments
     } finally {
       setLoadingComments(false);
     }
@@ -273,12 +319,9 @@ function CourseDetailPage() {
     // === PAUSE VIDEO KHI TAB KHÔNG ACTIVE ===
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log('📵 Tab ẩn - pause video');
         if (videoRef.current && !videoRef.current.paused) {
           videoRef.current.pause();
         }
-      } else {
-        console.log('📱 Tab đã quay lại');
       }
     };
 
@@ -366,7 +409,7 @@ function CourseDetailPage() {
         fetchComments();
 
       } catch (err) {
-        console.error("Lỗi fetch detail:", err);
+        // Lỗi fetch detail
       } finally {
         setLoading(false);
       }
@@ -483,7 +526,6 @@ function CourseDetailPage() {
         });
         setQuizAttemptsInfo(response.data);
       } catch (error) {
-        console.error('Lỗi kiểm tra số lần làm quiz:', error);
         setQuizAttemptsInfo(null);
       } finally {
         setLoadingAttempts(false);
@@ -502,23 +544,18 @@ function CourseDetailPage() {
         const isYouTube = lesson.src?.includes('youtube.com/embed');
 
         if (lesson.type === 'video' && !isYouTube) {
-          console.log(`🎥 HTML5 Video detected: ${lesson.title} - Tracking via timeupdate`);
           // Cho HTML5 video, tracking sẽ được handle bởi onTimeUpdate event
           // Không cần track ngay lúc này
         } else if (lesson.type === 'video' && isYouTube) {
-          console.log(`▶️ YouTube Video detected: ${lesson.title} - Tracking immediately (can't track %)`);
           // YouTube videos: Track ngay khi select
           // Vì không thể access duration/currentTime do cross-origin restrictions
           await axios.post(`${API_BASE}/${id}/track-lesson/${lesson.id}`, {}, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log(`✅ Tracked YouTube lesson ${lesson.id}`);
-
           // Recalculate score
           await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log(`📊 Score recalculated`);
 
           setScoreRefreshTrigger(prev => prev + 1);
 
@@ -529,18 +566,16 @@ function CourseDetailPage() {
           await axios.post(`${API_BASE}/${id}/track-lesson/${lesson.id}`, {}, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log(`✅ Tracked lesson ${lesson.id} (${lesson.type})`);
 
           // Recalculate score
           await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log(`📊 Score recalculated`);
 
           setScoreRefreshTrigger(prev => prev + 1);
         }
       } catch (err) {
-        console.log('Progress tracking not critical, continue anyway', err);
+        // Progress tracking not critical, continue anyway
       }
     }
   };
@@ -562,7 +597,6 @@ function CourseDetailPage() {
 
     // ❌ KHÔNG TRACK nếu tab không active
     if (document.hidden) {
-      console.log('⚠️ Tab không active, dừng tracking');
       return;
     }
 
@@ -574,7 +608,6 @@ function CourseDetailPage() {
 
     // Send progress update every 30 seconds of watch time
     if (currentTime - lastProgressUpdateRef.current >= 30) {
-      console.log(`📊 Sending progress update at ${currentTime.toFixed(1)}s...`);
       try {
         const token = localStorage.getItem('user_token');
         await axios.post(`${API_BASE}/${id}/track-video/${activeLesson.id}`, {
@@ -584,9 +617,8 @@ function CourseDetailPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         lastProgressUpdateRef.current = currentTime;
-        console.log(`✅ Progress updated at ${currentTime.toFixed(1)}s`);
       } catch (err) {
-        console.log('Progress update failed (non-critical):', err);
+        // Progress update failed (non-critical)
       }
     }
 
@@ -594,7 +626,6 @@ function CourseDetailPage() {
     const watchedPercentage = (currentTime / duration) * 100;
 
     if (watchedPercentage >= 80 && !videoTrackingTimeoutRef.current) {
-      console.log(`🎬 User watched ${watchedPercentage.toFixed(1)}% - tracking...`);
 
       try {
         const token = localStorage.getItem('user_token');
@@ -607,13 +638,10 @@ function CourseDetailPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        console.log(`✅ Video tracked (${watchedPercentage.toFixed(1)}%)`);
-
         // 2. Recalculate overall score
         await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        console.log(`📊 Score recalculated`);
 
         // 3. Refresh scoreboard
         setScoreRefreshTrigger(prev => prev + 1);
@@ -621,7 +649,7 @@ function CourseDetailPage() {
         // Mark so we don't track again
         videoTrackingTimeoutRef.current = true;
       } catch (err) {
-        console.log('Video tracking failed (non-critical):', err);
+        // Video tracking failed (non-critical)
       }
     }
   };
@@ -630,7 +658,6 @@ function CourseDetailPage() {
     if (!videoRef.current || !activeLesson || activeLesson.type !== 'video') return;
 
     const duration = videoRef.current.duration;
-    console.log(`🎬 Video ended - tracking full completion...`);
 
     try {
       const token = localStorage.getItem('user_token');
@@ -643,18 +670,15 @@ function CourseDetailPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      console.log(`✅ Video tracked (100% - completed)`);
-
       // 2. Recalculate overall score
       await axios.post(`${API_BASE}/${id}/calculate-score/${currentUser?.id}`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      console.log(`📊 Score recalculated after video ended`);
 
       // 3. Refresh scoreboard
       setScoreRefreshTrigger(prev => prev + 1);
     } catch (err) {
-      console.log('Video tracking failed on end (non-critical):', err);
+      // Video tracking failed on end (non-critical)
     }
   };
 
@@ -681,8 +705,7 @@ function CourseDetailPage() {
 
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      console.error('Download failed:', err);
-      // Fallback to direct link
+      // Download failed, fallback to direct link
       const a = document.createElement('a');
       a.href = activeLesson.documentUrl || activeLesson.src || activeLesson.video_url;
       const fallbackName = activeLesson.displayName || activeLesson.title;
@@ -708,7 +731,6 @@ function CourseDetailPage() {
     // Nếu không có thì mặc định 60 phút
     const quizTimeInMinutes = activeLesson?.quiz_time || 60;
     const quizTimeInSeconds = quizTimeInMinutes * 60;
-    console.log('Quiz time from lesson:', activeLesson?.quiz_time, 'Using:', quizTimeInMinutes, 'minutes');
     setQuizStarted(true);
     setQuizSubmitted(false);
     setUserAnswers({});
@@ -740,13 +762,12 @@ function CourseDetailPage() {
           try {
             userId = JSON.parse(storedUser).id;
           } catch (e) {
-            console.error('Không thể parse user từ localStorage');
+            // Không thể parse user từ localStorage
           }
         }
       }
 
       if (!userId) {
-        console.warn('Không tìm thấy userId, bỏ qua lưu điểm');
         notifySuccess(`Đã nộp bài! Điểm: ${quizScorePercent.toFixed(1)}/100`);
         return;
       }
@@ -778,10 +799,10 @@ function CourseDetailPage() {
         });
         setQuizAttemptsInfo(attemptsRes.data);
       } catch (e) {
-        console.error('Lỗi refresh quiz attempts:', e);
+        // Lỗi refresh quiz attempts
       }
     } catch (error) {
-      console.error('Lỗi lưu điểm quiz:', error);
+      // Lỗi lưu điểm quiz
       // Vẫn hiển thị điểm cho user
       const totalQuestions = activeLesson.questions.length;
       const quizScorePercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
@@ -905,11 +926,12 @@ function CourseDetailPage() {
     );
 
   return (
-    <div className="lms-page" ref={topRef}>
+    <>
+      <div className="lms-page" ref={topRef}>
 
-      {/* PLAYER SECTION */}
-      <div className="lms-player-section">
-        <div className="player-header">
+        {/* PLAYER SECTION */}
+        <div className="lms-player-section">
+          <div className="player-header">
           <div className="header-left">
             <button className="btn-back-list" onClick={() => navigate('/khoa-hoc')}>
               Danh Sách Khóa Học
@@ -970,11 +992,10 @@ function CourseDetailPage() {
                   <iframe
                     key={activeLesson.id}
                     className="main-video-player"
-                    src={activeLesson.src + '?modestbranding=1&rel=0&fs=1&autoplay=0'}
+                    src={activeLesson.src + '?modestbranding=1&rel=0&fs=0&autoplay=0'}
                     title={activeLesson.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     sandbox="allow-same-origin allow-scripts allow-presentation allow-popups"
-                    allowFullScreen
                     style={{ border: 'none' }}
                   />
                 ) : (
@@ -982,6 +1003,7 @@ function CourseDetailPage() {
                     ref={videoRef}
                     key={activeLesson.id}
                     controls
+                    controlsList="nofullscreen"
                     autoPlay
                     className="main-video-player"
                     onTimeUpdate={handleVideoTimeUpdate}
@@ -1818,7 +1840,8 @@ function CourseDetailPage() {
           </div>
         </div>
       </div>
-    </div>
+    </div>  
+     </>
   );
 }
 

@@ -146,7 +146,6 @@ export default function PointManager() {
         throw new Error(result.error);
       }
     } catch (error) {
-      console.error("Save Error:", error);
       notifyError(`LỖI: ${error.message}`);
     }
   }, [pointForm, isEditingPoint, savePoint, refetch]);
@@ -243,7 +242,6 @@ export default function PointManager() {
         setLibraryImages([]);
       }
     } catch (error) {
-      console.error("Error loading image library:", error);
       setLibraryImages([]);
     } finally {
       setLoadingLibrary(false);

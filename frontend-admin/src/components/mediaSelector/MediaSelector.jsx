@@ -196,7 +196,9 @@ export default function MediaSelector({ onSelect, onClose }) {
                 setSelectedPaths(new Set());
                 setActiveMenuId(null);
             })
-            .catch(e => console.error(e));
+            .catch(e => {
+              // Error fetching files
+            });
     }, []);
 
     useEffect(() => { fetchFiles(currentPath); }, [currentPath, fetchFiles]);
@@ -233,7 +235,7 @@ export default function MediaSelector({ onSelect, onClose }) {
         const promises = clipboard.items.map(async (item) => {
             const body = { itemName: item.filename, oldPath: item.path, newFolderPath: currentPath, isCopy: clipboard.action === 'copy' };
             const endpoint = clipboard.action === 'copy' ? `${MEDIA_API_URL}/copy` : `${MEDIA_API_URL}/move`;
-            try { await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch (e) { console.error(e); }
+            try { await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch (e) { /* Error */ }
         });
         await Promise.all(promises);
         if (clipboard.action === 'cut') setClipboard({ items: [], action: null });
@@ -243,7 +245,7 @@ export default function MediaSelector({ onSelect, onClose }) {
     const handleRename = useCallback(async (item) => {
         const newName = prompt("Nhập tên mới:", item.filename);
         if (!newName || newName === item.filename) return;
-        try { await fetch(`${MEDIA_API_URL}/rename`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPath: item.path, newName: newName }) }); fetchFiles(currentPath); } catch (e) { console.error(e); }
+        try { await fetch(`${MEDIA_API_URL}/rename`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPath: item.path, newName: newName }) }); fetchFiles(currentPath); } catch (e) { /* Error */ }
     }, [currentPath, fetchFiles]);
 
     const handleDelete = useCallback(async (pathToDelete) => {
@@ -266,7 +268,6 @@ export default function MediaSelector({ onSelect, onClose }) {
     const onDrop = useCallback(async (acceptedFiles) => {
         if (acceptedFiles.length === 0) return;
         setUploading(true);
-        console.log("⬆️  Starting upload for", acceptedFiles.length, "files");
 
         try {
             await Promise.all(acceptedFiles.map(async (file) => {
@@ -280,14 +281,12 @@ export default function MediaSelector({ onSelect, onClose }) {
                         body: formData
                     });
                     const result = await response.json();
-                    console.log("✅ Upload response:", result);
                 } catch (e) {
-                    console.error("❌ Upload error:", e);
+                    // Upload error
                 }
             }));
         } finally {
             setUploading(false);
-            console.log("🔄 Refreshing file list...");
             fetchFiles(currentPath);
         }
     }, [currentPath, fetchFiles]);
@@ -295,7 +294,6 @@ export default function MediaSelector({ onSelect, onClose }) {
     // Handler riêng cho input file upload (hỗ trợ await)
     const handleFileInputUpload = useCallback(async (e) => {
         const files = Array.from(e.target.files);
-        console.log("📁 File selected:", files);
         await onDrop(files);
         // Reset input để có thể upload file cùng tên lần khác
         e.target.value = '';
