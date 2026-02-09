@@ -336,6 +336,22 @@
   object-fit: contain;
 }
 
+/* Hide fullscreen button on video controls */
+.video-wrapper video::-webkit-media-controls-fullscreen-button,
+.main-video-player::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+.video-wrapper video::-moz-media-controls-fullscreen-button,
+.main-video-player::-moz-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+.video-wrapper video::-ms-media-controls-fullscreen-button,
+.main-video-player::-ms-media-controls-fullscreen-button {
+  display: none !important;
+}
+
 /* =========================================
    DOCUMENT / IMAGE / PDF FULL SIZE LIKE VIDEO
    ========================================= */
