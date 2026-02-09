@@ -577,8 +577,11 @@ useEffect(() => {
           })()}
           <h2 className="intro-title">Giới thiệu</h2>
           <div className="intro-content">
-            <p className="intro-description">Hệ thống đào tạo và Cấp Chứng Chỉ Điều Khiển UAV Theo Tiêu Chuẩn Quy Định Pháp Luật VN <strong>được xây dựng nhằm đảm bảo an toàn không phân, nâng cao ý thức người sử dụng và tuân thủ các quy định pháp luật về hoạt động bay không người lái tại Việt Nam.</strong></p>
-            <p className="intro-description">Sở hữu chứng chỉ hợp pháp giúp bạn tránh các khoản phạt hành chính, được phép bay tại các khu vực cho phép, và mở ra cơ hội nghề nghiệp trong lĩnh vực công nghệ bay không người lái đang phát triển mạnh mẽ.</p>
+            <p className="intro-description">Hệ thống đào tạo và Cấp Chứng Chỉ Điều Khiển UAV Theo Tiêu Chuẩn Quy Định Pháp Luật Việt Nam <br/> 
+            <strong>được xây dựng nhằm đảm bảo an toàn không phân, nâng cao ý thức người sử dụng và tuân thủ các quy định pháp luật <br/>
+             về hoạt động bay không người lái tại Việt Nam.</strong></p>
+            <p className="intro-description">Sở hữu chứng chỉ hợp pháp giúp bạn tránh các khoản phạt hành chính, được phép bay tại các khu vực cho phép <br/>
+            và mở ra cơ hội nghề nghiệp trong lĩnh vực công nghệ bay không người lái đang phát triển mạnh mẽ.</p>
           </div>
           <div className="intro-stats">
             <div className="intro-stat-item"><div className="intro-stat-number">XXX+</div><div className="intro-stat-label">Học viên</div></div>
@@ -962,7 +965,7 @@ useEffect(() => {
                 <div key={news.id} className="news-card">
                   {news.isNew && <div className="news-badge">MỚI</div>}
                   <div className="news-content">
-                    <div className="news-date">{news.date}</div>
+                    <div className="news-date">Cập nhật {news.date}</div>
                     <div className="news-title">{news.title}</div>
                     <div className="news-desc">{news.description}</div>
                     <a href={news.link || "#"} className="link-button">Xem chi tiết</a>
