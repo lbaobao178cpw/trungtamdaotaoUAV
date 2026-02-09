@@ -236,7 +236,7 @@
   position: absolute;
   transform: rotate(-45deg);
   transform-origin: center center;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 900;
   color: rgba(255,255,255,0.36);
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
@@ -250,13 +250,13 @@
 }
 
 .video-watermark .wm-text:nth-child(2) {
-  top: 45%;
+  top: 40%;
   left: 45%;
   transform: translateX(-50%) rotate(-45deg);
 }
 
 .video-watermark .wm-text:nth-child(3) {
-  top:78%;
+  top:65%;
   right: 7%;
 }
 
