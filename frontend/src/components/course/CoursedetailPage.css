@@ -242,6 +242,8 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   white-space: nowrap;
   pointer-events: none;
+  letter-spacing: normal;
+  line-height: 1.2;
 }
 
 .video-watermark .wm-text:nth-child(1) {
@@ -260,9 +262,57 @@
   right: 7%;
 }
 
+/* Mobile optimization for watermark */
 @media (max-width: 900px) {
-  .video-watermark .wm-text { font-size: 20px; }
-  .video-watermark .wm-text:nth-child(2) { top: 12%; }
+  .video-watermark .wm-text { 
+    font-size: 16px;
+    text-shadow: 0 0.5px 2px rgba(0,0,0,0.6);
+  }
+  
+  .video-watermark .wm-text:nth-child(1) {
+    top: 10%;
+    left: -5%;
+  }
+  
+  .video-watermark .wm-text:nth-child(2) { 
+    top: 35%;
+    left: 50%;
+    transform: translateX(-50%) rotate(-45deg);
+  }
+  
+  .video-watermark .wm-text:nth-child(3) {
+    top: 65%;
+    right: 0%;
+  }
+}
+
+/* Extra small mobile (portrait mode) */
+@media (max-width: 480px) {
+  .video-watermark .wm-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.32);
+    text-shadow: none;
+    letter-spacing: -0.5px;
+  }
+  
+  .video-watermark .wm-text:nth-child(1) {
+    top: 12%;
+    left: -8%;
+    font-weight: 700;
+  }
+  
+  .video-watermark .wm-text:nth-child(2) { 
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%) rotate(-45deg);
+    font-weight: 700;
+  }
+  
+  .video-watermark .wm-text:nth-child(3) {
+    top: 68%;
+    right: -5%;
+    font-weight: 700;
+  }
 }
 
 /* YouTube iframe - centered with max dimensions (giống video upload) */
