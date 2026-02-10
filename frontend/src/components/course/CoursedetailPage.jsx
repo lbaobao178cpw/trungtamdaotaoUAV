@@ -10,7 +10,7 @@ import { API_ENDPOINTS, MEDIA_BASE_URL } from '../../config/apiConfig';
 import {
   Video, FileText, ChevronDown, ChevronUp,
   PenTool, PlayCircle, MessageSquare, CheckCircle, RefreshCw,
-  Circle, CheckCircle2, Star, Award
+  Circle, CheckCircle2, Star, Award, Maximize, Minimize
 } from 'lucide-react';
 
 const API_BASE = API_ENDPOINTS.COURSES;
@@ -826,6 +826,25 @@ function CourseDetailPage() {
     setTotalTime(0);
   };
 
+  // === CUSTOM FULLSCREEN: ESC KEY HANDLER ===
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen]);
+
   // === TIMER EFFECT ===
   useEffect(() => {
     let interval;
@@ -1016,6 +1035,14 @@ function CourseDetailPage() {
                     Trình duyệt không hỗ trợ.
                   </video>
                 )}
+                {/* Nút phóng to màn hình tùy chỉnh */}
+                <button
+                  className="custom-fullscreen-btn"
+                  onClick={() => setIsFullscreen(true)}
+                  title="Phóng to màn hình"
+                >
+                  <Maximize size={20} />
+                </button>
                 {/* Watermark overlay (3 repeated marks: left, center, right) */}
                 <div className="video-watermark" aria-hidden="true">
                   <span className="wm-text">{watermarkText}</span>
@@ -1843,7 +1870,59 @@ function CourseDetailPage() {
           </div>
         </div>
       </div>
-    </div>  
+    </div>
+
+    {/* === CUSTOM FULLSCREEN OVERLAY === */}
+    {isFullscreen && activeLesson?.type === 'video' && (
+      <div className="custom-fullscreen-overlay">
+        <div className="custom-fullscreen-topbar">
+          <span className="custom-fullscreen-title">{activeLesson.title}</span>
+        </div>
+        <div className="custom-fullscreen-content">
+          {activeLesson.src?.includes('youtube.com/embed') ? (
+            <iframe
+              key={`fs-${activeLesson.id}`}
+              className="custom-fullscreen-player"
+              src={activeLesson.src + '?modestbranding=1&rel=0&fs=0&autoplay=1'}
+              title={activeLesson.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-same-origin allow-scripts allow-presentation allow-popups"
+              style={{ border: 'none' }}
+            />
+          ) : (
+            <video
+              key={`fs-${activeLesson.id}`}
+              controls
+              controlsList="nofullscreen nodownload noplaybackrate"
+              disablePictureInPicture
+              disableRemotePlayback
+              onContextMenu={(e) => e.preventDefault()}
+              autoPlay
+              className="custom-fullscreen-player"
+              onTimeUpdate={handleVideoTimeUpdate}
+              onEnded={handleVideoEnded}
+            >
+              <source src={getFullMediaPath(activeLesson.src)} type="video/mp4" />
+              Trình duyệt không hỗ trợ.
+            </video>
+          )}
+          {/* Watermark trong fullscreen */}
+          <div className="video-watermark" aria-hidden="true">
+            <span className="wm-text">{watermarkText}</span>
+            <span className="wm-text">{watermarkText}</span>
+            <span className="wm-text">{watermarkText}</span>
+          </div>
+          {/* Nút thu nhỏ */}
+          <button
+            className="custom-fullscreen-minimize-btn"
+            onClick={() => setIsFullscreen(false)}
+            title="Thu nhỏ"
+          >
+            <Minimize size={20} />
+          </button>
+        </div>
+      </div>
+    )}
      </>
   );
 }
