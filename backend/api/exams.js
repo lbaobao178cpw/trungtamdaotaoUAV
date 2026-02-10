@@ -327,7 +327,7 @@ router.get("/my-registrations", verifyToken, async (req, res) => {
 // --- GET: DANH SÁCH ĐĂNG KÝ (ADMIN) ---
 router.get("/registrations", verifyAdmin, async (req, res) => {
   try {
-    const { search, name, tier, location, status, sort, direction } = req.query;
+    const { search, name, tier, location, status, date, sort, direction } = req.query;
 
     let query = `
       SELECT r.id AS registration_id, r.status AS registration_status, r.created_at,
@@ -377,6 +377,12 @@ router.get("/registrations", verifyAdmin, async (req, res) => {
     if (status && status.trim()) {
       query += ` AND r.status = ?`;
       params.push(status.trim());
+    }
+
+    // Filter by date (ngày thi) - format: YYYY-MM-DD
+    if (date && date.trim()) {
+      query += ` AND DATE(s.exam_date) = ?`;
+      params.push(date.trim());
     }
 
     // Sort

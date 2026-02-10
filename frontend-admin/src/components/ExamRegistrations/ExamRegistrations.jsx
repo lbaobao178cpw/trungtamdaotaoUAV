@@ -12,6 +12,7 @@ export default function ExamRegistrations() {
   const [tierFilter, setTierFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const token = localStorage.getItem("admin_token");
 
   const fetchRegistrations = async () => {
@@ -23,6 +24,7 @@ export default function ExamRegistrations() {
       if (tierFilter) params.append("tier", tierFilter);
       if (locationFilter.trim()) params.append("location", locationFilter.trim());
       if (statusFilter) params.append("status", statusFilter);
+      if (dateFilter) params.append("date", dateFilter);
       if (sortColumn) params.append("sort", sortColumn);
       if (sortDirection) params.append("direction", sortDirection);
 
@@ -63,7 +65,7 @@ export default function ExamRegistrations() {
   useEffect(() => {
     fetchRegistrations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, nameFilter, tierFilter, locationFilter, statusFilter, sortColumn, sortDirection]);
+  }, [searchTerm, nameFilter, tierFilter, locationFilter, statusFilter, dateFilter, sortColumn, sortDirection]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -86,6 +88,7 @@ export default function ExamRegistrations() {
     setTierFilter("");
     setLocationFilter("");
     setStatusFilter("");
+    setDateFilter("");
     setSortColumn(null);
     setSortDirection(null);
   };
@@ -143,7 +146,7 @@ export default function ExamRegistrations() {
         r.full_name || '-',
         r.email || '-',
         r.type || '-',
-        r.exam_date ? `${formatDateTime(r.exam_date)} ${r.exam_time || ''}` : '-',
+        r.exam_date ? `${formatDateOnly(r.exam_date)} ${r.exam_time || ''}` : '-',
         r.location || r.address || '-',
         translateStatus(r.registration_status),
         formatDateTime(r.created_at),
@@ -248,10 +251,10 @@ export default function ExamRegistrations() {
         marginTop: '16px',
         marginBottom: '16px'
       }}>
-        {/* Row 1: Tìm kiếm chung + Đặt lại */}
+        {/* Row 1: Tìm kiếm chung + Tìm kiếm ngày + Đặt lại */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr auto',
+          gridTemplateColumns: '2fr 1fr auto',
           gap: '16px',
           alignItems: 'end',
           marginBottom: '16px'
@@ -271,6 +274,31 @@ export default function ExamRegistrations() {
               placeholder="Nhập tên, email, mã đăng ký..."
               value={searchTerm}
               onChange={handleSearchChange}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                backgroundColor: '#ffffff'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Tìm kiếm ngày
+            </label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
               style={{
                 width: '100%',
                 padding: '10px 12px',
@@ -430,7 +458,7 @@ export default function ExamRegistrations() {
           paddingTop: '12px'
         }}>
           Hiển thị {registrations.length} kết quả
-          {(searchTerm || nameFilter || tierFilter || locationFilter || statusFilter || sortColumn !== null) && (
+          {(searchTerm || nameFilter || tierFilter || locationFilter || statusFilter || dateFilter || sortColumn !== null) && (
             <span style={{ marginLeft: '8px' }}>
               • Đã áp dụng bộ lọc
             </span>
