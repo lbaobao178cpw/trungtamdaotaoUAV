@@ -9,25 +9,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-pr
 // === AUTO MIGRATION: Update status ENUM to Vietnamese values ===
 (async () => {
   try {
-    // Step 1: Alter ENUM to include both old and new values
-    await db.query(
-      `ALTER TABLE exam_registrations MODIFY COLUMN status ENUM('registered', 'passed', 'cancelled', 'pending', 'completed', 'failed', 'in-progress', 'Đã đăng ký', 'Đã duyệt', 'Đã hủy') DEFAULT 'Đã đăng ký'`
-    );
-    
-    // Step 2: Convert existing data from English to Vietnamese
-    await db.query(`UPDATE exam_registrations SET status = 'Đã đăng ký' WHERE status = 'registered'`);
-    await db.query(`UPDATE exam_registrations SET status = 'Đã duyệt' WHERE status = 'passed'`);
-    await db.query(`UPDATE exam_registrations SET status = 'Đã hủy' WHERE status = 'cancelled'`);
-    await db.query(`UPDATE exam_registrations SET status = 'Đã duyệt' WHERE status = 'approved'`);
-    
-    // Step 3: Remove old English values from ENUM
     await db.query(
       `ALTER TABLE exam_registrations MODIFY COLUMN status ENUM('Đã đăng ký', 'Đã duyệt', 'Đã hủy') DEFAULT 'Đã đăng ký'`
     );
-    
     console.log('✅ Updated exam_registrations status ENUM to Vietnamese values');
   } catch (err) {
-    console.error('⚠️ Migration note:', err.message);
+    if (err.message.includes('Duplicate key')) {
+      console.log('ℹ️ Status ENUM already updated');
+    } else {
+      console.error('⚠️ Error updating status ENUM:', err.message);
+    }
   }
 })();
 
