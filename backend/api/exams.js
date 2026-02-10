@@ -5,6 +5,32 @@ const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verif
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
+
+// === AUTO MIGRATION: Update status ENUM to Vietnamese values ===
+(async () => {
+  try {
+    // Step 1: Alter ENUM to include both old and new values
+    await db.query(
+      `ALTER TABLE exam_registrations MODIFY COLUMN status ENUM('registered', 'passed', 'cancelled', 'pending', 'completed', 'failed', 'in-progress', 'Đã đăng ký', 'Đã duyệt', 'Đã hủy') DEFAULT 'Đã đăng ký'`
+    );
+    
+    // Step 2: Convert existing data from English to Vietnamese
+    await db.query(`UPDATE exam_registrations SET status = 'Đã đăng ký' WHERE status = 'registered'`);
+    await db.query(`UPDATE exam_registrations SET status = 'Đã duyệt' WHERE status = 'passed'`);
+    await db.query(`UPDATE exam_registrations SET status = 'Đã hủy' WHERE status = 'cancelled'`);
+    await db.query(`UPDATE exam_registrations SET status = 'Đã duyệt' WHERE status = 'approved'`);
+    
+    // Step 3: Remove old English values from ENUM
+    await db.query(
+      `ALTER TABLE exam_registrations MODIFY COLUMN status ENUM('Đã đăng ký', 'Đã duyệt', 'Đã hủy') DEFAULT 'Đã đăng ký'`
+    );
+    
+    console.log('✅ Updated exam_registrations status ENUM to Vietnamese values');
+  } catch (err) {
+    console.error('⚠️ Migration note:', err.message);
+  }
+})();
+
 // --- GET: Lấy danh sách lịch thi (Có kiểm tra trạng thái đăng ký của User) ---
 // Không bắt buộc token - nếu có token thì filter theo level, nếu không thì show all
 router.get("/", async (req, res) => {
@@ -256,10 +282,10 @@ router.post("/book", verifyStudent, async (req, res) => {
 
     // 3. Tạo đăng ký
     // Insert minimal registration fields to match DB schema (no extra payment_status field).
-    // Use allowed status value 'registered' (matches ENUM in schema).
+    // Use Vietnamese status value 'Đã đăng ký'.
     await connection.query(
       `INSERT INTO exam_registrations (user_id, exam_schedule_id, status) 
-       VALUES (?, ?, 'registered')`,
+       VALUES (?, ?, 'Đã đăng ký')`,
       [user_id, exam_schedule_id]
     );
 
@@ -330,7 +356,7 @@ router.get("/registrations", verifyAdmin, async (req, res) => {
 // --- PUT: CẬP NHẬT TRẠNG THÁI ĐĂNG KÝ (ADMIN) ---
 router.put("/registrations/:id", verifyAdmin, async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // expected values: 'registered', 'approved', 'cancelled'
+  const { status } = req.body; // expected values: 'Đã đăng ký', 'Đã duyệt', 'Đã hủy'
 
   const connection = await db.getConnection();
   try {
@@ -350,16 +376,16 @@ router.put("/registrations/:id", verifyAdmin, async (req, res) => {
     const prevStatus = existing.status;
     const scheduleId = existing.exam_schedule_id;
 
-    // Nếu thay đổi sang 'cancelled' từ trạng thái khác thì trả lại chỗ
-    if (status === 'cancelled' && prevStatus !== 'cancelled') {
+    // Nếu thay đổi sang 'Đã hủy' từ trạng thái khác thì trả lại chỗ
+    if (status === 'Đã hủy' && prevStatus !== 'Đã hủy') {
       await connection.query(
         "UPDATE exam_schedules SET spots_left = spots_left + 1 WHERE id = ?",
         [scheduleId]
       );
     }
 
-    // Nếu thay đổi từ 'cancelled' sang 'registered' hoặc 'approved' thì trừ chỗ nếu còn
-    if ((status === 'registered' || status === 'approved') && prevStatus === 'cancelled') {
+    // Nếu thay đổi từ 'Đã hủy' sang 'Đã đăng ký' hoặc 'Đã duyệt' thì trừ chỗ nếu còn
+    if ((status === 'Đã đăng ký' || status === 'Đã duyệt') && prevStatus === 'Đã hủy') {
       const [sRows] = await connection.query(
         "SELECT spots_left FROM exam_schedules WHERE id = ?",
         [scheduleId]

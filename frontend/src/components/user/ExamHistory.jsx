@@ -39,14 +39,7 @@ export default function ExamHistory() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <div style={{ fontWeight: 700 }}>{r.type}</div>
                 <div style={{ fontSize: 12, color: '#374151' }}>
-                  {(() => {
-                    const s = String(r.registration_status || '').toLowerCase();
-                    if (s === 'registered') return 'Đã đăng ký';
-                    if (s === 'cancelled' || s === 'canceled') return 'Đã hủy';
-                    if (s === 'completed') return 'Hoàn thành';
-                    if (s === 'pending') return 'Đang chờ';
-                    return r.registration_status || '--';
-                  })()}
+                  {r.registration_status || '--'}
                 </div>
               </div>
 
