@@ -23,24 +23,10 @@ export default function ExamRegistrations() {
     }
   };
 
-  // Translate status and format dates for Vietnamese UI
+  // Status is already in Vietnamese from backend, just return as-is
   const translateStatus = (s) => {
     if (!s) return "-";
-    const key = String(s).toLowerCase();
-    switch (key) {
-      case "registered":
-        return "Đã đăng ký";
-      case "approved":
-      case "passed":
-        return "Đã phê duyệt";
-      case "cancelled":
-      case "canceled":
-        return "Đã hủy";
-      case "failed":
-        return "Không đạt";
-      default:
-        return s;
-    }
+    return String(s);
   };
 
   const formatDateTime = (value) => {
@@ -102,8 +88,7 @@ export default function ExamRegistrations() {
   };
 
   const updateStatus = async (id, newStatus) => {
-    const statusDisplay = newStatus === 'passed' ? 'Phê duyệt' : 'Hủy';
-    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${statusDisplay}' không?`)) return;
+    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${newStatus}' không?`)) return;
     try {
       const res = await fetch(`${API_BASE_URL}/exams/registrations/${id}`, {
         method: "PUT",
@@ -168,10 +153,10 @@ export default function ExamRegistrations() {
                   <td>{translateStatus(r.registration_status)}</td>
                   <td>{formatDateTime(r.created_at)}</td>
                   <td className="actions">
-                    <button className="approve" onClick={() => updateStatus(r.registration_id, "passed")}>
-                      Phê duyệt
+                    <button className="approve" onClick={() => updateStatus(r.registration_id, "Đã duyệt")}>
+                      Duyệt
                     </button>
-                    <button className="cancel" onClick={() => updateStatus(r.registration_id, "cancelled")}>Hủy</button>
+                    <button className="cancel" onClick={() => updateStatus(r.registration_id, "Đã hủy")}>Hủy</button>
                   </td>
                 </tr>
               ))}
