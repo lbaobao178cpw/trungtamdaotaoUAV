@@ -5,12 +5,31 @@ import "./ExamRegistrations.css";
 export default function ExamRegistrations() {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState(null);
+  const [nameFilter, setNameFilter] = useState("");
+  const [tierFilter, setTierFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const token = localStorage.getItem("admin_token");
 
   const fetchRegistrations = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/exams/registrations`, {
+      const params = new URLSearchParams();
+      if (searchTerm.trim()) params.append("search", searchTerm.trim());
+      if (nameFilter.trim()) params.append("name", nameFilter.trim());
+      if (tierFilter) params.append("tier", tierFilter);
+      if (locationFilter.trim()) params.append("location", locationFilter.trim());
+      if (statusFilter) params.append("status", statusFilter);
+      if (dateFilter) params.append("date", dateFilter);
+      if (sortColumn) params.append("sort", sortColumn);
+      if (sortDirection) params.append("direction", sortDirection);
+
+      const url = `${API_BASE_URL}/exams/registrations${params.toString() ? `?${params.toString()}` : ""}`;
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -23,24 +42,10 @@ export default function ExamRegistrations() {
     }
   };
 
-  // Translate status and format dates for Vietnamese UI
+  // Status is already in Vietnamese from backend, just return as-is
   const translateStatus = (s) => {
     if (!s) return "-";
-    const key = String(s).toLowerCase();
-    switch (key) {
-      case "registered":
-        return "Đã đăng ký";
-      case "approved":
-      case "passed":
-        return "Đã phê duyệt";
-      case "cancelled":
-      case "canceled":
-        return "Đã hủy";
-      case "failed":
-        return "Không đạt";
-      default:
-        return s;
-    }
+    return String(s);
   };
 
   const formatDateTime = (value) => {
@@ -50,10 +55,73 @@ export default function ExamRegistrations() {
     return d.toLocaleString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
   };
 
+  const formatDateOnly = (value) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" });
+  };
+
   useEffect(() => {
     fetchRegistrations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchTerm, nameFilter, tierFilter, locationFilter, statusFilter, dateFilter, sortColumn, sortDirection]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New column, default to asc
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setNameFilter("");
+    setTierFilter("");
+    setLocationFilter("");
+    setStatusFilter("");
+    setDateFilter("");
+    setSortColumn(null);
+    setSortDirection(null);
+  };
+
+  const SortableHeader = ({ column, children }) => {
+    const isActive = sortColumn === column;
+    const direction = isActive ? sortDirection : null;
+
+    return (
+      <th
+        onClick={() => handleSort(column)}
+        style={{
+          cursor: 'pointer',
+          userSelect: 'none',
+          position: 'relative',
+          paddingRight: '20px'
+        }}
+        title={`Sắp xếp theo ${children.toLowerCase()}`}
+      >
+        {children}
+        <span style={{
+          position: 'absolute',
+          right: '5px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '12px',
+          color: isActive ? '#2563eb' : '#9ca3af'
+        }}>
+          {direction === 'asc' ? '↑' : direction === 'desc' ? '↓' : '↕'}
+        </span>
+      </th>
+    );
+  };
 
   const exportToCSV = () => {
     if (!registrations || registrations.length === 0) {
@@ -78,7 +146,7 @@ export default function ExamRegistrations() {
         r.full_name || '-',
         r.email || '-',
         r.type || '-',
-        r.exam_date ? `${formatDateTime(r.exam_date)} ${r.exam_time || ''}` : '-',
+        r.exam_date ? `${formatDateOnly(r.exam_date)} ${r.exam_time || ''}` : '-',
         r.location || r.address || '-',
         translateStatus(r.registration_status),
         formatDateTime(r.created_at),
@@ -102,8 +170,7 @@ export default function ExamRegistrations() {
   };
 
   const updateStatus = async (id, newStatus) => {
-    const statusDisplay = newStatus === 'passed' ? 'Phê duyệt' : 'Hủy';
-    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${statusDisplay}' không?`)) return;
+    if (!window.confirm(`Bạn có chắc muốn đổi trạng thái thành '${newStatus}' không?`)) return;
     try {
       const res = await fetch(`${API_BASE_URL}/exams/registrations/${id}`, {
         method: "PUT",
@@ -125,14 +192,280 @@ export default function ExamRegistrations() {
 
   return (
     <div className="panel">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Quản lý đăng ký lịch thi</h2>
-        <div>
-          <button className="export" onClick={exportToCSV} disabled={loading || registrations.length===0}>
-            Xuất Excel
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        borderBottom: '2px solid #3b82f6',
+        paddingBottom: '12px'
+      }}>
+        <h2 style={{
+          margin: 0,
+          fontSize: '24px',
+          color: '#111827',
+          fontWeight: '700',
+          borderLeft: '4px solid #f97316',
+          paddingLeft: '12px'
+        }}>
+          Quản lý đăng ký lịch thi
+        </h2>
+        <button
+          className="export"
+          onClick={exportToCSV}
+          disabled={loading || registrations.length === 0}
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 16px',
+            borderRadius: '8px',
+            cursor: loading || registrations.length === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)',
+            opacity: loading || registrations.length === 0 ? 0.6 : 1
+          }}
+          onMouseEnter={(e) => {
+            if (!(loading || registrations.length === 0)) {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.2)';
+          }}
+        >
+          Xuất Excel
+        </button>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="search-filter-section" style={{
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '20px',
+        marginTop: '16px',
+        marginBottom: '16px'
+      }}>
+        {/* Row 1: Tìm kiếm chung + Tìm kiếm ngày + Đặt lại */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr auto',
+          gap: '16px',
+          alignItems: 'end',
+          marginBottom: '16px'
+        }}>
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Tìm kiếm chung
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập tên, email, mã đăng ký..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                backgroundColor: '#ffffff'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Tìm kiếm ngày
+            </label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                backgroundColor: '#ffffff'
+              }}
+            />
+          </div>
+
+          <button
+            onClick={clearFilters}
+            style={{
+              padding: '10px 20px',
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Đặt lại
           </button>
         </div>
+
+        {/* Row 2: Bộ lọc chi tiết */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr 1fr',
+          gap: '12px',
+          alignItems: 'end',
+          marginBottom: '16px'
+        }}>
+          {/* Lọc theo người dùng */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '4px'
+            }}>
+              Người dùng
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập tên..."
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '13px',
+                backgroundColor: '#ffffff'
+              }}
+            />
+          </div>
+
+          {/* Lọc theo lịch thi (Hạng A/B) */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '4px'
+            }}>
+              Lịch thi
+            </label>
+            <select
+              value={tierFilter}
+              onChange={(e) => setTierFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '13px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Tất cả</option>
+              <option value="A">Hạng A</option>
+              <option value="B">Hạng B</option>
+            </select>
+          </div>
+
+          {/* Lọc theo địa điểm */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '4px'
+            }}>
+              Địa điểm
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập địa điểm..."
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '13px',
+                backgroundColor: '#ffffff'
+              }}
+            />
+          </div>
+
+          {/* Lọc theo trạng thái */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '4px'
+            }}>
+              Trạng thái
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '13px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Tất cả</option>
+              <option value="Đã duyệt">Đã duyệt</option>
+              <option value="Đã hủy">Đã hủy</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{
+          fontSize: '13px',
+          color: '#6b7280',
+          borderTop: '1px solid #e2e8f0',
+          paddingTop: '12px'
+        }}>
+          Hiển thị {registrations.length} kết quả
+          {(searchTerm || nameFilter || tierFilter || locationFilter || statusFilter || dateFilter || sortColumn !== null) && (
+            <span style={{ marginLeft: '8px' }}>
+              • Đã áp dụng bộ lọc
+            </span>
+          )}
+        </div>
       </div>
+
       {loading ? (
         <p>Đang tải...</p>
       ) : (
@@ -140,14 +473,14 @@ export default function ExamRegistrations() {
           <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th>Mã</th>
-                <th>Người dùng</th>
-                <th>Email</th>
+                <SortableHeader column="registration_id">Mã</SortableHeader>
+                <SortableHeader column="full_name">Người dùng</SortableHeader>
+                <SortableHeader column="email">Email</SortableHeader>
                 <th>Lịch thi</th>
-                <th>Ngày & giờ</th>
+                <SortableHeader column="exam_date">Ngày & giờ</SortableHeader>
                 <th>Địa điểm</th>
                 <th>Trạng thái</th>
-                <th>Thời gian đăng ký</th>
+                <SortableHeader column="created_at">Thời gian đăng ký</SortableHeader>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -163,15 +496,15 @@ export default function ExamRegistrations() {
                   <td>{r.full_name || "-"}</td>
                   <td>{r.email}</td>
                   <td>{r.type}</td>
-                  <td>{r.exam_date ? `${formatDateTime(r.exam_date)} ${r.exam_time || ""}` : "-"}</td>
+                  <td>{r.exam_date ? `${formatDateOnly(r.exam_date)} ${r.exam_time || ""}` : "-"}</td>
                   <td>{r.location || r.address || "-"}</td>
                   <td>{translateStatus(r.registration_status)}</td>
                   <td>{formatDateTime(r.created_at)}</td>
                   <td className="actions">
-                    <button className="approve" onClick={() => updateStatus(r.registration_id, "passed")}>
-                      Phê duyệt
+                    <button className="approve" onClick={() => updateStatus(r.registration_id, "Đã duyệt")}>
+                      Duyệt
                     </button>
-                    <button className="cancel" onClick={() => updateStatus(r.registration_id, "cancelled")}>Hủy</button>
+                    <button className="cancel" onClick={() => updateStatus(r.registration_id, "Đã hủy")}>Hủy</button>
                   </td>
                 </tr>
               ))}

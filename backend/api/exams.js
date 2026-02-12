@@ -5,6 +5,23 @@ const { verifyToken, verifyAdmin, verifyStudent } = require('../middleware/verif
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
+
+// === AUTO MIGRATION: Update status ENUM to Vietnamese values ===
+(async () => {
+  try {
+    await db.query(
+      `ALTER TABLE exam_registrations MODIFY COLUMN status ENUM('Đã đăng ký', 'Đã duyệt', 'Đã hủy') DEFAULT 'Đã đăng ký'`
+    );
+    console.log('✅ Updated exam_registrations status ENUM to Vietnamese values');
+  } catch (err) {
+    if (err.message.includes('Duplicate key')) {
+      console.log('ℹ️ Status ENUM already updated');
+    } else {
+      console.error('⚠️ Error updating status ENUM:', err.message);
+    }
+  }
+})();
+
 // --- GET: Lấy danh sách lịch thi (Có kiểm tra trạng thái đăng ký của User) ---
 // Không bắt buộc token - nếu có token thì filter theo level, nếu không thì show all
 router.get("/", async (req, res) => {
@@ -256,10 +273,10 @@ router.post("/book", verifyStudent, async (req, res) => {
 
     // 3. Tạo đăng ký
     // Insert minimal registration fields to match DB schema (no extra payment_status field).
-    // Use allowed status value 'registered' (matches ENUM in schema).
+    // Use Vietnamese status value 'Đã đăng ký'.
     await connection.query(
       `INSERT INTO exam_registrations (user_id, exam_schedule_id, status) 
-       VALUES (?, ?, 'registered')`,
+       VALUES (?, ?, 'Đã đăng ký')`,
       [user_id, exam_schedule_id]
     );
 
@@ -310,16 +327,86 @@ router.get("/my-registrations", verifyToken, async (req, res) => {
 // --- GET: DANH SÁCH ĐĂNG KÝ (ADMIN) ---
 router.get("/registrations", verifyAdmin, async (req, res) => {
   try {
-    const query = `
+    const { search, name, tier, location, status, date, sort, direction } = req.query;
+
+    let query = `
       SELECT r.id AS registration_id, r.status AS registration_status, r.created_at,
              u.id AS user_id, u.email, u.full_name,
              s.id AS schedule_id, s.type, s.location, s.address, s.exam_date, s.exam_time
       FROM exam_registrations r
       JOIN users u ON r.user_id = u.id
       JOIN exam_schedules s ON r.exam_schedule_id = s.id
-      ORDER BY r.created_at DESC
+      WHERE 1=1
     `;
-    const [rows] = await db.query(query);
+
+    const params = [];
+
+    // Search filter - tìm kiếm chung trong tên, email, mã đăng ký, loại lịch thi, địa điểm
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      query += ` AND (
+        u.full_name LIKE ? OR
+        u.email LIKE ? OR
+        r.id LIKE ? OR
+        s.type LIKE ? OR
+        s.location LIKE ? OR
+        s.address LIKE ?
+      )`;
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+    }
+
+    // Filter by name (người dùng)
+    if (name && name.trim()) {
+      query += ` AND u.full_name LIKE ?`;
+      params.push(`%${name.trim()}%`);
+    }
+
+    // Filter by tier (lịch thi - Hạng A/B)
+    if (tier && tier.trim()) {
+      query += ` AND s.type LIKE ?`;
+      params.push(`%Hạng ${tier.trim()}%`);
+    }
+
+    // Filter by location (địa điểm)
+    if (location && location.trim()) {
+      query += ` AND (s.location LIKE ? OR s.address LIKE ?)`;
+      params.push(`%${location.trim()}%`, `%${location.trim()}%`);
+    }
+
+    // Filter by status (trạng thái)
+    if (status && status.trim()) {
+      query += ` AND r.status = ?`;
+      params.push(status.trim());
+    }
+
+    // Filter by date (ngày thi) - format: YYYY-MM-DD
+    if (date && date.trim()) {
+      query += ` AND DATE(s.exam_date) = ?`;
+      params.push(date.trim());
+    }
+
+    // Sort
+    let orderBy = 'r.created_at DESC'; // default
+    if (sort && direction) {
+      const validSortColumns = {
+        'registration_id': 'r.id',
+        'full_name': 'u.full_name',
+        'email': 'u.email',
+        'exam_date': 's.exam_date',
+        'registration_status': 'r.status',
+        'created_at': 'r.created_at'
+      };
+
+      const dbColumn = validSortColumns[sort];
+      if (dbColumn) {
+        const sortDir = direction === 'desc' ? 'DESC' : 'ASC';
+        orderBy = `${dbColumn} ${sortDir}`;
+      }
+    }
+
+    query += ` ORDER BY ${orderBy}`;
+
+    const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error("Error in /registrations:", error);
@@ -330,7 +417,7 @@ router.get("/registrations", verifyAdmin, async (req, res) => {
 // --- PUT: CẬP NHẬT TRẠNG THÁI ĐĂNG KÝ (ADMIN) ---
 router.put("/registrations/:id", verifyAdmin, async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // expected values: 'registered', 'approved', 'cancelled'
+  const { status } = req.body; // expected values: 'Đã đăng ký', 'Đã duyệt', 'Đã hủy'
 
   const connection = await db.getConnection();
   try {
@@ -350,16 +437,16 @@ router.put("/registrations/:id", verifyAdmin, async (req, res) => {
     const prevStatus = existing.status;
     const scheduleId = existing.exam_schedule_id;
 
-    // Nếu thay đổi sang 'cancelled' từ trạng thái khác thì trả lại chỗ
-    if (status === 'cancelled' && prevStatus !== 'cancelled') {
+    // Nếu thay đổi sang 'Đã hủy' từ trạng thái khác thì trả lại chỗ
+    if (status === 'Đã hủy' && prevStatus !== 'Đã hủy') {
       await connection.query(
         "UPDATE exam_schedules SET spots_left = spots_left + 1 WHERE id = ?",
         [scheduleId]
       );
     }
 
-    // Nếu thay đổi từ 'cancelled' sang 'registered' hoặc 'approved' thì trừ chỗ nếu còn
-    if ((status === 'registered' || status === 'approved') && prevStatus === 'cancelled') {
+    // Nếu thay đổi từ 'Đã hủy' sang 'Đã đăng ký' hoặc 'Đã duyệt' thì trừ chỗ nếu còn
+    if ((status === 'Đã đăng ký' || status === 'Đã duyệt') && prevStatus === 'Đã hủy') {
       const [sRows] = await connection.query(
         "SELECT spots_left FROM exam_schedules WHERE id = ?",
         [scheduleId]

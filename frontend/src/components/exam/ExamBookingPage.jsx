@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiClient } from "../../lib/apiInterceptor";
+import { notifySuccess, notifyError, notifyWarning } from "../../lib/notifications";
 import {
   Calendar, MapPin, User, CheckCircle, AlertTriangle, ArrowLeft
 } from "lucide-react";
@@ -19,7 +20,7 @@ const ExamBookingPage = () => {
     // 1. Kiểm tra đăng nhập
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
-      alert("Vui lòng đăng nhập trước!");
+      notifyWarning("Vui lòng đăng nhập trước!");
       navigate("/dang-nhap");
       return;
     }
@@ -45,15 +46,15 @@ const ExamBookingPage = () => {
       const remaining = typeof data.spots_left === 'number' ? data.spots_left : null;
 
       if (remaining !== null) {
-        alert(`Đăng ký thành công! Chỗ trống còn lại: ${remaining}. Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.`);
+        notifySuccess(`Đăng ký thành công! Chỗ trống còn lại: ${remaining}. Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.`);
       } else {
-        alert("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.");
+        notifySuccess("Đăng ký thành công! Chúng tôi sẽ liên hệ sớm để hướng dẫn đóng lệ phí.");
       }
 
       // Quay về trang danh sách lịch thi để người dùng thấy cập nhật
       navigate("/thi-sat-hach");
     } catch (error) {
-      alert(error.response?.data?.error || error.message || "Lỗi đăng ký");
+      notifyError(error.response?.data?.error || error.message || "Lỗi đăng ký");
     } finally {
       setLoading(false);
     }

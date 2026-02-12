@@ -153,7 +153,7 @@ function UserProfile() {
               )}
             </div>
             <h3 className="user-name">{profile.full_name}</h3>
-            <p className="user-id">{profile.email || profile.phone}</p>
+            {/* <p className="user-id">{profile.email || profile.phone}</p> */}
           </div>
 
           {/* Menu */}

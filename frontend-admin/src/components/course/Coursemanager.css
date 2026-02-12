@@ -536,6 +536,7 @@
 .cm-course-actions {
     display: flex;
     gap: var(--cm-spacing-sm);
+    margin-top : auto ;
 }
 
 /* ============================================
