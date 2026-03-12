@@ -411,6 +411,9 @@ function RegisterPage() {
     <div className="register-step">
       <h2 className="step-title">Thông tin cá nhân</h2>
 
+
+
+
       {/* CCCD SECTION */}
       <div className="form-section">
         <h3><CreditCard size={20} style={{ marginBottom: '-4px', marginRight: '8px' }} />Ảnh chụp CCCD/CMND</h3>
