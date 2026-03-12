@@ -25,19 +25,25 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào thư mục SUBDOMAIN
+      - name: 🚀 Deploy vào subdomain Client
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }} 
           password: ${{ secrets.FTP_PASSWORD }} 
-          local-dir: ./frontend/dist/ 
           
-          # CHỈ DÙNG DẤU CHẤM vì FTP đã trỏ thẳng vào folder /public_html/client rồi
-          server-dir: ./ 
+          local-dir: ./frontend/dist/ 
+          # Lưu ý: Kiểm tra xem đường dẫn này đã đúng ý bạn chưa (client hay main domain)
+          server-dir: domains/client.uavtrainningcenter.vn/public_html/
           
           protocol: ftp
           port: 21
-          timeout: 900000 
+          
+          # Tăng thời gian chờ lên 20 phút (1,200,000 ms)
+          timeout: 1200000 
+          
+          # Cực kỳ quan trọng: Giúp tiếp tục upload các file còn lại nếu lần trước bị lỗi
           state-name: .ftp-deploy-sync-state.json
+          
+          # Bật log chi tiết để xem file nào đang làm đứng kết nối
           log-level: verbose
