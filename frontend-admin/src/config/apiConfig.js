@@ -23,6 +23,8 @@ const getMediaBaseUrl = () => {
     return import.meta.env.VITE_MEDIA_BASE_URL || 'http://localhost:5000';
 };
 
+
+
 export const API_BASE_URL = getApiBaseUrl();
 export const MEDIA_BASE_URL = getMediaBaseUrl();
 

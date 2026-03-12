@@ -21,6 +21,11 @@ jobs:
 
       - name: Cài đặt thư viện và Build (Đóng gói)
         working-directory: ./frontend-admin
+        # --- ĐÂY LÀ PHẦN QUAN TRỌNG NHẤT BẠN ĐANG THIẾU ---
+        env:
+          VITE_API_BASE_URL: https://api.uavtrainningcenter.vn/api
+          VITE_MEDIA_BASE_URL: https://api.uavtrainningcenter.vn
+        # ------------------------------------------------
         run: |
           npm install
           CI=false npm run build
