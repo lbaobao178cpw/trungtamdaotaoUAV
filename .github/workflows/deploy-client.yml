@@ -36,7 +36,7 @@ jobs:
           local-dir: ./frontend/dist/ 
           
           # ĐƯỜNG DẪN ĐỔ VÀO TRANG CHỦ
-          server-dir: domains/uavtrainningcenter.vn/public_html/
+          server-dir: /domains/uavtrainningcenter.vn/public_html/
           
           protocol: ftp
           port: 21
