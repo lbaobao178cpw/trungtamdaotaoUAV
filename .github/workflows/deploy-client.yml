@@ -17,7 +17,7 @@ jobs:
       - name: Cài đặt Node.js môi trường bản mới nhất (Node 20)
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # <--- Chắc chắn đã là 20 ở đây
+          node-version: '20'
 
       - name: Cài đặt thư viện và Build (Đóng gói)
         working-directory: ./frontend
@@ -29,9 +29,11 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.FTP_CLIENT_USER }} # <--- Đã đổi sang chìa khóa mới của Client
+          password: ${{ secrets.FTP_CLIENT_PASS }} # <--- Đã đổi sang mật khẩu mới của Client
           local-dir: ./frontend/dist/ 
-          server-dir: ./domains/uavtrainningcenter.vn/public_html/
+          
+          # Đã XÓA dòng server-dir vì tài khoản FTP mới trỏ thẳng vào đích rồi
+          
           protocol: ftp
           dangerous-clean-slate: false
