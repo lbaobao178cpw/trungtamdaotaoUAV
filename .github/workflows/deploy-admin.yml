@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'frontend-admin/**'
+      - "frontend-admin/**"
 
 jobs:
   build-and-deploy:
@@ -17,7 +17,7 @@ jobs:
       - name: Cài đặt Node.js môi trường bản mới nhất (Node 20)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Cài đặt thư viện và Build (Đóng gói)
         working-directory: ./frontend-admin
@@ -29,11 +29,8 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_ADMIN_USER }} # <--- Đã đổi sang chìa khóa mới của Client
-          password: ${{ secrets.FTP_ADMIN_PASS }} # <--- Đã đổi sang mật khẩu mới của Client
-          local-dir: ./frontend-admin/dist/ 
-          
-          # Đã XÓA dòng server-dir vì tài khoản FTP mới trỏ thẳng vào đích rồi
-          
+          username: ${{ secrets.FTP_ADMIN_USER }}
+          password: ${{ secrets.FTP_ADMIN_PASS }}
+          local-dir: ./frontend-admin/dist/
           protocol: ftp
           dangerous-clean-slate: false
