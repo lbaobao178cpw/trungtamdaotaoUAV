@@ -14,7 +14,7 @@ jobs:
       - name: 📂 Lấy mã nguồn mới nhất
         uses: actions/checkout@v4
 
-      - name: 🟢 Cài đặt Node.js (Bản 22)
+      - name: 🟢 Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -25,17 +25,15 @@ jobs:
           npm install
           CI=false npm run build
 
-
-      - name: 🚀 Deploy chuẩn vào tên miền chính
+      - name: 🚀 Deploy trực tiếp vào public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }} 
           password: ${{ secrets.FTP_PASSWORD }} 
-          
           local-dir: ./frontend/dist/ 
           
-          # QUAN TRỌNG: Chỉ dùng dấu chấm vì tài khoản FTP đã trỏ đúng thư mục rồi
+          # QUAN TRỌNG NHẤT: Chỉ dùng dấu chấm vì FTP đã trỏ đúng thư mục rồi
           server-dir: ./ 
           
           protocol: ftp
