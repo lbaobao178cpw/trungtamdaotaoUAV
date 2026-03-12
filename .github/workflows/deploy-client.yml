@@ -1,4 +1,4 @@
-name: Deploy React Client
+name: Deploy React to Main Domain
 
 on:
   push:
@@ -25,27 +25,30 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào subdomain Client (Chế độ bền bỉ)
+      - name: 🚀 Deploy vào tên miền chính (uavtrainningcenter.vn)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }} 
           password: ${{ secrets.FTP_PASSWORD }} 
           
+          # Folder chứa code sau khi build xong
           local-dir: ./frontend/dist/ 
-          server-dir: domains/client.uavtrainningcenter.vn/public_html/
+          
+          # ĐƯỜNG DẪN ĐỔ VÀO TRANG CHỦ
+          server-dir: domains/uavtrainningcenter.vn/public_html/
           
           protocol: ftp
           port: 21
           
-          # Giữ thời gian chờ cao để tránh bị ngắt quãng khi upload 60MB
+          # Tăng thời gian chờ lên 15 phút để tải đống ảnh Panorama nặng
           timeout: 900000 
           
-          # Chỉ upload những file có sự thay đổi (giúp các lần sau cực nhanh)
+          # Ghi nhớ các file đã upload để các lần sau deploy chỉ mất vài giây
           state-name: .ftp-deploy-sync-state.json
           
-          # Hiển thị log chi tiết để theo dõi quá trình
+          # Hiện log chi tiết để theo dõi
           log-level: verbose
           
+          # Không xóa các file hệ thống quan trọng như .htaccess
           dangerous-clean-slate: false
