@@ -11,29 +11,40 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Lấy mã nguồn mới nhất
+      - name: 📂 Lấy mã nguồn mới nhất
         uses: actions/checkout@v4
 
-      - name: Cài đặt Node.js môi trường bản mới nhất (Node 20)
+      - name: 🟢 Cài đặt Node.js môi trường bản mới (Node 22)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Cài đặt thư viện và Build (Đóng gói)
+      - name: 🏗️ Cài đặt thư viện và Build (Đóng gói)
         working-directory: ./frontend
         run: |
           npm install
           CI=false npm run build
 
-      - name: Deploy gói Build lên hosting Mắt Bão
+      - name: 🚀 Deploy gói Build lên hosting Mắt Bão
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_CLIENT_USER }} # <--- Đã đổi sang chìa khóa mới của Client
-          password: ${{ secrets.FTP_CLIENT_PASS }} # <--- Đã đổi sang mật khẩu mới của Client
+          username: ${{ secrets.FTP_CLIENT_USER }}
+          password: ${{ secrets.FTP_CLIENT_PASS }}
+          
+          # Folder chứa bản build sau khi chạy npm run build
           local-dir: ./frontend/dist/ 
           
-          # Đã XÓA dòng server-dir vì tài khoản FTP mới trỏ thẳng vào đích rồi
+          # QUAN TRỌNG: Dù tài khoản FTP đã trỏ đúng folder, 
+          # vẫn cần './' để xác nhận thư mục gốc của tài khoản đó.
+          server-dir: ./ 
           
+          # Ép sử dụng giao thức ftp truyền thống để tránh lỗi 421 do bắt tay bảo mật thất bại
           protocol: ftp
+          port: 21
+          
+          # Không xóa các file cũ không có trong bản build (để giữ lại .htaccess, v.v.)
           dangerous-clean-slate: false
+          
+          # Tự động thử lại nếu kết nối bị ngắt giữa chừng
+          timeout: 60000
