@@ -25,8 +25,9 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào subdomain Client
+      - name: 🚀 Deploy vào subdomain Client (Chế độ bền bỉ)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }} 
@@ -38,10 +39,13 @@ jobs:
           protocol: ftp
           port: 21
           
-          # Tăng thời gian chờ lên 15 phút (900,000ms) để không bị ngắt quãng
+          # Giữ thời gian chờ cao để tránh bị ngắt quãng khi upload 60MB
           timeout: 900000 
           
-          # Chỉ upload những file có sự thay đổi để nhanh hơn cho các lần sau
+          # Chỉ upload những file có sự thay đổi (giúp các lần sau cực nhanh)
           state-name: .ftp-deploy-sync-state.json
+          
+          # Hiển thị log chi tiết để theo dõi quá trình
+          log-level: verbose
           
           dangerous-clean-slate: false
