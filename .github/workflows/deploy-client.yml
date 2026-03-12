@@ -25,30 +25,21 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào tên miền chính (uavtrainningcenter.vn)
+
+      - name: 🚀 Deploy chuẩn vào tên miền chính
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }} 
           password: ${{ secrets.FTP_PASSWORD }} 
           
-          # Folder chứa code sau khi build xong
           local-dir: ./frontend/dist/ 
           
-          # ĐƯỜNG DẪN ĐỔ VÀO TRANG CHỦ
-          server-dir: /domains/uavtrainningcenter.vn/public_html/
+          # QUAN TRỌNG: Chỉ dùng dấu chấm vì tài khoản FTP đã trỏ đúng thư mục rồi
+          server-dir: ./ 
           
           protocol: ftp
           port: 21
-          
-          # Tăng thời gian chờ lên 15 phút để tải đống ảnh Panorama nặng
           timeout: 900000 
-          
-          # Ghi nhớ các file đã upload để các lần sau deploy chỉ mất vài giây
           state-name: .ftp-deploy-sync-state.json
-          
-          # Hiện log chi tiết để theo dõi
           log-level: verbose
-          
-          # Không xóa các file hệ thống quan trọng như .htaccess
-          dangerous-clean-slate: false
