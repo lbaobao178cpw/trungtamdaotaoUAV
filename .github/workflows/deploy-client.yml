@@ -14,37 +14,30 @@ jobs:
       - name: 📂 Lấy mã nguồn mới nhất
         uses: actions/checkout@v4
 
-      - name: 🟢 Cài đặt Node.js môi trường bản mới (Node 22)
+      - name: 🟢 Cài đặt Node.js (Bản 22)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: 🏗️ Cài đặt thư viện và Build (Đóng gói)
+      - name: 🏗️ Cài đặt và Build React
         working-directory: ./frontend
         run: |
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy gói Build lên hosting Mắt Bão
+      - name: 🚀 Deploy vào subdomain Client (Dùng tài khoản Master)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_CLIENT_USER }}
-          password: ${{ secrets.FTP_CLIENT_PASS }}
+          # Dùng tài khoản chính (Master) để tránh lỗi 421
+          username: ${{ secrets.FTP_USERNAME }} 
+          password: ${{ secrets.FTP_PASSWORD }} 
           
-          # Folder chứa bản build sau khi chạy npm run build
           local-dir: ./frontend/dist/ 
           
-          # QUAN TRỌNG: Dù tài khoản FTP đã trỏ đúng folder, 
-          # vẫn cần './' để xác nhận thư mục gốc của tài khoản đó.
-          server-dir: ./ 
+          # ĐƯỜNG DẪN CHUẨN CHO SUBDOMAIN CLIENT
+          server-dir: domains/client.uavtrainningcenter.vn/public_html/
           
-          # Ép sử dụng giao thức ftp truyền thống để tránh lỗi 421 do bắt tay bảo mật thất bại
           protocol: ftp
           port: 21
-          
-          # Không xóa các file cũ không có trong bản build (để giữ lại .htaccess, v.v.)
           dangerous-clean-slate: false
-          
-          # Tự động thử lại nếu kết nối bị ngắt giữa chừng
-          timeout: 60000
