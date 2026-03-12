@@ -1,0 +1,41 @@
+name: Deploy React Client
+
+on:
+  push:
+    branches:
+      - main # Hoặc master
+    paths:
+      - 'frontend/**' # Chỉ kích hoạt khi có thay đổi trong thư mục frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lấy mã nguồn mới nhất
+        uses: actions/checkout@v4
+
+      - name: Cài đặt Node.js môi trường
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Môi trường Node để build React
+
+      - name: Cài đặt thư viện và Build (Đóng gói)
+        working-directory: ./frontend # <--- THAY BẰNG TÊN THƯ MỤC CHỨA CODE CLIENT CỦA BẠN
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy gói Build lên hosting Mắt Bão
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }} 
+          password: ${{ secrets.FTP_PASSWORD }} 
+          
+          # Đẩy thư mục dist vừa được build xong
+          local-dir: ./frontend/dist/ # <--- Nếu bạn dùng Create React App, đổi 'dist' thành 'build'
+          
+          # Trỏ thẳng vào tên miền chính
+          server-dir: ./domains/uavtrainningcenter.vn/public_html/
+          protocol: ftp
+          dangerous-clean-slate: false

@@ -3,7 +3,7 @@ name: Deploy Node.js Backend
 on:
   push:
     branches:
-      - main # Chú ý: Nếu nhánh hiện tại của bạn tên là 'master', hãy đổi chữ 'main' thành 'master' nhé
+      - main # Hoặc master
 
 jobs:
   deploy:
@@ -19,4 +19,10 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./backend/
-          dangerous-clean-slate: false # Giữ an toàn, không xóa nhầm file trên hosting
+          protocol: ftp # <--- Bổ sung dòng này để tránh lỗi handshake bảo mật
+          exclude: |
+            **/node_modules/**
+            **/uploads/**
+            .git/**
+            .github/**
+          dangerous-clean-slate: false

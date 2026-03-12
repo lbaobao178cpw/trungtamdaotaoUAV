@@ -36,3 +36,4 @@ nodemodel
 
 *.db
 *.sqlite
+backend/uploads/

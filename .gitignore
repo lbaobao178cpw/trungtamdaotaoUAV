@@ -104,3 +104,4 @@ temp
 *.log
 npm-debug.log*
 yarn-error.log*
+backend/uploads/
