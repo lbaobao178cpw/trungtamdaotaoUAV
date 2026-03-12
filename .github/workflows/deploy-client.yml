@@ -1,4 +1,4 @@
-name: Deploy React to Main Domain
+name: Deploy React to Subdomain Client
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy trực tiếp vào public_html
+      - name: 🚀 Deploy vào thư mục client riêng biệt
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }} 
           local-dir: ./frontend/dist/ 
           
-          # QUAN TRỌNG NHẤT: Chỉ dùng dấu chấm vì FTP đã trỏ đúng thư mục rồi
+          # DÙNG DẤU CHẤM VÌ FTP ĐÃ TRỎ VÀO FOLDER /client RỒI
           server-dir: ./ 
           
           protocol: ftp
