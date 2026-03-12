@@ -25,19 +25,23 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào subdomain Client (Dùng tài khoản Master)
+      - name: 🚀 Deploy vào subdomain Client
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          # Dùng tài khoản chính (Master) để tránh lỗi 421
           username: ${{ secrets.FTP_USERNAME }} 
           password: ${{ secrets.FTP_PASSWORD }} 
           
           local-dir: ./frontend/dist/ 
-          
-          # ĐƯỜNG DẪN CHUẨN CHO SUBDOMAIN CLIENT
           server-dir: domains/client.uavtrainningcenter.vn/public_html/
           
           protocol: ftp
           port: 21
+          
+          # Tăng thời gian chờ lên 15 phút (900,000ms) để không bị ngắt quãng
+          timeout: 900000 
+          
+          # Chỉ upload những file có sự thay đổi để nhanh hơn cho các lần sau
+          state-name: .ftp-deploy-sync-state.json
+          
           dangerous-clean-slate: false

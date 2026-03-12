@@ -16,6 +16,9 @@ class ErrorBoundary extends React.Component {
     console.error("Lỗi 3D bị bắt bởi Error Boundary:", error, errorInfo);
   }
 
+
+
+  
   render() {
     if (this.state.hasError) {
       // Giao diện Lỗi
