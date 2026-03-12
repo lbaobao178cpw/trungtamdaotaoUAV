@@ -17,7 +17,7 @@ jobs:
       - name: Cài đặt Node.js môi trường
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # Môi trường Node để build React
+          node-version: '20' # Môi trường Node để build React
 
       - name: Cài đặt thư viện và Build (Đóng gói)
         working-directory: ./frontend # <--- THAY BẰNG TÊN THƯ MỤC CHỨA CODE CLIENT CỦA BẠN
