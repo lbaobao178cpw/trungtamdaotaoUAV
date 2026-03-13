@@ -19,8 +19,10 @@ router.get("/files", async (req, res) => {
     if (process.env.BACKEND_URL) {
       baseUrl = process.env.BACKEND_URL.replace(/\/$/, ''); // Remove trailing slash
     } else {
-      const port = req.socket.localPort || process.env.PORT || 5000;
-      baseUrl = `http://localhost:${port}`;
+      // Use request protocol and host as fallback (works for both localhost and production)
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:5000';
+      baseUrl = `${protocol}://${host}`;
     }
 
     const currentFolder = req.query.folder || "";
@@ -91,8 +93,10 @@ router.post("/upload", upload.single("mediaFile"), async (req, res) => {
     if (process.env.BACKEND_URL) {
       baseUrl = process.env.BACKEND_URL.replace(/\/$/, ''); // Remove trailing slash
     } else {
-      const port = req.socket.localPort || process.env.PORT || 5000;
-      baseUrl = `http://localhost:${port}`;
+      // Use request protocol and host as fallback (works for both localhost and production)
+      const protocol = req.protocol || 'http';
+      const host = req.get('host') || 'localhost:5000';
+      baseUrl = `${protocol}://${host}`;
     }
 
     res.json({
