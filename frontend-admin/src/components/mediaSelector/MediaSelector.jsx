@@ -5,9 +5,9 @@ import {
     PointerSensor, MouseSensor, TouchSensor
 } from '@dnd-kit/core';
 import "../admin/Admin/Admin.css";
-import { API_BASE_URL } from '../../config/apiConfig';
+import { MEDIA_BASE_URL } from '../../config/apiConfig';
 
-const MEDIA_API_URL = API_BASE_URL;
+const MEDIA_API_URL = MEDIA_BASE_URL + '/api';
 
 // --- ICONS SVG (Dùng thay thế cho Emoji) ---
 const Icons = {
