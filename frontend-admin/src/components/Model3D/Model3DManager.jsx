@@ -186,6 +186,19 @@ export default function Model3DManager() {
   // Memoized API mutation for saving settings
   const { mutate: saveSettings, loading } = useApiMutation();
 
+  const getPreviewModelUrl = useCallback((src) => {
+    if (!src) return "";
+    const normalized = normalizeMediaUrl(src);
+    const sourceForProxy = toMediaRelativePath(normalized);
+    const pathname = String(sourceForProxy || "");
+
+    if (pathname.startsWith("/uploads/") || pathname.startsWith("uploads/") || pathname.startsWith("http")) {
+      return `${API_ENDPOINTS.SETTINGS}/model-proxy?src=${encodeURIComponent(sourceForProxy)}`;
+    }
+
+    return normalized;
+  }, []);
+
   const handleSelectModel = useCallback(async (url) => {
     const normalizedUrl = normalizeMediaUrl(url);
     const storableValue = toMediaRelativePath(normalizedUrl);
@@ -395,7 +408,7 @@ export default function Model3DManager() {
                   <directionalLight intensity={5} color={0xdad5ff} position={[25, 35, 25]} />
                   <directionalLight intensity={0.5} color={0xf0ecff} position={[-20, 25, -20]} />
 
-                  <ModelPreview url={currentModel} />
+                  <ModelPreview url={getPreviewModelUrl(currentModel)} />
                   <PointsLayer points={points} />
                 </Suspense>
               </ErrorBoundary3D>
