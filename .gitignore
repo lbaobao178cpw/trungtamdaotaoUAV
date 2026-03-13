@@ -46,7 +46,7 @@ Thumbs.db
 *.tar.gz
 
 # 3D & Design files
-*.glb
+
 *.gltf
 *.obj
 *.blend
