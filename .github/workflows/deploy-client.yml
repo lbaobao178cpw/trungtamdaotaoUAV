@@ -1,4 +1,4 @@
-name: Deploy React to Subdomain Client
+name: Deploy Frontend to New Subdomain Structure
 
 on:
   push:
@@ -25,19 +25,19 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào Subdomain Client
+      - name: 🚀 Deploy vào public_html của Subdomain
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }} 
-          password: ${{ secrets.FTP_PASSWORD }} 
+          username: ${{ secrets.FTP_CLIENT_USER }} 
+          password: ${{ secrets.FTP_CLIENT_PASS }} 
+          
+          # Folder chứa file đã build
           local-dir: ./frontend/dist/ 
           
-          # DÙNG DẤU CHẤM vì FTP đã trỏ thẳng vào folder /client rồi
+          # Vì tài khoản FTP đã trỏ thẳng vào public_html nên dùng ./
           server-dir: ./ 
           
           protocol: ftp
           port: 21
-          timeout: 900000 
-          state-name: .ftp-deploy-sync-state.json
-          log-level: verbose
+          timeout: 900000
