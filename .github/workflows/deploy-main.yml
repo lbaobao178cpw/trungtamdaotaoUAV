@@ -27,7 +27,6 @@ jobs:
           npm install
           CI=false npm run build
         env:
-          # Đảm bảo dùng URL API thật để web có dữ liệu
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_MEDIA_BASE_URL: ${{ secrets.VITE_MEDIA_BASE_URL }}
 
@@ -38,12 +37,9 @@ jobs:
           username: ${{ secrets.FTP_MAIN_USER }} 
           password: ${{ secrets.FTP_MAIN_PASS }} 
           local-dir: ./frontend/dist/ 
-          
-          # Thử đổi thành đường dẫn tuyệt đối nếu ./ không chạy đúng
           server-dir: ./ 
-          
-          
           protocol: ftp
           port: 21
-          # Xóa file state cũ để nó đồng bộ lại toàn bộ file mới
+          timeout: 900000
+          # Xóa file state cũ để ép GitHub đẩy lại toàn bộ file models mới
           state-name: .ftp-deploy-sync-state.json
