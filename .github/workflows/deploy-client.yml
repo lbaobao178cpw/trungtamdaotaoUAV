@@ -25,19 +25,19 @@ jobs:
           npm install
           CI=false npm run build
 
-      - name: 🚀 Deploy vào Subdomain Client
+      - name: 🚀 Deploy vào Subdomain Client (MatBao FTP client)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }} 
-          password: ${{ secrets.FTP_PASSWORD }} 
-          local-dir: ./frontend/dist/ 
-          
-          # DÙNG DẤU CHẤM vì FTP đã trỏ thẳng vào folder /client rồi
-          server-dir: ./ 
-          
+          username: ${{ secrets.FTP_CLIENT_USER }}
+          password: ${{ secrets.FTP_CLIENT_PASS }}
+          local-dir: ./frontend/dist/
+
+          # Đẩy vào thư mục domain cụ thể trên hosting MatBao
+          server-dir: domains/Uavtrainningcenter.vn
+
           protocol: ftp
           port: 21
-          timeout: 900000 
+          timeout: 900000
           state-name: .ftp-deploy-sync-state.json
           log-level: verbose
