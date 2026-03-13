@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { apiClient } from '../lib/apiInterceptor';
+import { normalizeApiData } from '../lib/mediaUrl';
 
 /**
  * Custom hook for API calls with loading, error, and data states
@@ -19,7 +20,8 @@ export const useApi = (url, options = {}) => {
         setError(null);
         try {
             const response = await apiClient.get(url);
-            setData(Array.isArray(response.data) ? response.data : response.data || null);
+            const normalized = normalizeApiData(response.data);
+            setData(Array.isArray(normalized) ? normalized : normalized || null);
         } catch (err) {
             setError(err.message || 'Lỗi khi tải dữ liệu');
             setData(options.defaultValue || null);
