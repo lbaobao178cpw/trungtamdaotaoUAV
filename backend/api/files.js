@@ -3,7 +3,6 @@ const router = express.Router();
 const fs = require("fs-extra");
 const path = require("path");
 const {
-  UPLOAD_ROOT,
   resolvePath,
   getThumbPath,
   getFileType,
@@ -11,35 +10,6 @@ const {
   upload,
   THUMB_ROOT
 } = require("../utils/fileHelpers");
-
-const findFileRecursively = async (rootDir, matcher, maxDepth = 4) => {
-  const queue = [{ dir: rootDir, depth: 0 }];
-
-  while (queue.length > 0) {
-    const { dir, depth } = queue.shift();
-    let entries = [];
-    try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch (e) {
-      continue;
-    }
-
-    for (const entry of entries) {
-      if (entry.name === "thumbs") continue;
-      const full = path.join(dir, entry.name);
-
-      if (entry.isFile() && matcher(entry.name, full)) {
-        return full;
-      }
-
-      if (entry.isDirectory() && depth < maxDepth) {
-        queue.push({ dir: full, depth: depth + 1 });
-      }
-    }
-  }
-
-  return null;
-};
 
 // GET /api/files
 router.get("/files", async (req, res) => {
@@ -88,160 +58,6 @@ router.get("/files", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json([]);
-  }
-});
-
-// GET /api/files/raw?path=<relative_path>
-router.get("/files/raw", async (req, res) => {
-  try {
-    const relativePath = (req.query.path || "").toString().trim();
-    if (!relativePath) {
-      return res.status(404).json({ message: "File không tồn tại" });
-    }
-
-    const normalizedPath = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
-    const candidateRelativePaths = [normalizedPath];
-
-    // Backward compatibility: older settings may store only filename without folder.
-    if (!normalizedPath.includes("/")) {
-      candidateRelativePaths.push(`model-3d/${normalizedPath}`);
-      candidateRelativePaths.push(`course-uploads/${normalizedPath}`);
-      candidateRelativePaths.push(`Solutions/${normalizedPath}`);
-      candidateRelativePaths.push(`panorama/${normalizedPath}`);
-      candidateRelativePaths.push(`Documents/${normalizedPath}`);
-    }
-
-    let fullPath = null;
-    for (const candidate of candidateRelativePaths) {
-      const resolved = resolvePath(candidate);
-      if (await fs.pathExists(resolved.fullPath)) {
-        fullPath = resolved.fullPath;
-        break;
-      }
-    }
-
-    if (!fullPath) {
-      // Last fallback: search one level deep under uploads root for filename-only paths.
-      if (!normalizedPath.includes("/")) {
-        try {
-          const entries = await fs.readdir(UPLOAD_ROOT, { withFileTypes: true });
-          for (const entry of entries) {
-            if (!entry.isDirectory() || entry.name === "thumbs") continue;
-            const candidatePath = path.join(UPLOAD_ROOT, entry.name, normalizedPath);
-            if (await fs.pathExists(candidatePath)) {
-              fullPath = candidatePath;
-              break;
-            }
-          }
-        } catch (e) {
-          // ignore and return 404 below
-        }
-      }
-    }
-
-    // Fallback for renamed files with extra timestamp suffix.
-    // Example requested: model-3d/a-123.glb, actual file: model-3d/a-123-999.glb
-    if (!fullPath) {
-      const dirRel = path.posix.dirname(normalizedPath);
-      const fileName = path.posix.basename(normalizedPath);
-      const ext = path.extname(fileName);
-      const baseName = path.basename(fileName, ext);
-
-      if (dirRel && dirRel !== "." && ext) {
-        const { fullPath: dirFullPath } = resolvePath(dirRel);
-        if (await fs.pathExists(dirFullPath)) {
-          try {
-            const dirEntries = await fs.readdir(dirFullPath, { withFileTypes: true });
-            const directMatch = dirEntries.find((entry) =>
-              entry.isFile() && entry.name === fileName
-            );
-
-            if (directMatch) {
-              fullPath = path.join(dirFullPath, directMatch.name);
-            } else {
-              const fuzzyMatch = dirEntries.find((entry) => {
-                if (!entry.isFile()) return false;
-                const entryExt = path.extname(entry.name);
-                if (entryExt.toLowerCase() !== ext.toLowerCase()) return false;
-                const entryBase = path.basename(entry.name, entryExt);
-                return entryBase === baseName || entryBase.startsWith(`${baseName}-`);
-              });
-
-              if (fuzzyMatch) {
-                fullPath = path.join(dirFullPath, fuzzyMatch.name);
-              }
-            }
-          } catch (e) {
-            // ignore and return 404 below
-          }
-        }
-      }
-    }
-
-    // Final fallback: recursive search under uploads by exact filename first, then fuzzy match.
-    if (!fullPath) {
-      const requestedFileName = path.posix.basename(normalizedPath);
-      const requestedExt = path.extname(requestedFileName).toLowerCase();
-      const requestedBase = path.basename(requestedFileName, path.extname(requestedFileName)).toLowerCase();
-
-      fullPath = await findFileRecursively(
-        UPLOAD_ROOT,
-        (entryName) => entryName.toLowerCase() === requestedFileName.toLowerCase(),
-        5
-      );
-
-      if (!fullPath && requestedExt) {
-        fullPath = await findFileRecursively(
-          UPLOAD_ROOT,
-          (entryName) => {
-            const entryExt = path.extname(entryName).toLowerCase();
-            if (entryExt !== requestedExt) return false;
-            const entryBase = path.basename(entryName, path.extname(entryName)).toLowerCase();
-            return entryBase === requestedBase || entryBase.startsWith(`${requestedBase}-`) || requestedBase.startsWith(`${entryBase}-`);
-          },
-          5
-        );
-      }
-    }
-
-    if (!fullPath) {
-      // Hosting fallback: some environments serve /uploads from web server storage
-      // that is different from Node's local filesystem. In that case, fetch the
-      // static URL server-side and stream back through API to avoid CORS issues.
-      try {
-        const protocol = req.protocol || "https";
-        const host = req.get("host");
-        const staticUrl = `${protocol}://${host}/uploads/${normalizedPath}`;
-        const upstreamRes = await fetch(staticUrl);
-
-        if (upstreamRes.ok) {
-          const contentType = upstreamRes.headers.get("content-type") || "application/octet-stream";
-          const cacheControl = upstreamRes.headers.get("cache-control");
-
-          res.setHeader("Content-Type", contentType);
-          if (cacheControl) {
-            res.setHeader("Cache-Control", cacheControl);
-          }
-
-          const arrBuf = await upstreamRes.arrayBuffer();
-          return res.send(Buffer.from(arrBuf));
-        }
-      } catch (e) {
-        // ignore and return 404 below
-      }
-
-      return res.status(404).json({ message: "File không tồn tại" });
-    }
-
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) {
-      return res.status(400).json({ message: "Path phải là file" });
-    }
-
-    // Let Express infer the proper content-type by extension (.glb, .jpg, ...)
-    return res.sendFile(fullPath);
-  } catch (e) {
-    return res.status(500).json({ message: "Lỗi đọc file" });
   }
 });
 

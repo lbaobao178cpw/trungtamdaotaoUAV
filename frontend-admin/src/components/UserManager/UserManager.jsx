@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { useApi, useApiMutation } from "../../hooks/useApi";
 import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
-import { MEDIA_BASE_URL } from "../../config/apiConfig";
 import { notifySuccess, notifyError } from "../../lib/notifications";
 import "./UserManager.css";
 
@@ -250,8 +249,18 @@ export default function UserManager() {
 
   // location helpers
   const getApiBase = () => {
-    // Use the MEDIA_BASE_URL from apiConfig which is properly set during build
-    return MEDIA_BASE_URL;
+    // Check both VITE_API_BASE_URL and VITE_API_BASE
+    const envBase = (typeof import.meta !== 'undefined' && import.meta.env) 
+      ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE)
+      : null;
+    
+    if (envBase) {
+      return envBase.replace(/\/api\/?$/, ''); // Remove /api suffix if present
+    }
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `${window.location.protocol}//localhost:5000`;
+    }
+    return null;
   };
 
   const fetchProvinces = async () => {
