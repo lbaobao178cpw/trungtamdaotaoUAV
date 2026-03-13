@@ -42,6 +42,7 @@ jobs:
           # Thử đổi thành đường dẫn tuyệt đối nếu ./ không chạy đúng
           server-dir: ./ 
           
+          
           protocol: ftp
           port: 21
           # Xóa file state cũ để nó đồng bộ lại toàn bộ file mới
