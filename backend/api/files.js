@@ -14,17 +14,6 @@ const {
 // GET /api/files
 router.get("/files", async (req, res) => {
   try {
-    // Xác định base URL dựa vào environment
-    let baseUrl;
-    if (process.env.BACKEND_URL) {
-      baseUrl = process.env.BACKEND_URL.replace(/\/$/, ''); // Remove trailing slash
-    } else {
-      // Use request protocol and host as fallback (works for both localhost and production)
-      const protocol = req.protocol || 'http';
-      const host = req.get('host') || 'localhost:5000';
-      baseUrl = `${protocol}://${host}`;
-    }
-
     const currentFolder = req.query.folder || "";
     const { fullPath, relativePath } = resolvePath(currentFolder);
 
@@ -47,8 +36,8 @@ router.get("/files", async (req, res) => {
           filename: item.name,
           type: isDir ? "folder" : getFileType(item.name),
           path: itemRelPath,
-          url: isDir ? null : `${baseUrl}/uploads/${itemRelPath}`,
-          thumbUrl: hasThumb ? `${baseUrl}/uploads/thumbs/${itemRelPath}` : null,
+          url: isDir ? null : `/uploads/${itemRelPath}`,
+          thumbUrl: hasThumb ? `/uploads/thumbs/${itemRelPath}` : null,
         };
       });
 
@@ -88,22 +77,11 @@ router.post("/upload", upload.single("mediaFile"), async (req, res) => {
     // Generate thumbnail nếu là ảnh
     await generateThumbnail(req.file.path, relativePath);
 
-    // Xác định base URL dựa vào environment
-    let baseUrl;
-    if (process.env.BACKEND_URL) {
-      baseUrl = process.env.BACKEND_URL.replace(/\/$/, ''); // Remove trailing slash
-    } else {
-      // Use request protocol and host as fallback (works for both localhost and production)
-      const protocol = req.protocol || 'http';
-      const host = req.get('host') || 'localhost:5000';
-      baseUrl = `${protocol}://${host}`;
-    }
-
     res.json({
       success: true,
       filename: req.file.filename,
       path: filePath,
-      url: `${baseUrl}/uploads/${filePath}`,
+      url: `/uploads/${filePath}`,
       type: getFileType(req.file.filename)
     });
   } else {
