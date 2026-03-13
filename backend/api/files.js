@@ -12,6 +12,35 @@ const {
   THUMB_ROOT
 } = require("../utils/fileHelpers");
 
+const findFileRecursively = async (rootDir, matcher, maxDepth = 4) => {
+  const queue = [{ dir: rootDir, depth: 0 }];
+
+  while (queue.length > 0) {
+    const { dir, depth } = queue.shift();
+    let entries = [];
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch (e) {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (entry.name === "thumbs") continue;
+      const full = path.join(dir, entry.name);
+
+      if (entry.isFile() && matcher(entry.name, full)) {
+        return full;
+      }
+
+      if (entry.isDirectory() && depth < maxDepth) {
+        queue.push({ dir: full, depth: depth + 1 });
+      }
+    }
+  }
+
+  return null;
+};
+
 // GET /api/files
 router.get("/files", async (req, res) => {
   try {
@@ -146,6 +175,32 @@ router.get("/files/raw", async (req, res) => {
             // ignore and return 404 below
           }
         }
+      }
+    }
+
+    // Final fallback: recursive search under uploads by exact filename first, then fuzzy match.
+    if (!fullPath) {
+      const requestedFileName = path.posix.basename(normalizedPath);
+      const requestedExt = path.extname(requestedFileName).toLowerCase();
+      const requestedBase = path.basename(requestedFileName, path.extname(requestedFileName)).toLowerCase();
+
+      fullPath = await findFileRecursively(
+        UPLOAD_ROOT,
+        (entryName) => entryName.toLowerCase() === requestedFileName.toLowerCase(),
+        5
+      );
+
+      if (!fullPath && requestedExt) {
+        fullPath = await findFileRecursively(
+          UPLOAD_ROOT,
+          (entryName) => {
+            const entryExt = path.extname(entryName).toLowerCase();
+            if (entryExt !== requestedExt) return false;
+            const entryBase = path.basename(entryName, path.extname(entryName)).toLowerCase();
+            return entryBase === requestedBase || entryBase.startsWith(`${requestedBase}-`) || requestedBase.startsWith(`${entryBase}-`);
+          },
+          5
+        );
       }
     }
 
