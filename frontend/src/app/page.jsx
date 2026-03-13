@@ -584,7 +584,7 @@ useEffect(() => {
             và mở ra cơ hội nghề nghiệp trong lĩnh vực công nghệ bay không người lái đang phát triển mạnh mẽ.</p>
           </div>
           <div className="intro-stats">
-            <div className="intro-stat-item"><div className="intro-stat-number">XXX+</div><div className="intro-stat-label">Học viên</div></div>
+            <div className="intro-stat-item"><div className="intro-stat-number">9670</div><div className="intro-stat-label">Học viên</div></div>
             <div className="intro-stat-item"><div className="intro-stat-number">100%</div><div className="intro-stat-label">Công nhận</div></div>
             <div className="intro-stat-item"><div className="intro-stat-number">24/7</div><div className="intro-stat-label">Hỗ trợ</div></div>
           </div>
