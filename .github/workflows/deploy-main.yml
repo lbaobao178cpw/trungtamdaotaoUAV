@@ -30,13 +30,17 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_MEDIA_BASE_URL: ${{ secrets.VITE_MEDIA_BASE_URL }}
 
-      - name: 🚀 Deploy vào cả 2 túi (Phòng hờ)
+      - name: 🚀 Deploy trực tiếp vào private_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_MAIN_USER }} 
           password: ${{ secrets.FTP_MAIN_PASS }} 
           local-dir: ./frontend/dist/ 
-          # Đẩy vào public_html trước
-          server-dir: ./ 
+          
+          # THAY ĐỔI Ở ĐÂY: Trỏ thẳng vào private_html
+          # Nếu tài khoản FTP đang ở trong public_html, ta dùng ../ để nhảy ra ngoài rồi vào private
+          server-dir: ../private_html/ 
+          
           protocol: ftp
+          port: 21
