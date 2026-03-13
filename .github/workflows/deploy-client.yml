@@ -1,45 +1,51 @@
-name: Deploy Frontend to New Subdomain Structure
+name: Deploy Frontend Client (UAV Training)
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'frontend/**'
+      - 'frontend/**' # Chỉ chạy khi bạn thay đổi code trong thư mục frontend
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📂 Lấy mã nguồn mới nhất
+      - name: 📂 Lấy mã nguồn từ GitHub
         uses: actions/checkout@v4
 
       - name: 🟢 Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: 🏗️ Cài đặt và Build React
+      - name: 🏗️ Cài đặt thư viện và Build React
         working-directory: ./frontend
         run: |
           npm install
           CI=false npm run build
         env:
+          # Ép React dùng địa chỉ API thật từ GitHub Secrets thay vì localhost
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_MEDIA_BASE_URL: ${{ secrets.VITE_MEDIA_BASE_URL }}
 
-      - name: 🚀 Deploy chuẩn vào public_html
+      - name: 🚀 Đẩy bản Build lên Hosting Mắt Bão
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_CLIENT_USER }} 
           password: ${{ secrets.FTP_CLIENT_PASS }} 
           
-          # PHẢI LÀ ĐƯỜNG DẪN NÀY: Nó chỉ lấy các file trong thư mục đã build xong
+          # CHỈ LẤY folder dist bên trong frontend (không lấy source code)
           local-dir: ./frontend/dist/ 
           
+          # Đổ thẳng vào public_html (vì tài khoản FTP đã trỏ đúng chỗ)
           server-dir: ./ 
+          
           protocol: ftp
           port: 21
           timeout: 900000
-          state-name: .ftp-deploy-sync-state.json
+          # Xóa file cũ không còn dùng trên host để tránh rác
+          dangerous-clean-slate: false
