@@ -205,6 +205,31 @@ router.get("/files/raw", async (req, res) => {
     }
 
     if (!fullPath) {
+      // Hosting fallback: some environments serve /uploads from web server storage
+      // that is different from Node's local filesystem. In that case, fetch the
+      // static URL server-side and stream back through API to avoid CORS issues.
+      try {
+        const protocol = req.protocol || "https";
+        const host = req.get("host");
+        const staticUrl = `${protocol}://${host}/uploads/${normalizedPath}`;
+        const upstreamRes = await fetch(staticUrl);
+
+        if (upstreamRes.ok) {
+          const contentType = upstreamRes.headers.get("content-type") || "application/octet-stream";
+          const cacheControl = upstreamRes.headers.get("cache-control");
+
+          res.setHeader("Content-Type", contentType);
+          if (cacheControl) {
+            res.setHeader("Cache-Control", cacheControl);
+          }
+
+          const arrBuf = await upstreamRes.arrayBuffer();
+          return res.send(Buffer.from(arrBuf));
+        }
+      } catch (e) {
+        // ignore and return 404 below
+      }
+
       return res.status(404).json({ message: "File không tồn tại" });
     }
 
