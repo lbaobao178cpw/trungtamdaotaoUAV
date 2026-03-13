@@ -35,10 +35,14 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_MAIN_USER }} # Sẽ dùng: frontend@uavtrainningcenter.vn
+          username: ${{ secrets.FTP_MAIN_USER }} 
           password: ${{ secrets.FTP_MAIN_PASS }} 
           local-dir: ./frontend/dist/ 
+          
+          # Thử đổi thành đường dẫn tuyệt đối nếu ./ không chạy đúng
           server-dir: ./ 
+          
           protocol: ftp
           port: 21
-          timeout: 900000
+          # Xóa file state cũ để nó đồng bộ lại toàn bộ file mới
+          state-name: .ftp-deploy-sync-state.json
