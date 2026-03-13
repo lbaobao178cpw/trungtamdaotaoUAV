@@ -110,6 +110,45 @@ router.get("/files/raw", async (req, res) => {
       }
     }
 
+    // Fallback for renamed files with extra timestamp suffix.
+    // Example requested: model-3d/a-123.glb, actual file: model-3d/a-123-999.glb
+    if (!fullPath) {
+      const dirRel = path.posix.dirname(normalizedPath);
+      const fileName = path.posix.basename(normalizedPath);
+      const ext = path.extname(fileName);
+      const baseName = path.basename(fileName, ext);
+
+      if (dirRel && dirRel !== "." && ext) {
+        const { fullPath: dirFullPath } = resolvePath(dirRel);
+        if (await fs.pathExists(dirFullPath)) {
+          try {
+            const dirEntries = await fs.readdir(dirFullPath, { withFileTypes: true });
+            const directMatch = dirEntries.find((entry) =>
+              entry.isFile() && entry.name === fileName
+            );
+
+            if (directMatch) {
+              fullPath = path.join(dirFullPath, directMatch.name);
+            } else {
+              const fuzzyMatch = dirEntries.find((entry) => {
+                if (!entry.isFile()) return false;
+                const entryExt = path.extname(entry.name);
+                if (entryExt.toLowerCase() !== ext.toLowerCase()) return false;
+                const entryBase = path.basename(entry.name, entryExt);
+                return entryBase === baseName || entryBase.startsWith(`${baseName}-`);
+              });
+
+              if (fuzzyMatch) {
+                fullPath = path.join(dirFullPath, fuzzyMatch.name);
+              }
+            }
+          } catch (e) {
+            // ignore and return 404 below
+          }
+        }
+      }
+    }
+
     if (!fullPath) {
       return res.status(404).json({ message: "File không tồn tại" });
     }
