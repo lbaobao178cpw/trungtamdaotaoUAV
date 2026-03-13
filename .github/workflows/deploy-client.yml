@@ -24,22 +24,21 @@ jobs:
         run: |
           npm install
           CI=false npm run build
-        # --- PHẦN QUAN TRỌNG NHẤT ĐƯỢC THÊM VÀO ĐÂY ---
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_MEDIA_BASE_URL: ${{ secrets.VITE_MEDIA_BASE_URL }}
-        # ----------------------------------------------
 
-      - name: 🚀 Deploy vào public_html của Subdomain
+      - name: 🚀 Deploy chuẩn vào public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_CLIENT_USER }} 
           password: ${{ secrets.FTP_CLIENT_PASS }} 
           
+          # PHẢI LÀ ĐƯỜNG DẪN NÀY: Nó chỉ lấy các file trong thư mục đã build xong
           local-dir: ./frontend/dist/ 
-          server-dir: ./ 
           
+          server-dir: ./ 
           protocol: ftp
           port: 21
           timeout: 900000
