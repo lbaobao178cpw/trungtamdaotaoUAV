@@ -1,0 +1,41 @@
+name: Deploy React Admin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend-admin/**"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lấy mã nguồn mới nhất
+        uses: actions/checkout@v4
+
+      - name: Cài đặt Node.js môi trường bản mới nhất (Node 20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cài đặt thư viện và Build (Đóng gói)
+        working-directory: ./frontend-admin
+        # --- ĐÂY LÀ PHẦN QUAN TRỌNG NHẤT BẠN ĐANG THIẾU ---
+        env:
+          VITE_API_BASE_URL: https://api.uavtrainningcenter.vn/api
+          VITE_MEDIA_BASE_URL: https://api.uavtrainningcenter.vn
+        # ------------------------------------------------
+        run: |
+          npm install
+          CI=false npm run build
+
+      - name: Deploy gói Build lên hosting Mắt Bão
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_ADMIN_USER }}
+          password: ${{ secrets.FTP_ADMIN_PASS }}
+          local-dir: ./frontend-admin/dist/
+          protocol: ftp
+          dangerous-clean-slate: false

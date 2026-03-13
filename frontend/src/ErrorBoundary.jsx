@@ -11,10 +11,22 @@ class ErrorBoundary extends React.Component {
   static getDerivedStateFromError(error) {
     return { hasError: true, error: error };
   }
-
+     
   componentDidCatch(error, errorInfo) {
     console.error("Lỗi 3D bị bắt bởi Error Boundary:", error, errorInfo);
   }
+
+
+
+
+
+
+  
+
+
+
+
+
 
   render() {
     if (this.state.hasError) {

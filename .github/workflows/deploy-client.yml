@@ -1,0 +1,43 @@
+name: Deploy React to Subdomain Client
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📂 Lấy mã nguồn mới nhất
+        uses: actions/checkout@v4
+
+      - name: 🟢 Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 🏗️ Cài đặt và Build React
+        working-directory: ./frontend
+        run: |
+          npm install
+          CI=false npm run build
+
+      - name: 🚀 Deploy vào Subdomain Client
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }} 
+          password: ${{ secrets.FTP_PASSWORD }} 
+          local-dir: ./frontend/dist/ 
+          
+          # DÙNG DẤU CHẤM vì FTP đã trỏ thẳng vào folder /client rồi
+          server-dir: ./ 
+          
+          protocol: ftp
+          port: 21
+          timeout: 900000 
+          state-name: .ftp-deploy-sync-state.json
+          log-level: verbose

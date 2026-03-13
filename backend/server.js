@@ -69,7 +69,12 @@ app.use("/uploads", express.static(UPLOAD_ROOT, {
   maxAge: "7d",
   immutable: true
 }));
-
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "success", 
+    message: "Chào mừng đến với API của UAV Training Center! Backend đang hoạt động trơn tru 🚀" 
+  });
+});
 // --- ROUTES ---
 const filesRoute = require("./api/files");
 const pointsRoute = require("./api/points");
@@ -110,26 +115,26 @@ app.use("/api/otp", otpRoute);
 app.use("/api/nghiep-vu-hang-b", nghiepVuHangBRoute);
 
 // --- KHỞI ĐỘNG SERVER & KIỂM TRA DB ---
-// Silence runtime console output by default; keep originals to print only the server port
+
+// Tạm thời KHÔNG ẩn console.error để chúng ta biết nó lỗi gì trên hosting
 const __origConsoleLog = console.log;
 const __origConsoleWarn = console.warn;
 const __origConsoleError = console.error;
-console.log = console.warn = console.error = () => {};
+// console.log = console.warn = console.error = () => {}; // Tạm comment lại
 
 const startServer = async () => {
+  // BƯỚC 1: Luôn luôn bật Server lên trước để không bị lỗi 503 của DirectAdmin
+  app.listen(PORT, () => {
+    __origConsoleLog(`Server is running on PORT: ${PORT}`);
+  });
+
+  // BƯỚC 2: Sau khi server đã chạy, mới bắt đầu thử kết nối Database
   try {
-    // Test connection
     const [result] = await db.execute("SELECT 1");
-
-    // NOTE: Automatic DB alteration/migration code removed per request.
-    // Server will only test DB connection and start; it will not modify schema or seed data.
-
-    app.listen(PORT, () => {
-      // print only the server started message using original console.log
-      __origConsoleLog(`Server is running on PORT: ${PORT}`);
-    });
-
+    __origConsoleLog("✅ Database connected successfully!");
   } catch (error) {
+    // In lỗi ra để biết đường sửa cấu hình .env
+    __origConsoleError("❌ Lỗi kết nối Database:", error.message);
   }
 };
 

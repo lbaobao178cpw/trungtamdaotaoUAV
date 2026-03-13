@@ -32,7 +32,7 @@ import MyComments from './components/user/Comments/MyComments';
 import ChangePassword from './components/user/ChangePassword/ChangePassword';
 // Import Component 404 (Nếu có) hoặc dùng tạm div
 const NotFound = () => <div className="p-20 text-center">404 - Không tìm thấy trang</div>;
-
+// Kích hoạt deploy frontend.
 function App() {
   useEffect(() => {
     document.title = "UAV-Training";
@@ -108,3 +108,4 @@ function App() {
 }
 
 export default App;
+ 

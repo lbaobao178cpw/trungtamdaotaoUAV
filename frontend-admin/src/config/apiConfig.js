@@ -11,6 +11,10 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 };
 
+
+
+
+
 const getMediaBaseUrl = () => {
     if (typeof window !== 'undefined' && window.__MEDIA_BASE_URL__) {
         return window.__MEDIA_BASE_URL__;
@@ -18,6 +22,8 @@ const getMediaBaseUrl = () => {
 
     return import.meta.env.VITE_MEDIA_BASE_URL || 'http://localhost:5000';
 };
+
+
 
 export const API_BASE_URL = getApiBaseUrl();
 export const MEDIA_BASE_URL = getMediaBaseUrl();

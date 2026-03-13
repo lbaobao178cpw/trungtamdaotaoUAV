@@ -1,0 +1,28 @@
+name: Deploy Node.js Backend
+
+on:
+  push:
+    branches:
+      - main # Hoặc master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lấy mã nguồn mới nhất
+        uses: actions/checkout@v4
+
+      - name: Deploy code lên hosting Mắt Bão qua FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./backend/
+          protocol: ftp # <--- Bổ sung dòng này để tránh lỗi handshake bảo mật
+          exclude: |
+            **/node_modules/**
+            **/uploads/**
+            .git/**
+            .github/**
+          dangerous-clean-slate: false

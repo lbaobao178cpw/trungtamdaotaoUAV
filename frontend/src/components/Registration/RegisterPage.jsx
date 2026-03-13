@@ -402,7 +402,7 @@ function RegisterPage() {
         </ol>
       </div>
 
-      <div className="terms-section"><label className="checkbox-label required-checkbox"><input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} /><span>Tôi cam kết các thông tin khai báo là trung thực</span></label></div>
+      <div className="terms-section"><label className="checkbox-label required-checkbox"><input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} /><span>Tôi cam kết hoàn toàn chịu trách nhiệm về việc cung cấp thông tin xác thực theo dữ liệu cá nhân</span></label></div>
       <button type="button" onClick={handleNext} className={`btn btn-primary btn-full ${!agreedToTerms ? "btn-disabled" : ""}`}>Bắt đầu đăng ký <ArrowRight size={20} /></button>
     </div>
   );
@@ -410,6 +410,9 @@ function RegisterPage() {
   const renderStep2 = () => (
     <div className="register-step">
       <h2 className="step-title">Thông tin cá nhân</h2>
+
+
+
 
       {/* CCCD SECTION */}
       <div className="form-section">
