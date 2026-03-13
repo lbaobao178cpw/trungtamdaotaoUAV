@@ -5,17 +5,6 @@ const path = require("path");
 const pool = require("../config/db");
 const { UPLOAD_ROOT } = require("../utils/fileHelpers");
 
-router.get("/:key", async (req, res) => {
-  try {
-    const { key } = req.params;
-    const [rows] = await pool.execute("SELECT setting_value FROM settings WHERE setting_key = ?", [key]);
-    if (rows.length > 0) res.json({ value: rows[0].setting_value });
-    else res.status(404).json({ message: "Key not found" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 // Proxy model files via API route so cross-origin admin/frontend can load GLB/GLTF reliably.
 router.get("/model-proxy", async (req, res) => {
   try {
@@ -66,6 +55,17 @@ router.get("/model-proxy", async (req, res) => {
     res.setHeader("Cache-Control", "public, max-age=86400");
 
     fs.createReadStream(fullPath).pipe(res);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/:key", async (req, res) => {
+  try {
+    const { key } = req.params;
+    const [rows] = await pool.execute("SELECT setting_value FROM settings WHERE setting_key = ?", [key]);
+    if (rows.length > 0) res.json({ value: rows[0].setting_value });
+    else res.status(404).json({ message: "Key not found" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
