@@ -36,6 +36,8 @@ jobs:
           # Đẩy vào thư mục domain cụ thể trên hosting MatBao (phải kết thúc bằng '/')
           server-dir: domains/Uavtrainningcenter.vn/
 
+
+
           protocol: ftp
           port: 21
           timeout: 900000
