@@ -8,7 +8,7 @@ import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { STYLES, ANIMATIONS } from "../../constants/styles";
 import { notifyWarning, notifyError, notifySuccess } from "../../lib/notifications";
 import { uploadModel3D, listModel3Ds } from "../../lib/cloudinaryService";
-import { normalizeMediaUrl } from "../../lib/mediaUrl";
+import { normalizeMediaUrl, getModelPreviewUrl } from "../../lib/mediaUrl";
 import "./Model3DManager.css";
 
 // === 0. WEBGL SUPPORT CHECK ===
@@ -165,6 +165,7 @@ export default function Model3DManager() {
   const { data: currentModelData } = useApi(`${API_ENDPOINTS.SETTINGS}/current_model_url`);
   const { data: defaultViewData } = useApi(`${API_ENDPOINTS.SETTINGS}/default_camera_view`);
   const points = useMemo(() => Array.isArray(pointsData) ? pointsData : [], [pointsData]);
+  const previewModelUrl = useMemo(() => getModelPreviewUrl(currentModel), [currentModel]);
 
   // Initialize model and camera view from API data
   useEffect(() => {
@@ -389,7 +390,7 @@ export default function Model3DManager() {
                   <directionalLight intensity={5} color={0xdad5ff} position={[25, 35, 25]} />
                   <directionalLight intensity={0.5} color={0xf0ecff} position={[-20, 25, -20]} />
 
-                  <ModelPreview url={currentModel} />
+                  <ModelPreview url={previewModelUrl} />
                   <PointsLayer points={points} />
                 </Suspense>
               </ErrorBoundary3D>

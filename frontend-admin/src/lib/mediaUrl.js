@@ -1,4 +1,5 @@
 import { MEDIA_BASE_URL } from "../config/apiConfig";
+import { API_BASE_URL } from "../config/apiConfig";
 
 export const normalizeMediaUrl = (url) => {
   if (!url || typeof url !== "string") return url;
@@ -18,4 +19,18 @@ export const normalizeMediaUrl = (url) => {
   }
 
   return trimmed;
+};
+
+export const getModelPreviewUrl = (url) => {
+  const normalized = normalizeMediaUrl(url);
+  if (!normalized || typeof normalized !== "string") return normalized;
+
+  const uploadsMarker = "/uploads/";
+  const idx = normalized.indexOf(uploadsMarker);
+  if (idx === -1) {
+    return normalized;
+  }
+
+  const relativePath = normalized.slice(idx + uploadsMarker.length);
+  return `${API_BASE_URL}/files/raw?path=${encodeURIComponent(relativePath)}`;
 };

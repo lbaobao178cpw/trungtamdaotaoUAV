@@ -61,6 +61,28 @@ router.get("/files", async (req, res) => {
   }
 });
 
+// GET /api/files/raw?path=<relative_path>
+router.get("/files/raw", async (req, res) => {
+  try {
+    const relativePath = req.query.path || "";
+    const { fullPath } = resolvePath(relativePath);
+
+    if (!relativePath || !await fs.pathExists(fullPath)) {
+      return res.status(404).json({ message: "File không tồn tại" });
+    }
+
+    const stat = await fs.stat(fullPath);
+    if (stat.isDirectory()) {
+      return res.status(400).json({ message: "Path phải là file" });
+    }
+
+    // Let Express infer the proper content-type by extension (.glb, .jpg, ...)
+    return res.sendFile(fullPath);
+  } catch (e) {
+    return res.status(500).json({ message: "Lỗi đọc file" });
+  }
+});
+
 // DELETE /api/files
 router.delete("/files", async (req, res) => {
   try {
