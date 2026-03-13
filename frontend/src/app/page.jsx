@@ -512,7 +512,7 @@ useEffect(() => {
           <div className="hero-logo">
             <img src="/images/logo_white_on_trans.png" alt="Logo" onError={(e) => (e.target.style.display = "none")} />
           </div>
-          <h1>Hệ thống Đào tạo và Cấp Chứng chỉ 1<br />Điều khiển UAV Theo Tiêu Chuẩn<br />Quy Định Pháp Luật Việt Nam</h1>
+          <h1>Hệ thống Đào tạo và Cấp Chứng chỉ<br />Điều khiển UAV Theo Tiêu Chuẩn<br />Quy Định Pháp Luật Việt Nam</h1>
           <p>Theo Nghị định Số 288/2025/NĐ-CP Quy Định về Quản lý Tàu Bay Không Người Lái</p>
           <Link to="/dang-ky" className="btn btn-register1">
             Đăng ký học tập
