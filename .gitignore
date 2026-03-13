@@ -56,7 +56,7 @@ Thumbs.db
 # Directories with heavy files
 media-server/uploads/
 frontend/public/course-video/
-frontend/public/models/
+
 frontend/public/document/
 backend/uploads/* - Cho phép upload folder lên Git
 !backend/uploads/.gitkeep
