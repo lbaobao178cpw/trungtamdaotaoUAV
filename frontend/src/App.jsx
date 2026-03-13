@@ -38,6 +38,11 @@ function App() {
     document.title = "UAV-Training";
   }, []);
 
+
+  
+
+  
+  
   return (
     <>
       <AuthProvider>
