@@ -30,16 +30,13 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_MEDIA_BASE_URL: ${{ secrets.VITE_MEDIA_BASE_URL }}
 
-      - name: 🚀 Deploy vào Tên Miền Chính
+      - name: 🚀 Deploy vào cả 2 túi (Phòng hờ)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_MAIN_USER }} 
           password: ${{ secrets.FTP_MAIN_PASS }} 
           local-dir: ./frontend/dist/ 
+          # Đẩy vào public_html trước
           server-dir: ./ 
           protocol: ftp
-          port: 21
-          timeout: 900000
-          # Xóa file state cũ để ép GitHub đẩy lại toàn bộ file models mới
-          state-name: .ftp-deploy-sync-state.json
