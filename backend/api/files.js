@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require("fs-extra");
 const path = require("path");
 const {
+  UPLOAD_ROOT,
   resolvePath,
   getThumbPath,
   getFileType,
@@ -64,10 +65,52 @@ router.get("/files", async (req, res) => {
 // GET /api/files/raw?path=<relative_path>
 router.get("/files/raw", async (req, res) => {
   try {
-    const relativePath = req.query.path || "";
-    const { fullPath } = resolvePath(relativePath);
+    const relativePath = (req.query.path || "").toString().trim();
+    if (!relativePath) {
+      return res.status(404).json({ message: "File không tồn tại" });
+    }
 
-    if (!relativePath || !await fs.pathExists(fullPath)) {
+    const normalizedPath = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
+    const candidateRelativePaths = [normalizedPath];
+
+    // Backward compatibility: older settings may store only filename without folder.
+    if (!normalizedPath.includes("/")) {
+      candidateRelativePaths.push(`model-3d/${normalizedPath}`);
+      candidateRelativePaths.push(`course-uploads/${normalizedPath}`);
+      candidateRelativePaths.push(`Solutions/${normalizedPath}`);
+      candidateRelativePaths.push(`panorama/${normalizedPath}`);
+      candidateRelativePaths.push(`Documents/${normalizedPath}`);
+    }
+
+    let fullPath = null;
+    for (const candidate of candidateRelativePaths) {
+      const resolved = resolvePath(candidate);
+      if (await fs.pathExists(resolved.fullPath)) {
+        fullPath = resolved.fullPath;
+        break;
+      }
+    }
+
+    if (!fullPath) {
+      // Last fallback: search one level deep under uploads root for filename-only paths.
+      if (!normalizedPath.includes("/")) {
+        try {
+          const entries = await fs.readdir(UPLOAD_ROOT, { withFileTypes: true });
+          for (const entry of entries) {
+            if (!entry.isDirectory() || entry.name === "thumbs") continue;
+            const candidatePath = path.join(UPLOAD_ROOT, entry.name, normalizedPath);
+            if (await fs.pathExists(candidatePath)) {
+              fullPath = candidatePath;
+              break;
+            }
+          }
+        } catch (e) {
+          // ignore and return 404 below
+        }
+      }
+    }
+
+    if (!fullPath) {
       return res.status(404).json({ message: "File không tồn tại" });
     }
 
