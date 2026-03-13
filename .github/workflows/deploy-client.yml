@@ -33,8 +33,8 @@ jobs:
           password: ${{ secrets.FTP_CLIENT_PASS }}
           local-dir: ./frontend/dist/
 
-          # Đẩy vào thư mục domain cụ thể trên hosting MatBao
-          server-dir: domains/Uavtrainningcenter.vn
+          # Đẩy vào thư mục domain cụ thể trên hosting MatBao (phải kết thúc bằng '/')
+          server-dir: domains/Uavtrainningcenter.vn/
 
           protocol: ftp
           port: 21
