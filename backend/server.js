@@ -59,9 +59,23 @@ app.use(compression());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// Set UTF-8 encoding for all responses
-app.use((req, res, next) => {
+// Keep JSON content type only for API responses (do not override static file mime types)
+app.use("/api", (req, res, next) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
+
+// Explicit CORS headers for static assets so admin domain can fetch model/thumbnail files
+app.use("/uploads", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Range');
   next();
 });
 
