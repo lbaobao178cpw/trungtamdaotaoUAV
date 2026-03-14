@@ -976,7 +976,7 @@ useEffect(() => {
       </section>
 
       {/* 7. GIẢI PHÁP */}
-      <section className="section section-white" style={{ padding: "60px 0" }}>
+      {/* <section className="section section-white" style={{ padding: "60px 0" }}>
         <div className="container">
           <h2 className="section-title solutions-section-title">Giải pháp cho các ngành nghề khác nhau</h2>
           {solutions.length === 0 ? (
@@ -998,7 +998,7 @@ useEffect(() => {
             </div>
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* 8. THÔNG BÁO CHÍNH THỨC */}
       <section className="section section-gray">

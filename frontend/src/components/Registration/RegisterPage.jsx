@@ -739,7 +739,7 @@ function RegisterPage() {
                 else setFormData(prev => ({ ...prev, confirmations: [] }));
               }}
             />
-            <span> Tôi xin cam đoan các thông tin trên là đúng sự thật và chịu trách nhiệm trước pháp luật.</span>
+            <span>Tôi cam kết hoàn toàn chịu trách nhiệm về việc cung cấp thông tin xác thực theo dữ liệu cá nhân</span>
           </label>
         </div>
 
