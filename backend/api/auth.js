@@ -165,7 +165,7 @@ router.post("/register", registerLimiter, async (req, res) => {
       currentCityId, currentWardId,
       emergencyName, emergencyPhone, emergencyRelation,
       uavTypes, uavPurpose, activityArea, experience, certificateType,
-      cccdFront, cccdBack, tierBServices
+      cccdFront, cccdBack, tierBServices, avatar
     } = req.body;
 
     // === VALIDATION: TẤT CẢ CÁC TRƯỜNG BẮT BUỘC ===
@@ -216,8 +216,8 @@ router.post("/register", registerLimiter, async (req, res) => {
 
     // Insert Users (new registrations are not approved by default)
     const [userResult] = await connection.query(
-      `INSERT INTO users (phone, email, password_hash, full_name, role, is_approved) VALUES (?, ?, ?, ?, 'student', 0)`,
-      [phone, email, password_hash, fullName]
+      `INSERT INTO users (phone, email, password_hash, full_name, avatar, role, is_approved) VALUES (?, ?, ?, ?, ?, 'student', 0)`,
+      [phone, email, password_hash, fullName, avatar || null]
     );
     const newUserId = userResult.insertId;
 
