@@ -566,12 +566,10 @@
     background: rgba(29, 78, 216, 0.1);
 }
 
-.submit-progress-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9rem;
-    font-weight: 600;
+.submit-progress-percent {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
     color: #dbeafe;
     margin-bottom: 8px;
 }
@@ -654,6 +652,18 @@
         height: 200px;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    .submit-progress-wrap {
+        padding: 10px 12px;
+    }
+
+    .submit-progress-percent {
+        font-size: 0.95rem;
+    }
+
+    .submit-progress-track {
+        height: 7px;
     }
 }
 

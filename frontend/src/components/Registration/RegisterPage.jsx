@@ -37,7 +37,6 @@ function RegisterPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
-  const [submitStage, setSubmitStage] = useState("");
 
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
@@ -629,7 +628,6 @@ function RegisterPage() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
     if (!isLoading) {
       setSubmitProgress(0);
-      setSubmitStage("");
     }
   };
 
@@ -637,7 +635,6 @@ function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
     setSubmitProgress(5);
-    setSubmitStage("Đang kiểm tra dữ liệu...");
 
     try {
       // === VALIDATE TẤT CẢ CÁC STEPS TRƯỚC KHI SUBMIT ===
@@ -682,13 +679,11 @@ function RegisterPage() {
         const missingFields = Object.values(allErrors).join('\n');
         toast.error(`❌ Vui lòng kiểm tra lại:\n\n${missingFields}`);
         setSubmitProgress(0);
-        setSubmitStage("");
         setIsLoading(false);
         return;
       }
 
       setSubmitProgress(20);
-      setSubmitStage("Đang chuẩn bị upload ảnh...");
 
       const uploadQueue = [];
       if (formData.avatar) {
@@ -728,7 +723,6 @@ function RegisterPage() {
 
             const progressByUpload = 25 + Math.round((completedUploads / totalUploads) * 55);
             setSubmitProgress(progressByUpload);
-            setSubmitStage(`Đang tải ảnh ${completedUploads}/${totalUploads}...`);
 
             return { key: item.key, url };
           })
@@ -744,7 +738,6 @@ function RegisterPage() {
       }
 
       setSubmitProgress(90);
-      setSubmitStage("Đang gửi hồ sơ đăng ký...");
 
       const submitData = {
         ...formData,
@@ -769,12 +762,10 @@ function RegisterPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại");
       setSubmitProgress(100);
-      setSubmitStage("Đăng ký thành công");
       console.log("Đăng ký thành công, hiển thị toast");
       toast.success("Đăng ký thành công! Tài khoản của bạn đang chờ kiểm duyệt từ quản trị viên.");
       setTimeout(() => navigate("/dang-nhap"), 1000); // Delay 1s để toast hiện
     } catch (err) {
-      setSubmitStage("Đăng ký thất bại");
       toast.error(err.message);
     } finally {
       setIsLoading(false);
@@ -1199,10 +1190,7 @@ function RegisterPage() {
 
         {(isLoading || submitProgress > 0) && (
           <div className="submit-progress-wrap" aria-live="polite">
-            <div className="submit-progress-meta">
-              <span>{submitStage || "Đang xử lý..."}</span>
-              <strong>{submitProgress}%</strong>
-            </div>
+            <div className="submit-progress-percent">{submitProgress}%</div>
             <div className="submit-progress-track">
               <div className="submit-progress-fill" style={{ width: `${submitProgress}%` }}></div>
             </div>
