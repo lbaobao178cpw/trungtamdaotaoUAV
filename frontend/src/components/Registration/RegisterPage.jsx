@@ -610,51 +610,41 @@ function RegisterPage() {
         return;
       }
 
-      let cccdFrontUrl = null;
-      let cccdBackUrl = null;
-      let avatarUrl = null;
+      const uploadCccdImage = async (file, errorLabel) => {
+        if (!file) return null;
 
-      // Upload avatar (optional)
-      if (formData.avatar) {
-        const avatarFormData = new FormData();
-        avatarFormData.append('file', formData.avatar);
+        const body = new FormData();
+        body.append('file', file);
 
-        const avatarRes = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: avatarFormData
-        });
-        const avatarData = await avatarRes.json();
-        if (!avatarRes.ok) throw new Error(avatarData.error || 'Không thể upload ảnh đại diện');
-        avatarUrl = avatarData.secure_url;
-      }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      // Upload CCCD Front lên backend (proxy Cloudinary)
-      if (formData.cccdFront) {
-        const formDataFront = new FormData();
-        formDataFront.append('file', formData.cccdFront);
+        try {
+          const response = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
+            method: 'POST',
+            body,
+            signal: controller.signal
+          });
 
-        const resFront = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: formDataFront
-        });
-        const dataFront = await resFront.json();
-        if (!resFront.ok) throw new Error(dataFront.error || 'Không thể upload CCCD mặt trước');
-        cccdFrontUrl = dataFront.secure_url;
-      }
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || errorLabel);
+          return data.secure_url;
+        } catch (uploadError) {
+          if (uploadError.name === 'AbortError') {
+            throw new Error(`${errorLabel} (timeout)`);
+          }
+          throw uploadError;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
 
-      // Upload CCCD Back lên backend (proxy Cloudinary)
-      if (formData.cccdBack) {
-        const formDataBack = new FormData();
-        formDataBack.append('file', formData.cccdBack);
-
-        const resBack = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: formDataBack
-        });
-        const dataBack = await resBack.json();
-        if (!resBack.ok) throw new Error(dataBack.error || 'Không thể upload CCCD mặt sau');
-        cccdBackUrl = dataBack.secure_url;
-      }
+      // Tối ưu tốc độ: upload các ảnh song song thay vì tuần tự.
+      const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
+        uploadCccdImage(formData.avatar, 'Không thể upload ảnh đại diện'),
+        uploadCccdImage(formData.cccdFront, 'Không thể upload CCCD mặt trước'),
+        uploadCccdImage(formData.cccdBack, 'Không thể upload CCCD mặt sau')
+      ]);
 
       const submitData = {
         ...formData,
