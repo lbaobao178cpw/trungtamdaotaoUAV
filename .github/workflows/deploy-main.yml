@@ -41,3 +41,4 @@ jobs:
           
           protocol: ftp
           port: 21
+          timeout: 600000
