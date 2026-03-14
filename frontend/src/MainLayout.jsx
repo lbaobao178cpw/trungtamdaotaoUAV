@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 import { useEffect } from "react";
 import { useAuth } from "./contexts/AuthContext";
+import CookieConsentBanner from "./components/cookie/CookieConsentBanner";
 
 function MainLayout() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ function MainLayout() {
       {/* Header */}
       <Outlet />
       {/* Footer */}
+      <CookieConsentBanner />
     </>
   );
 }

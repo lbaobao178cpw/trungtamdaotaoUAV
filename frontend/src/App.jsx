@@ -8,6 +8,9 @@ import "react-toastify/dist/ReactToastify.css";
 import MainLayout from "./components/MainLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import AuthInitializer from "./components/auth/AuthInitializer";
+import { CookieConsentProvider } from "./contexts/CookieConsentContext";
+import ConsentAnalyticsBridge from "./components/cookie/ConsentAnalyticsBridge";
+import CookiePolicyPage from "./components/cookie/CookiePolicyPage";
 
 /* === IMPORT CÁC COMPONENTS === */
 import UAVLandingPage from "./app/page";
@@ -49,11 +52,13 @@ function App() {
   return (
     <>
       <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AuthInitializer>
-            <AliveScope>
-              <Routes>
-                <Route element={<MainLayout />}>
+        <CookieConsentProvider>
+          <ConsentAnalyticsBridge />
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AuthInitializer>
+              <AliveScope>
+                <Routes>
+                  <Route element={<MainLayout />}>
                   {/* 1. TRANG CHỦ (Ưu tiên cao nhất) */}
                   <Route
                     path="/"
@@ -74,6 +79,7 @@ function App() {
                   <Route path="/dat-lich-thi" element={<ExamBookingPage />} />
                   <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicyPage />} />
                   <Route path="/dieu-khoan-su-dung" element={<TermsOfServicePage />} />
+                  <Route path="/chinh-sach-cookie" element={<CookiePolicyPage />} />
 
                   {/* Route Khóa học */}
                   <Route path="/khoa-hoc" element={<CoursesPage />} />
@@ -93,11 +99,12 @@ function App() {
 
                   {/* 4. Route 404 */}
                   <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </AliveScope>
-          </AuthInitializer>
-        </Router>
+                  </Route>
+                </Routes>
+              </AliveScope>
+            </AuthInitializer>
+          </Router>
+        </CookieConsentProvider>
       </AuthProvider>
       <ToastContainer
         position="top-right"
