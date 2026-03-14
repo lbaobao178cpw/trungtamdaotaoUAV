@@ -3,95 +3,106 @@
   right: 24px;
   bottom: 24px;
   z-index: 1200;
-  width: min(460px, calc(100vw - 32px));
+  width: min(500px, calc(100vw - 32px));
 }
 
 .cookie-card {
-  border-radius: 16px;
-  background: linear-gradient(145deg, #fffef8 0%, #f5fbff 100%);
-  border: 1px solid #d8e8f3;
-  box-shadow: 0 16px 42px rgba(8, 40, 79, 0.18);
-  padding: 16px;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(248, 253, 255, 0.96)),
+    radial-gradient(320px 120px at 0% 0%, rgba(11, 119, 181, 0.08), transparent 70%);
+  border: 1px solid #d4e7f5;
+  box-shadow: 0 24px 50px rgba(4, 50, 84, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 20px;
 }
 
 .cookie-head h3 {
   margin: 0;
-  font-size: 18px;
-  color: #143656;
+  font-size: 20px;
+  color: #14395a;
+  letter-spacing: 0.2px;
 }
 
 .cookie-head p {
-  margin: 8px 0 0;
-  color: #415469;
-  font-size: 13px;
+  margin: 10px 0 0;
+  color: #425a72;
+  font-size: 14px;
   line-height: 1.5;
 }
 
 .cookie-tags {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
 
 .cookie-tag {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: #0f5d86;
-  background: #eaf4fb;
-  border: 1px solid #cce4f3;
+  color: #0b5f8e;
+  background: #e9f5fc;
+  border: 1px solid #c8e4f5;
   border-radius: 999px;
-  padding: 3px 10px;
+  padding: 4px 11px;
 }
 
 .cookie-summary {
   margin: 12px 0 0;
-  font-size: 12px;
-  color: #4f5f70;
+  font-size: 13px;
+  color: #51687e;
 }
 
 .cookie-policy-link-wrap {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: 12px;
-  color: #4f5f70;
+  color: #5a6f83;
 }
 
 .cookie-policy-link-wrap a {
-  color: #0d66ab;
+  color: #0a69ad;
   font-weight: 700;
   text-decoration: none;
 }
 
+.cookie-policy-link-wrap a:hover {
+  text-decoration: underline;
+}
+
 .cookie-customize {
-  margin-top: 12px;
-  border-top: 1px dashed #c8d8e8;
-  padding-top: 10px;
+  margin-top: 14px;
+  border-top: 1px dashed #c3d9ea;
+  padding-top: 12px;
 }
 
 .cookie-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 14px;
+  padding: 10px 0;
 }
 
 .cookie-row strong {
   display: block;
-  color: #1a3b58;
-  font-size: 13px;
+  color: #1b3d5a;
+  font-size: 14px;
 }
 
 .cookie-row small {
   display: block;
-  margin-top: 2px;
-  color: #5e7287;
-  font-size: 11px;
+  margin-top: 4px;
+  color: #5c7388;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .cookie-row input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   accent-color: #0d73bc;
+  margin-top: 2px;
 }
 
 .cookie-row-lock input[type="checkbox"] {
@@ -99,34 +110,44 @@
 }
 
 .cookie-actions {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  margin-top: 16px;
+  display: block;
 }
 
 .cookie-btn {
-  border: none;
-  border-radius: 10px;
-  padding: 9px 8px;
-  font-size: 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 10px 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .cookie-btn.ghost {
-  background: #ecf3f7;
-  color: #2e5069;
+  background: #edf4f8;
+  color: #2c4d67;
+  border-color: #d8e6ef;
 }
 
 .cookie-btn.subtle {
-  background: #fff4dc;
-  color: #8f5a00;
+  background: #fff3dd;
+  color: #8b5b05;
+  border-color: #f5ddad;
 }
 
 .cookie-btn.primary {
-  background: #0a78c6;
+  background: linear-gradient(135deg, #0c79c5, #0b8fb6);
   color: #ffffff;
+  box-shadow: 0 8px 16px rgba(12, 121, 197, 0.28);
+}
+
+.cookie-btn-single {
+  width: 100%;
+}
+
+.cookie-btn:hover {
+  transform: translateY(-1px);
 }
 
 .cookie-pill {
@@ -134,15 +155,16 @@
   right: 16px;
   bottom: 16px;
   z-index: 1190;
-  border: 1px solid #bedcf0;
-  background: #ffffff;
-  color: #0a5b96;
+  border: 1px solid #b8d9ef;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0a5f9a;
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 10px 15px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(5, 63, 106, 0.16);
+  box-shadow: 0 10px 24px rgba(5, 63, 106, 0.2);
+  transition: transform 0.2s ease;
 }
 
 @media (max-width: 640px) {
@@ -154,10 +176,10 @@
   }
 
   .cookie-card {
-    padding: 14px;
+    padding: 16px;
   }
 
   .cookie-actions {
-    grid-template-columns: 1fr;
+    display: block;
   }
 }

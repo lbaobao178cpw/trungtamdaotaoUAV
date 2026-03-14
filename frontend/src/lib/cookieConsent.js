@@ -8,8 +8,8 @@ export const DEFAULT_COOKIE_PREFERENCES = {
 
 export const normalizeCookiePreferences = (input) => ({
   necessary: true,
-  analytics: !!input?.analytics,
-  marketing: !!input?.marketing,
+  analytics: false,
+  marketing: false,
 });
 
 export const readCookieConsent = () => {

@@ -5,7 +5,7 @@ import "./CookiePolicyPage.css";
 export default function CookiePolicyPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Chinh sach Cookie - UAV Training Center";
+    document.title = "Chính sách Cookie - UAV Training Center";
 
     return () => {
       document.title = "UAV Training Center";
@@ -16,57 +16,57 @@ export default function CookiePolicyPage() {
     <div className="cookie-policy-page">
       <div className="cookie-policy-shell">
         <div className="cookie-policy-breadcrumb">
-          <Link to="/">Trang chu</Link>
+          <Link to="/">Trang chủ</Link>
           <span>/</span>
-          <span>Chinh sach Cookie</span>
+          <span>Chính sách Cookie</span>
         </div>
 
         <div className="cookie-policy-hero">
-          <h1>Chinh sach Cookie</h1>
+          <h1>Chính sách Cookie</h1>
           <p>
-            Chung toi su dung cookie de dam bao he thong hoc UAV van hanh on dinh, tang toc do tai trang va toi uu
-            trai nghiem hoc vien.
+            Chúng tôi sử dụng cookie để đảm bảo hệ thống học UAV vận hành ổn định, tăng tốc độ tải trang và tối ưu
+            trải nghiệm học viên.
           </p>
         </div>
 
         <div className="cookie-policy-grid">
           <section className="cookie-policy-card">
-            <h2>1. Cookie la gi?</h2>
+            <h2>1. Cookie là gì?</h2>
             <p>
-              Cookie la tep nho duoc trinh duyet luu tren thiet bi cua ban. Cookie cho phep website ghi nho lua chon,
-              trang thai dang nhap va mot so thiet lap ca nhan.
+              Cookie là tệp nhỏ được trình duyệt lưu trên thiết bị của bạn. Cookie cho phép website ghi nhớ lựa chọn,
+              trạng thái đăng nhập và một số thiết lập cá nhân.
             </p>
           </section>
 
           <section className="cookie-policy-card">
-            <h2>2. Nhom cookie chung toi su dung</h2>
+            <h2>2. Nhóm cookie chúng tôi sử dụng</h2>
             <ul>
-              <li>Can thiet: bat buoc de dang nhap, bao mat phien va tai du lieu.</li>
-              <li>Phan tich: giup danh gia hieu suat chuc nang va cai thien toc do.</li>
-              <li>Tiep thi: dung de ca nhan hoa thong tin goi y noi dung.</li>
+              <li>Cần thiết: bắt buộc cho đăng nhập, bảo mật phiên và tải dữ liệu.</li>
+              <li>Phân tích: giúp đánh giá hiệu suất tính năng và cải thiện tốc độ.</li>
+              <li>Tiếp thị: dùng để cá nhân hóa thông tin gợi ý nội dung.</li>
             </ul>
           </section>
 
           <section className="cookie-policy-card">
-            <h2>3. Kiem soat cookie</h2>
+            <h2>3. Kiểm soát cookie</h2>
             <p>
-              Ban co the doi lua chon bat ky luc nao bang nut Cookie settings o goc duoi phai man hinh. Ngoai ra,
-              ban co the xoa cookie tu cai dat trinh duyet.
+              Bạn có thể đổi lựa chọn bất kỳ lúc nào bằng nút Cài đặt cookie ở góc dưới phải màn hình. Ngoài ra,
+              bạn có thể xóa cookie từ cài đặt trình duyệt.
             </p>
           </section>
 
           <section className="cookie-policy-card">
-            <h2>4. Luu tru va cap nhat</h2>
+            <h2>4. Lưu trữ và cập nhật</h2>
             <p>
-              Lua chon cookie duoc luu tren trinh duyet cua ban de tranh hoi lai nhieu lan. Chung toi co the cap nhat
-              chinh sach nay khi co thay doi ve cong nghe hoac quy dinh phap ly.
+              Lựa chọn cookie được lưu trên trình duyệt của bạn để tránh hỏi lại nhiều lần. Chúng tôi có thể cập nhật
+              chính sách này khi có thay đổi về công nghệ hoặc quy định pháp lý.
             </p>
           </section>
         </div>
 
         <div className="cookie-policy-footer">
-          <Link to="/chinh-sach-bao-mat">Xem Chinh sach Bao mat</Link>
-          <Link to="/dieu-khoan-su-dung">Xem Dieu khoan Su dung</Link>
+          <Link to="/chinh-sach-bao-mat">Xem Chính sách Bảo mật</Link>
+          <Link to="/dieu-khoan-su-dung">Xem Điều khoản Sử dụng</Link>
         </div>
       </div>
     </div>
