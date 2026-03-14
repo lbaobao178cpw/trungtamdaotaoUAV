@@ -1,11 +1,13 @@
 name: Deploy Node.js Backend
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main # Hoặc master
     paths:
       - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
 
 jobs:
   deploy:
