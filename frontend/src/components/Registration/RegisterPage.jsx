@@ -675,42 +675,6 @@ function RegisterPage() {
         return;
       }
 
-<<<<<<< HEAD
-      const uploadCccdImage = async (file, errorLabel) => {
-        if (!file) return null;
-
-        const body = new FormData();
-        body.append('file', file);
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000);
-
-        try {
-          const response = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-            method: 'POST',
-            body,
-            signal: controller.signal
-          });
-
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || errorLabel);
-          return data.secure_url;
-        } catch (uploadError) {
-          if (uploadError.name === 'AbortError') {
-            throw new Error(`${errorLabel} (timeout)`);
-          }
-          throw uploadError;
-        } finally {
-          clearTimeout(timeoutId);
-        }
-      };
-
-      // Tối ưu tốc độ: upload các ảnh song song thay vì tuần tự.
-      const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
-        uploadCccdImage(formData.avatar, 'Không thể upload ảnh đại diện'),
-        uploadCccdImage(formData.cccdFront, 'Không thể upload CCCD mặt trước'),
-        uploadCccdImage(formData.cccdBack, 'Không thể upload CCCD mặt sau')
-=======
       // Upload song song để giảm thời gian chờ ở bước hoàn tất.
       const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
         formData.avatar
@@ -722,7 +686,6 @@ function RegisterPage() {
         formData.cccdBack
           ? uploadImageToCloudinary(formData.cccdBack, "Không thể upload CCCD mặt sau")
           : Promise.resolve(null),
->>>>>>> c7607dc5ad773ff653ba476a5f2849af0d44b1bd
       ]);
 
       const submitData = {
