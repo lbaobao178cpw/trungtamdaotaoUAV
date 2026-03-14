@@ -6,7 +6,53 @@ import { Experience } from "../components/3d/Experience"; // Đảm bảo đư�
 import { useNavigate, Link } from "react-router-dom";
 import { useActivate } from "react-activation";
 import { apiClient } from "../lib/apiInterceptor";
+import { API_BASE_URL, MEDIA_BASE_URL } from "../config/apiConfig";
 import "./UAVLandingPage.css";
+
+const LOCAL_HOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i;
+const trimTrailingSlash = (value) => (value || "").replace(/\/+$/, "");
+
+const buildModelProxyUrl = (source) => {
+  const apiBase = trimTrailingSlash(API_BASE_URL);
+  return `${apiBase}/settings/model-proxy?src=${encodeURIComponent(source)}`;
+};
+
+const normalizeModelUrl = (value) => {
+  if (typeof value !== "string" || !value) return value;
+  if (value.startsWith("data:") || value.startsWith("blob:")) return value;
+
+  const base = trimTrailingSlash(MEDIA_BASE_URL);
+  if (!base) return value;
+
+  if (LOCAL_HOST_RE.test(value)) {
+    try {
+      const parsed = new URL(value);
+      let pathname = parsed.pathname || "";
+      if (pathname.startsWith("/api/uploads/")) {
+        pathname = pathname.replace(/^\/api/, "");
+      }
+      if (pathname.startsWith("/uploads/")) {
+        return buildModelProxyUrl(`${pathname}${parsed.search || ""}`);
+      }
+      return `${base}${pathname}${parsed.search || ""}`;
+    } catch (_) {
+      return value;
+    }
+  }
+
+  if (value.startsWith("/api/uploads/")) {
+    const normalizedPath = value.replace(/^\/api/, "");
+    return buildModelProxyUrl(normalizedPath);
+  }
+  if (value.startsWith("/uploads/")) {
+    return buildModelProxyUrl(value);
+  }
+  if (value.startsWith("uploads/")) {
+    return buildModelProxyUrl(`/${value}`);
+  }
+
+  return value;
+};
 
 // =====================================================================
 // LOADING SCREEN COMPONENT
@@ -323,7 +369,8 @@ useEffect(() => {
 
         // Handle model URL
         if (modelRes.status === 'fulfilled') {
-          setModelUrl(modelRes.value.data.value || "/models/scene.glb");
+          const rawModelUrl = modelRes.value.data.value || "/models/scene.glb";
+          setModelUrl(normalizeModelUrl(rawModelUrl));
         } else {
           setModelUrl("/models/scene.glb");
         }
