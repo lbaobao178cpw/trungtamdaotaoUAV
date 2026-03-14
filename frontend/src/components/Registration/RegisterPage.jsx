@@ -894,7 +894,7 @@ function RegisterPage() {
 
       {/* PERMANENT ADDRESS SECTION */}
       <div className="form-section">
-        <h3><MapPin size={18} style={{ display: 'inline', marginBottom: '-3px' }} /> Hộ khẩu thường trú</h3>
+        <h3><MapPin size={18} style={{ display: 'inline', marginBottom: '-3px' }} /> Nơi thường trú</h3>
         <div className="form-row">
           <div className="form-group">
             <label>Tỉnh/Thành phố</label>
