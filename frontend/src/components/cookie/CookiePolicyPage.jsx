@@ -22,7 +22,7 @@ export default function CookiePolicyPage() {
         </div>
 
         <div className="cookie-policy-hero">
-          <h1>Chính sách Cookie</h1>
+          <h1>Chính Sách Cookie</h1>
           <p>
             Chúng tôi sử dụng cookie để đảm bảo hệ thống học UAV vận hành ổn định, tăng tốc độ tải trang và tối ưu
             trải nghiệm học viên.
