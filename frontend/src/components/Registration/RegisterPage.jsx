@@ -492,29 +492,6 @@ function RegisterPage() {
     }
   };
 
-  const uploadMediaInBackground = (field, file, errorMessage) => {
-    if (!file) return;
-
-    setUploadingMedia((prev) => ({ ...prev, [field]: true }));
-    setUploadedMedia((prev) => ({ ...prev, [field]: null }));
-
-    const task = (async () => {
-      try {
-        const uploadedUrl = await uploadImageToCloudinary(file, errorMessage);
-        setUploadedMedia((prev) => ({ ...prev, [field]: uploadedUrl }));
-        return uploadedUrl;
-      } catch (error) {
-        console.warn(`Background upload failed (${field}):`, error?.message || error);
-        return null;
-      } finally {
-        setUploadingMedia((prev) => ({ ...prev, [field]: false }));
-        uploadTasksRef.current[field] = null;
-      }
-    })();
-
-    uploadTasksRef.current[field] = task;
-  };
-
   // --- CHECK TRÙNG LẶP ---
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -571,18 +548,25 @@ function RegisterPage() {
         if (name === "avatar") {
           setFormData(prev => ({ ...prev, avatar: file }));
           setPreviewAvatar(URL.createObjectURL(file));
-          uploadMediaInBackground("avatar", file, "Không thể upload ảnh đại diện");
+          // Keep file only in browser memory; upload happens at final submit.
+          setUploadedMedia((prev) => ({ ...prev, avatar: null }));
+          setUploadingMedia((prev) => ({ ...prev, avatar: false }));
+          uploadTasksRef.current.avatar = null;
         }
         else if (name === "cccdFront") {
           setFormData(prev => ({ ...prev, cccdFront: file }));
           setPreviewFront(URL.createObjectURL(file));
           autoFillFromFrontCccdQr(file);
-          uploadMediaInBackground("cccdFront", file, "Không thể upload CCCD mặt trước");
+          setUploadedMedia((prev) => ({ ...prev, cccdFront: null }));
+          setUploadingMedia((prev) => ({ ...prev, cccdFront: false }));
+          uploadTasksRef.current.cccdFront = null;
         }
         else if (name === "cccdBack") {
           setFormData(prev => ({ ...prev, cccdBack: file }));
           setPreviewBack(URL.createObjectURL(file));
-          uploadMediaInBackground("cccdBack", file, "Không thể upload CCCD mặt sau");
+          setUploadedMedia((prev) => ({ ...prev, cccdBack: null }));
+          setUploadingMedia((prev) => ({ ...prev, cccdBack: false }));
+          uploadTasksRef.current.cccdBack = null;
         }
       }
     } else {
