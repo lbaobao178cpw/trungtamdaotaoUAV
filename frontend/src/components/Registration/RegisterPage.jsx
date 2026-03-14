@@ -21,6 +21,7 @@ import {
 // URL API
 const API_URL = API_ENDPOINTS.AUTH + "/register";
 const CHECK_EXISTENCE_URL = API_ENDPOINTS.AUTH + "/check-existence";
+const LOOKUP_TAX_URL = API_ENDPOINTS.BASE_URL + "/lookup-company-by-tax";
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -41,12 +42,15 @@ function RegisterPage() {
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [isDecodingFrontQr, setIsDecodingFrontQr] = useState(false);
   const [frontQrStatus, setFrontQrStatus] = useState("");
+  const [isLookingUpTaxCode, setIsLookingUpTaxCode] = useState(false);
+  const [taxLookupStatus, setTaxLookupStatus] = useState("");
 
   const preSelectedTier = location.state?.preSelectedTier || "";
   const examInfo = location.state?.examInfo || "";
 
   const [formData, setFormData] = useState({
     fullName: "", birthDate: "", cccd: "", gender: "", jobTitle: "", workPlace: "",
+    taxCode: "",
     avatar: null,
     cccdFront: null, cccdBack: null,
     permanentAddress: "", permanentCityId: "", permanentCityName: "", permanentWardId: "", permanentWardName: "",
@@ -353,6 +357,56 @@ function RegisterPage() {
       setFrontQrStatus("Lỗi khi quét QR. Bạn hãy nhập thủ công bên dưới.");
     } finally {
       setIsDecodingFrontQr(false);
+    }
+  };
+
+  const handleTaxCodeBlur = async (e) => {
+    const inputTaxCode = String(e.target.value || "").trim();
+    const normalizedTaxCode = inputTaxCode.replace(/\D/g, "");
+
+    if (!normalizedTaxCode) {
+      setTaxLookupStatus("");
+      return;
+    }
+
+    if (normalizedTaxCode.length !== 10 && normalizedTaxCode.length !== 13) {
+      setTaxLookupStatus("Mã số thuế phải có 10 hoặc 13 chữ số.");
+      return;
+    }
+
+    setIsLookingUpTaxCode(true);
+    setTaxLookupStatus("Đang tra cứu đơn vị theo mã số thuế...");
+
+    try {
+      const res = await fetch(`${LOOKUP_TAX_URL}/${normalizedTaxCode}`);
+      const responseText = await res.text();
+      let data = null;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok || !data?.companyName) {
+        if (res.status === 404) {
+          setTaxLookupStatus("API hiện tại chưa có tính năng tra cứu MST. Cần deploy backend mới.");
+          return;
+        }
+        setTaxLookupStatus(data?.error || "Không tìm thấy tên đơn vị theo mã số thuế.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        taxCode: normalizedTaxCode,
+        workPlace: data.companyName,
+      }));
+      setTaxLookupStatus("Đã tự động điền tên đơn vị công tác.");
+    } catch (error) {
+      console.error("Lỗi tra cứu mã số thuế:", error);
+      setTaxLookupStatus("Không thể tra cứu mã số thuế lúc này.");
+    } finally {
+      setIsLookingUpTaxCode(false);
     }
   };
 
@@ -782,6 +836,22 @@ function RegisterPage() {
             <label>Nghề nghiệp <span style={{ fontWeight: 'normal', fontSize: '12px' }}>(Tùy chọn)</span></label>
             <input type="text" name="jobTitle" value={formData.jobTitle} onChange={handleInputChange} className="form-input" />
           </div>
+          <div className="form-group">
+            <label>Mã số thuế <span style={{ fontWeight: 'normal', fontSize: '12px' }}>(Tùy chọn)</span></label>
+            <input
+              type="text"
+              name="taxCode"
+              value={formData.taxCode}
+              onChange={handleInputChange}
+              onBlur={handleTaxCodeBlur}
+              className="form-input"
+              placeholder="Nhập MST để tự điền đơn vị"
+              maxLength="14"
+            />
+            {!!taxLookupStatus && <p className="field-note" style={{ marginTop: 4 }}>{isLookingUpTaxCode ? "Đang xử lý..." : taxLookupStatus}</p>}
+          </div>
+        </div>
+        <div className="form-row">
           <div className="form-group">
             <label>Đơn vị công tác <span style={{ fontWeight: 'normal', fontSize: '12px' }}>(Tùy chọn)</span></label>
             <input type="text" name="workPlace" value={formData.workPlace} onChange={handleInputChange} className="form-input" />

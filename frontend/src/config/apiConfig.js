@@ -9,8 +9,20 @@ const getApiBaseUrl = () => {
         return window.__API_BASE_URL__;
     }
 
+    if (import.meta.env.VITE_API_BASE_URL) {
+        return import.meta.env.VITE_API_BASE_URL;
+    }
+
+    // In local development, default to local backend so new routes work immediately.
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:5000/api';
+        }
+    }
+
     // ƯU TIÊN: Biến môi trường -> Domain thật -> Localhost (cuối cùng)
-    return import.meta.env.VITE_API_BASE_URL || 'https://api.uavtrainningcenter.vn/api';
+    return 'https://api.uavtrainningcenter.vn/api';
 };
 
 const getMediaBaseUrl = () => {
@@ -18,7 +30,18 @@ const getMediaBaseUrl = () => {
         return window.__MEDIA_BASE_URL__;
     }
 
-    return import.meta.env.VITE_MEDIA_BASE_URL || 'https://api.uavtrainningcenter.vn';
+    if (import.meta.env.VITE_MEDIA_BASE_URL) {
+        return import.meta.env.VITE_MEDIA_BASE_URL;
+    }
+
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:5000';
+        }
+    }
+
+    return 'https://api.uavtrainningcenter.vn';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

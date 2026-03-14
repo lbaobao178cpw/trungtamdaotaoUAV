@@ -4,6 +4,49 @@ const fs = require("fs-extra");
 const path = require("path");
 const { UPLOAD_ROOT, THUMB_ROOT, getFileType, generateThumbnail } = require("../utils/fileHelpers");
 
+router.get("/lookup-company-by-tax/:taxCode", async (req, res) => {
+  const rawTaxCode = String(req.params.taxCode || "").trim();
+  const normalizedTaxCode = rawTaxCode.replace(/\D/g, "");
+
+  if (!normalizedTaxCode || (normalizedTaxCode.length !== 10 && normalizedTaxCode.length !== 13)) {
+    return res.status(400).json({ success: false, error: "Mã số thuế không hợp lệ" });
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(`https://api.vietqr.io/v2/business/${normalizedTaxCode}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      signal: controller.signal,
+    });
+
+    const data = await response.json();
+    const companyName = data?.data?.name || "";
+
+    if (!response.ok || !companyName) {
+      return res.status(404).json({ success: false, error: "Không tìm thấy doanh nghiệp theo mã số thuế" });
+    }
+
+    return res.json({
+      success: true,
+      taxCode: normalizedTaxCode,
+      companyName,
+      raw: data?.data || null,
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return res.status(504).json({ success: false, error: "Tra cứu mã số thuế bị timeout" });
+    }
+    return res.status(500).json({ success: false, error: "Không thể tra cứu mã số thuế" });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+});
+
 router.get("/regenerate-thumbs", async (req, res) => {
   console.log("⏳ Bắt đầu tạo lại thumbnail...");
   let count = 0;
