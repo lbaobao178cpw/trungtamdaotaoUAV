@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cloudinary = require('cloudinary').v2;
+const crypto = require('crypto');
 const { verifyToken, verifyAdmin, verifyTokenOptional } = require('../middleware/verifyToken');
 const multer = require('multer');
 const fs = require('fs');
@@ -23,6 +24,24 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
 });
+
+const TEMP_UPLOAD_TTL_MS = Number(process.env.TEMP_UPLOAD_TTL_MS || 2 * 60 * 60 * 1000);
+const TEMP_UPLOAD_TOKEN_SECRET = process.env.TEMP_UPLOAD_TOKEN_SECRET || process.env.CLOUDINARY_API_SECRET || 'uav-temp-upload-secret';
+
+const buildCleanupToken = (publicId, expiresAt) => {
+  const raw = `${publicId}.${expiresAt}`;
+  return crypto
+    .createHmac('sha256', TEMP_UPLOAD_TOKEN_SECRET)
+    .update(raw)
+    .digest('hex');
+};
+
+const verifyCleanupToken = ({ publicId, expiresAt, cleanupToken }) => {
+  if (!publicId || !expiresAt || !cleanupToken) return false;
+  if (Date.now() > Number(expiresAt)) return false;
+  const expected = buildCleanupToken(publicId, Number(expiresAt));
+  return expected === cleanupToken;
+};
 
 /**
  * POST /api/cloudinary/upload-cccd
@@ -71,17 +90,125 @@ router.post('/upload-cccd', upload.single('file'), async (req, res) => {
 
     // console.log("✅ CCCD uploaded:", uploadResult.secure_url);
 
+    const cleanupExpiresAt = Date.now() + TEMP_UPLOAD_TTL_MS;
+    const cleanupToken = buildCleanupToken(uploadResult.public_id, cleanupExpiresAt);
+
     res.json({
       success: true,
       secure_url: uploadResult.secure_url,
       public_id: uploadResult.public_id,
-      url: uploadResult.secure_url
+      url: uploadResult.secure_url,
+      cleanupToken,
+      cleanupExpiresAt
     });
   } catch (error) {
     // console.error('CCCD upload error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Upload failed'
+    });
+  }
+});
+
+/**
+ * POST /api/cloudinary/delete-temp
+ * Xóa ảnh đăng ký đã upload tạm bằng token an toàn (không cần đăng nhập)
+ */
+router.post('/delete-temp', async (req, res) => {
+  try {
+    const { publicId, cleanupToken, cleanupExpiresAt } = req.body || {};
+
+    if (!publicId || !cleanupToken || !cleanupExpiresAt) {
+      return res.status(400).json({
+        success: false,
+        error: 'publicId, cleanupToken, cleanupExpiresAt are required'
+      });
+    }
+
+    const isValid = verifyCleanupToken({
+      publicId,
+      cleanupToken,
+      expiresAt: Number(cleanupExpiresAt)
+    });
+
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired cleanup token'
+      });
+    }
+
+    const destroyResult = await cloudinary.uploader.destroy(publicId, {
+      resource_type: 'image',
+      invalidate: true,
+    });
+
+    return res.json({
+      success: true,
+      result: destroyResult,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Delete temp file failed'
+    });
+  }
+});
+
+/**
+ * POST /api/cloudinary/delete-temp-batch
+ * Xóa nhiều ảnh upload tạm cùng lúc (dùng cho beforeunload/pagehide)
+ */
+router.post('/delete-temp-batch', async (req, res) => {
+  try {
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+    if (!items.length) {
+      return res.json({
+        success: true,
+        deleted: 0,
+        failed: 0,
+        results: []
+      });
+    }
+
+    const results = await Promise.all(items.map(async (item) => {
+      const publicId = item?.publicId;
+      const cleanupToken = item?.cleanupToken;
+      const cleanupExpiresAt = Number(item?.cleanupExpiresAt);
+
+      if (!publicId || !cleanupToken || !cleanupExpiresAt) {
+        return { publicId, success: false, error: 'Missing token payload' };
+      }
+
+      const isValid = verifyCleanupToken({ publicId, cleanupToken, expiresAt: cleanupExpiresAt });
+      if (!isValid) {
+        return { publicId, success: false, error: 'Invalid or expired cleanup token' };
+      }
+
+      try {
+        const destroyResult = await cloudinary.uploader.destroy(publicId, {
+          resource_type: 'image',
+          invalidate: true,
+        });
+        return { publicId, success: true, result: destroyResult };
+      } catch (err) {
+        return { publicId, success: false, error: err.message };
+      }
+    }));
+
+    const deleted = results.filter((r) => r.success).length;
+    const failed = results.length - deleted;
+
+    return res.json({
+      success: true,
+      deleted,
+      failed,
+      results,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Batch delete temp files failed'
     });
   }
 });

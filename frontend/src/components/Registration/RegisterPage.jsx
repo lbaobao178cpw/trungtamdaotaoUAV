@@ -18,6 +18,9 @@ import {
   
 } from "lucide-react";
 
+  const INITIAL_UPLOADED_MEDIA = { avatar: null, cccdFront: null, cccdBack: null };
+  const INITIAL_UPLOADING_MEDIA = { avatar: false, cccdFront: false, cccdBack: false };
+
 // URL API
 const API_URL = API_ENDPOINTS.AUTH + "/register";
 const CHECK_EXISTENCE_URL = API_ENDPOINTS.AUTH + "/check-existence";
@@ -37,9 +40,12 @@ function RegisterPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
-  const [uploadedMedia, setUploadedMedia] = useState({ avatar: null, cccdFront: null, cccdBack: null });
-  const [uploadingMedia, setUploadingMedia] = useState({ avatar: false, cccdFront: false, cccdBack: false });
+  const [uploadedMedia, setUploadedMedia] = useState(INITIAL_UPLOADED_MEDIA);
+  const [uploadingMedia, setUploadingMedia] = useState(INITIAL_UPLOADING_MEDIA);
   const uploadTasksRef = useRef({ avatar: null, cccdFront: null, cccdBack: null });
+  const uploadedMediaRef = useRef(INITIAL_UPLOADED_MEDIA);
+  const shouldCleanupOnExitRef = useRef(true);
+  const isExitingRef = useRef(false);
 
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
@@ -104,6 +110,10 @@ function RegisterPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentStep]);
+
+  useEffect(() => {
+    uploadedMediaRef.current = uploadedMedia;
+  }, [uploadedMedia]);
 
   // Real-time email validation
   useEffect(() => {
@@ -481,7 +491,12 @@ function RegisterPage() {
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || errorMessage);
-      return data.secure_url;
+      return {
+        url: data.secure_url || data.url,
+        publicId: data.public_id || data.publicId,
+        cleanupToken: data.cleanupToken,
+        cleanupExpiresAt: data.cleanupExpiresAt,
+      };
     } catch (error) {
       if (error.name === "AbortError") {
         throw new Error(`${errorMessage} (timeout)`);
@@ -490,6 +505,109 @@ function RegisterPage() {
     } finally {
       clearTimeout(timeoutId);
     }
+  };
+
+  const getCleanupItems = (mediaMap) => {
+    return Object.values(mediaMap || {})
+      .filter((item) => item?.publicId && item?.cleanupToken && item?.cleanupExpiresAt)
+      .map((item) => ({
+        publicId: item.publicId,
+        cleanupToken: item.cleanupToken,
+        cleanupExpiresAt: item.cleanupExpiresAt,
+      }));
+  };
+
+  const cleanupUploads = (items, useBeacon = false) => {
+    if (!items?.length) return;
+
+    const endpoint = `${API_ENDPOINTS.CLOUDINARY}/delete-temp-batch`;
+    const payload = JSON.stringify({ items });
+
+    if (useBeacon && typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      try {
+        const blob = new Blob([payload], { type: "application/json" });
+        const sent = navigator.sendBeacon(endpoint, blob);
+        if (sent) return;
+      } catch {
+        // Ignore and fallback to keepalive fetch
+      }
+    }
+
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {
+      // No-op: best-effort cleanup
+    });
+  };
+
+  useEffect(() => {
+    const cleanupOnExit = () => {
+      if (!shouldCleanupOnExitRef.current) return;
+      isExitingRef.current = true;
+      cleanupUploads(getCleanupItems(uploadedMediaRef.current), true);
+    };
+
+    window.addEventListener("pagehide", cleanupOnExit);
+    window.addEventListener("beforeunload", cleanupOnExit);
+
+    return () => {
+      window.removeEventListener("pagehide", cleanupOnExit);
+      window.removeEventListener("beforeunload", cleanupOnExit);
+
+      if (shouldCleanupOnExitRef.current) {
+        isExitingRef.current = true;
+        cleanupUploads(getCleanupItems(uploadedMediaRef.current), false);
+      }
+    };
+  }, []);
+
+  const uploadMediaInBackground = (field, file, errorMessage) => {
+    if (!file) return;
+
+    const previousUpload = uploadedMediaRef.current[field];
+    if (previousUpload?.publicId && previousUpload?.cleanupToken && previousUpload?.cleanupExpiresAt) {
+      cleanupUploads([
+        {
+          publicId: previousUpload.publicId,
+          cleanupToken: previousUpload.cleanupToken,
+          cleanupExpiresAt: previousUpload.cleanupExpiresAt,
+        },
+      ]);
+    }
+
+    setUploadingMedia((prev) => ({ ...prev, [field]: true }));
+    setUploadedMedia((prev) => ({ ...prev, [field]: null }));
+
+    const task = (async () => {
+      try {
+        const uploaded = await uploadImageToCloudinary(file, errorMessage);
+
+        if (isExitingRef.current && uploaded?.publicId && uploaded?.cleanupToken && uploaded?.cleanupExpiresAt) {
+          cleanupUploads([
+            {
+              publicId: uploaded.publicId,
+              cleanupToken: uploaded.cleanupToken,
+              cleanupExpiresAt: uploaded.cleanupExpiresAt,
+            },
+          ]);
+          return null;
+        }
+
+        setUploadedMedia((prev) => ({ ...prev, [field]: uploaded }));
+        return uploaded;
+      } catch (error) {
+        console.warn(`Background upload failed (${field}):`, error?.message || error);
+        return null;
+      } finally {
+        setUploadingMedia((prev) => ({ ...prev, [field]: false }));
+        uploadTasksRef.current[field] = null;
+      }
+    })();
+
+    uploadTasksRef.current[field] = task;
   };
 
   // --- CHECK TRÙNG LẶP ---
@@ -548,25 +666,18 @@ function RegisterPage() {
         if (name === "avatar") {
           setFormData(prev => ({ ...prev, avatar: file }));
           setPreviewAvatar(URL.createObjectURL(file));
-          // Keep file only in browser memory; upload happens at final submit.
-          setUploadedMedia((prev) => ({ ...prev, avatar: null }));
-          setUploadingMedia((prev) => ({ ...prev, avatar: false }));
-          uploadTasksRef.current.avatar = null;
+          uploadMediaInBackground("avatar", file, "Không thể upload ảnh đại diện");
         }
         else if (name === "cccdFront") {
           setFormData(prev => ({ ...prev, cccdFront: file }));
           setPreviewFront(URL.createObjectURL(file));
           autoFillFromFrontCccdQr(file);
-          setUploadedMedia((prev) => ({ ...prev, cccdFront: null }));
-          setUploadingMedia((prev) => ({ ...prev, cccdFront: false }));
-          uploadTasksRef.current.cccdFront = null;
+          uploadMediaInBackground("cccdFront", file, "Không thể upload CCCD mặt trước");
         }
         else if (name === "cccdBack") {
           setFormData(prev => ({ ...prev, cccdBack: file }));
           setPreviewBack(URL.createObjectURL(file));
-          setUploadedMedia((prev) => ({ ...prev, cccdBack: null }));
-          setUploadingMedia((prev) => ({ ...prev, cccdBack: false }));
-          uploadTasksRef.current.cccdBack = null;
+          uploadMediaInBackground("cccdBack", file, "Không thể upload CCCD mặt sau");
         }
       }
     } else {
@@ -719,11 +830,11 @@ function RegisterPage() {
       setSubmitProgress(30);
 
       const resolveUploadedUrl = async ({ field, file, errorMessage, required }) => {
-        if (uploadedMedia[field]) return uploadedMedia[field];
+        if (uploadedMedia[field]?.url) return uploadedMedia[field].url;
 
         if (uploadTasksRef.current[field]) {
-          const pendingUrl = await uploadTasksRef.current[field];
-          if (pendingUrl) return pendingUrl;
+          const pendingUpload = await uploadTasksRef.current[field];
+          if (pendingUpload?.url) return pendingUpload.url;
         }
 
         if (!file) {
@@ -731,7 +842,8 @@ function RegisterPage() {
           return null;
         }
 
-        return uploadImageToCloudinary(file, errorMessage);
+        const uploaded = await uploadImageToCloudinary(file, errorMessage);
+        return uploaded?.url || null;
       };
 
       const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
@@ -781,6 +893,7 @@ function RegisterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại");
+      shouldCleanupOnExitRef.current = false;
       setSubmitProgress(100);
       console.log("Đăng ký thành công, hiển thị toast");
       toast.success("Đăng ký thành công! Tài khoản của bạn đang chờ kiểm duyệt từ quản trị viên.");
