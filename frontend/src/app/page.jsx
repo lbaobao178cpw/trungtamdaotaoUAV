@@ -909,7 +909,7 @@ useEffect(() => {
       </section>
 
       {/* 5. Courses */}
-      <section className="section section-gray">
+      <section className="section section-white">
         <div className="container">
           <h2 className="section-title">Khóa học mới nhất</h2>
           <div className="courses-grid">
@@ -1001,7 +1001,7 @@ useEffect(() => {
       </section> */}
 
       {/* 8. THÔNG BÁO CHÍNH THỨC */}
-      <section className="section section-gray">
+      <section className="section section-white">
         <div className="container">
           <h2 className="section-title">Thông báo chính thức</h2>
           {notifications.length === 0 ? (
