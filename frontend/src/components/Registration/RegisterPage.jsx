@@ -410,6 +410,71 @@ function RegisterPage() {
     }
   };
 
+  const compressImageIfNeeded = async (file, options = {}) => {
+    if (!file || !file.type?.startsWith("image/")) return file;
+
+    const maxWidth = options.maxWidth || 1800;
+    const maxHeight = options.maxHeight || 1800;
+    const quality = options.quality || 0.85;
+    const minSizeToCompress = options.minSizeToCompress || 1.2 * 1024 * 1024;
+
+    if (file.size < minSizeToCompress) return file;
+
+    const imageUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+
+      const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+      const targetWidth = Math.max(1, Math.floor(image.width * scale));
+      const targetHeight = Math.max(1, Math.floor(image.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, "image/jpeg", quality);
+      });
+
+      if (!blob) return file;
+      if (blob.size >= file.size * 0.95) return file;
+
+      return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+    } catch (error) {
+      console.warn("Image compression skipped due to error:", error);
+      return file;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  };
+
+  const uploadImageToCloudinary = async (file, errorMessage) => {
+    if (!file) return null;
+
+    const preparedFile = await compressImageIfNeeded(file);
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", preparedFile);
+
+    const response = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
+      method: "POST",
+      body: uploadFormData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || errorMessage);
+    return data.secure_url;
+  };
+
   // --- CHECK TRÙNG LẶP ---
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -610,51 +675,18 @@ function RegisterPage() {
         return;
       }
 
-      let cccdFrontUrl = null;
-      let cccdBackUrl = null;
-      let avatarUrl = null;
-
-      // Upload avatar (optional)
-      if (formData.avatar) {
-        const avatarFormData = new FormData();
-        avatarFormData.append('file', formData.avatar);
-
-        const avatarRes = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: avatarFormData
-        });
-        const avatarData = await avatarRes.json();
-        if (!avatarRes.ok) throw new Error(avatarData.error || 'Không thể upload ảnh đại diện');
-        avatarUrl = avatarData.secure_url;
-      }
-
-      // Upload CCCD Front lên backend (proxy Cloudinary)
-      if (formData.cccdFront) {
-        const formDataFront = new FormData();
-        formDataFront.append('file', formData.cccdFront);
-
-        const resFront = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: formDataFront
-        });
-        const dataFront = await resFront.json();
-        if (!resFront.ok) throw new Error(dataFront.error || 'Không thể upload CCCD mặt trước');
-        cccdFrontUrl = dataFront.secure_url;
-      }
-
-      // Upload CCCD Back lên backend (proxy Cloudinary)
-      if (formData.cccdBack) {
-        const formDataBack = new FormData();
-        formDataBack.append('file', formData.cccdBack);
-
-        const resBack = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-          method: 'POST',
-          body: formDataBack
-        });
-        const dataBack = await resBack.json();
-        if (!resBack.ok) throw new Error(dataBack.error || 'Không thể upload CCCD mặt sau');
-        cccdBackUrl = dataBack.secure_url;
-      }
+      // Upload song song để giảm thời gian chờ ở bước hoàn tất.
+      const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
+        formData.avatar
+          ? uploadImageToCloudinary(formData.avatar, "Không thể upload ảnh đại diện")
+          : Promise.resolve(null),
+        formData.cccdFront
+          ? uploadImageToCloudinary(formData.cccdFront, "Không thể upload CCCD mặt trước")
+          : Promise.resolve(null),
+        formData.cccdBack
+          ? uploadImageToCloudinary(formData.cccdBack, "Không thể upload CCCD mặt sau")
+          : Promise.resolve(null),
+      ]);
 
       const submitData = {
         ...formData,
