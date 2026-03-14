@@ -546,76 +546,126 @@ h3.section-title {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 430px) {
   .steps-row {
-    flex-direction: column;
-    gap: 10px; /* Giảm từ 20px xuống 10px */
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+    align-items: flex-start;
   }
   .step-item {
-    width: 100%;
-    max-width: 400px; /* Tăng từ 350px lên 400px */
+    width: auto;
+    flex: 1 1 0;
+    max-width: none;
     min-height: auto;
     margin-bottom: 10px;
-    padding-bottom: 0px; /* Giảm padding để sát */
-    padding: 0; /* Loại bỏ padding */
+    padding: 0;
+    min-width: 0;
   }
   .step-arrow {
-    display: none;
+    display: flex;
+    flex: 0 0 20px;
+    min-width: 20px;
+    margin-top: 20px;
   }
   .step-arrow-down {
-    display: none;
+    display: flex;
+    min-height: 48px;
+    margin: 0;
   }
   .step-arrow-vertical {
-    display: block;
+    display: none;
+  }
+  .step-arrow svg {
+    width: 20px;
+    height: 10px;
+  }
+  .step-arrow-down-container {
+    margin-top: -4px;
+    justify-content: flex-end;
+    padding-right: 0;
+  }
+  .step-arrow-down-container svg {
+    width: 14px;
+    height: 52px;
+    transform: translateX(-30px) !important;
   }
   .step-icon {
-    margin-bottom: 0px !important; /* Gần nhất */
+    width: 56px;
+    height: 56px;
+    margin-bottom: 6px !important;
+  }
+  .step-icon img {
+    width: 28px;
+    height: 28px;
   }
   .step-title {
-    margin-bottom: 0px !important; /* Gần nhất */
-    min-height: auto !important; /* Loại bỏ min-height để sát */
-    line-height: 1.1 !important; /* Giảm line-height */
-    font-size: 1.4rem !important; /* Tăng từ 1.2rem lên 1.4rem */
+    margin-bottom: 4px !important;
+    min-height: auto !important;
+    line-height: 1.25 !important;
+    font-size: 0.95rem !important;
   }
   .step-desc {
-    margin-top: 0px !important; /* Gần nhất */
-    font-size: 1.2rem !important; /* Tăng từ 1.1rem lên 1.2rem */
+    margin-top: 0 !important;
+    font-size: 0.82rem !important;
     display: block !important; /* Đảm bảo hiện */
     visibility: visible !important; /* Đảm bảo hiện */
-    line-height: 1.2 !important; /* Giảm line-height để sát */
+    line-height: 1.25 !important;
   }
 }
 
 @media (max-width: 480px) {
+  .steps-row {
+    gap: 6px;
+  }
   .step-item {
-    width: 100%;
-    max-width: 400px; /* Tăng width */
+    width: auto;
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+  }
+  .step-arrow {
+    display: flex;
+    flex: 0 0 14px;
+    min-width: 14px;
+    margin-top: 16px;
+  }
+  .step-arrow svg {
+    width: 14px;
+    height: 8px;
+  }
+  .step-arrow-down {
+    display: flex;
+    min-height: 40px;
+    margin: 0;
+  }
+  .step-arrow-down-container svg {
+    width: 12px;
+    height: 44px;
+    transform: translateX(-24px) !important;
   }
   .step-icon {
-    width: 70px;
-    height: 70px;
-    margin-bottom: 0px !important; /* Gần nhất */
+    width: 46px;
+    height: 46px;
+    margin-bottom: 4px !important;
   }
   .step-icon img {
-    width: 35px;
-    height: 35px;
-  }
-  .step-arrow-vertical {
-    font-size: 20px;
+    width: 22px;
+    height: 22px;
   }
   .step-title {
-    margin-bottom: 0px !important;
-    min-height: auto !important; /* Loại bỏ min-height */
-    line-height: 1.1 !important; /* Giảm line-height */
-    font-size: 1.4rem !important; /* Tăng font-size */
+    margin-bottom: 3px !important;
+    min-height: auto !important;
+    line-height: 1.2 !important;
+    font-size: 0.82rem !important;
   }
   .step-desc {
-    display: block !important; /* Override để hiện nội dung */
+    display: block !important;
     visibility: visible !important;
-    font-size: 1.2rem !important; /* Tăng font-size */
-    margin-top: 0px !important; /* Gần nhất */
-    line-height: 1.2 !important; /* Giảm line-height */
+    font-size: 0.72rem !important;
+    margin-top: 0 !important;
+    line-height: 1.2 !important;
   }
 }
 
@@ -1283,7 +1333,7 @@ h3.section-title {
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 430px) {
   /* MOBILE MINIATURE MODE: Giữ layout giống PC (2 cột) nhưng thu nhỏ */
 
   /* 1. Global Scale Down */
@@ -1379,7 +1429,7 @@ h3.section-title {
     margin-top: 20px;
   }
 
-  .step-item {
+  .steps-container .step-item {
     width: 22% !important;
     /* Mỗi bước chiếm khoảng 1/4 */
     max-width: none;
@@ -1387,19 +1437,19 @@ h3.section-title {
     margin: 0;
   }
 
-  .step-icon {
+  .steps-container .step-icon {
     width: 35px;
     height: 35px;
     margin-bottom: 5px;
     border-width: 1px;
   }
 
-  .step-icon img {
+  .steps-container .step-icon img {
     width: 18px;
     height: 18px;
   }
 
-  .step-title {
+  .steps-container .step-title {
     font-size: 1.1rem;
     line-height: 1.2;
     min-height: 25px;
@@ -1407,11 +1457,11 @@ h3.section-title {
   }
 
   /* Hiện mô tả để người dùng thấy nội dung */
-  .step-desc {
+  .steps-container .step-desc {
     display: block;
   }
 
-  .step-arrow-img {
+  .steps-container .step-arrow-img {
     transform: rotate(0deg) scale(1) !important;
     /* Mũi tên nằm ngang */
     width: 10px !important;
@@ -1428,6 +1478,7 @@ h3.section-title {
     /* Gap cực nhỏ để tiết kiệm chỗ */
     margin: 20px 0 !important;
     width: 100% !important;
+    grid-auto-rows: auto !important;
   }
 
   .uav-cert-card {
@@ -1436,7 +1487,9 @@ h3.section-title {
     /* Tăng padding để text có chỗ */
     margin: 0 !important;
     min-height: auto;
-    overflow: visible;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .uav-cert-title {
@@ -1452,7 +1505,9 @@ h3.section-title {
     font-size: 0.9rem !important;
     line-height: 1.4;
     margin-bottom: 10px !important;
-    display: block;
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
     /* Hiện lại mô tả nhưng đẹp hơn */
     overflow-wrap: break-word;
     word-break: break-word;
@@ -1461,6 +1516,7 @@ h3.section-title {
   .uav-cert-list {
     margin: 8px 0 12px 0 !important;
     padding: 0 !important;
+    display: block !important;
   }
 
   .uav-cert-list li {
@@ -1468,6 +1524,9 @@ h3.section-title {
     line-height: 1.3;
     padding-left: 15px !important;
     margin-bottom: 6px !important;
+    display: list-item !important;
+    visibility: visible !important;
+    overflow: visible !important;
     overflow-wrap: break-word;
     word-break: break-word;
   }
@@ -1476,13 +1535,25 @@ h3.section-title {
     font-size: 0.75rem !important;
     padding: 3px 8px !important;
     margin-bottom: 8px !important;
+    display: inline-block !important;
+    visibility: visible !important;
     word-break: break-word;
+  }
+
+  .uav-cert-note {
+    font-size: 0.85rem !important;
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
   }
 
   .uav-duration-box {
     padding: 8px !important;
     font-size: 0.8rem !important;
     margin: 10px 0 12px 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
     overflow-wrap: break-word;
     word-break: break-word;
   }
@@ -1491,9 +1562,24 @@ h3.section-title {
   .uav-cert-btn-detail {
     padding: 6px !important;
     font-size: 0.75rem !important;
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
   }
 
-  /* 5. TAB NGHIỆP VỤ (SCROLL NGANG) */
+  .cert-tabs-container {
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .cert-tabs-label {
+    display: block !important;
+    font-size: 0.9rem !important;
+    visibility: visible !important;
+  }
+
   .cert-tabs-header {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
@@ -1501,6 +1587,8 @@ h3.section-title {
     gap: 4px;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    display: flex !important;
+    visibility: visible !important;
   }
 
   .cert-tabs-header::-webkit-scrollbar {
@@ -1514,6 +1602,47 @@ h3.section-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    visibility: visible !important;
+  }
+
+  .cert-tab-content {
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .sub-list-arrow {
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
+  }
+
+  .sub-list-arrow li {
+    display: list-item !important;
+    visibility: visible !important;
+    overflow: visible !important;
+  }
+
+  .hangb-item {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .hangb-item-row {
+    display: flex !important;
+    visibility: visible !important;
+  }
+
+  .hangb-item-title {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .hangb-item-desc {
+    display: block !important;
+    visibility: visible !important;
+    overflow: visible !important;
   }
 
   /* 6. CÁC PHẦN KHÁC (KHÓA HỌC / GIẢI PHÁP - 2 CỘT) */
@@ -1785,12 +1914,16 @@ h3.section-title {
     margin-right: 0 !important;
     gap: 8px !important;
     width: 100% !important;
+    grid-auto-rows: auto !important;
   }
 
   .uav-cert-card {
-    width: 100% !important;
+    width: 430px !important;
     padding: 12px !important;
     margin: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
     border-radius: 6px !important;
   }
@@ -2100,6 +2233,23 @@ h3.section-title {
 @media (max-width: 1024px) {
   .step-arrow-down-container svg {
     transform: translateX(345px);
+  }
+}
+
+@media (max-width: 430px) {
+  .step-arrow-down-container {
+    justify-content: flex-end !important;
+
+  }
+
+  .step-arrow-down-container svg {
+    transform: translateX(-46px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-arrow-down-container svg {
+    transform: translateX(-38px) !important;
   }
 }
 
