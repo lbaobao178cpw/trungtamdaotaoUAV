@@ -37,12 +37,14 @@ function RegisterPage() {
 
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
+  const [previewAvatar, setPreviewAvatar] = useState(null);
 
   const preSelectedTier = location.state?.preSelectedTier || "";
   const examInfo = location.state?.examInfo || "";
 
   const [formData, setFormData] = useState({
     fullName: "", birthDate: "", cccd: "", gender: "", jobTitle: "", workPlace: "",
+    avatar: null,
     cccdFront: null, cccdBack: null,
     permanentAddress: "", permanentCityId: "", permanentCityName: "", permanentWardId: "", permanentWardName: "",
     sameAsPermanent: false,
@@ -167,7 +169,8 @@ function RegisterPage() {
     } else if (type === "file") {
       const file = files[0];
       if (file) {
-        if (name === "cccdFront") { setFormData(prev => ({ ...prev, cccdFront: file })); setPreviewFront(URL.createObjectURL(file)); }
+        if (name === "avatar") { setFormData(prev => ({ ...prev, avatar: file })); setPreviewAvatar(URL.createObjectURL(file)); }
+        else if (name === "cccdFront") { setFormData(prev => ({ ...prev, cccdFront: file })); setPreviewFront(URL.createObjectURL(file)); }
         else if (name === "cccdBack") { setFormData(prev => ({ ...prev, cccdBack: file })); setPreviewBack(URL.createObjectURL(file)); }
       }
     } else {
@@ -311,6 +314,21 @@ function RegisterPage() {
 
       let cccdFrontUrl = null;
       let cccdBackUrl = null;
+      let avatarUrl = null;
+
+      // Upload avatar (optional)
+      if (formData.avatar) {
+        const avatarFormData = new FormData();
+        avatarFormData.append('file', formData.avatar);
+
+        const avatarRes = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
+          method: 'POST',
+          body: avatarFormData
+        });
+        const avatarData = await avatarRes.json();
+        if (!avatarRes.ok) throw new Error(avatarData.error || 'Không thể upload ảnh đại diện');
+        avatarUrl = avatarData.secure_url;
+      }
 
       // Upload CCCD Front lên backend (proxy Cloudinary)
       if (formData.cccdFront) {
@@ -350,6 +368,7 @@ function RegisterPage() {
         currentWardName: formData.sameAsPermanent && !formData.currentWardName ? formData.permanentWardName : formData.currentWardName,
         finalPermanentAddress: `${formData.permanentAddress}, ${formData.permanentWardName}, ${formData.permanentCityName}`,
         finalCurrentAddress: formData.sameAsPermanent ? `${formData.permanentAddress}, ${formData.permanentWardName}, ${formData.permanentCityName}` : `${formData.currentAddress}, ${formData.currentWardName}, ${formData.currentCityName}`,
+        avatar: avatarUrl,
         cccdFront: cccdFrontUrl,
         cccdBack: cccdBackUrl
       };
@@ -410,6 +429,32 @@ function RegisterPage() {
   const renderStep2 = () => (
     <div className="register-step">
       <h2 className="step-title">Thông tin cá nhân</h2>
+
+      {/* CCCD SECTION */}
+      <div className="form-section">
+        <h3><User size={20} style={{ marginBottom: '-4px', marginRight: '8px' }} />Ảnh chân dung 3x4</h3>
+        <p style={{ fontSize: '0.9rem', color: '#b0b0b0', marginBottom: '12px' }}>Tải ảnh chân dung đúng tỉ lệ 3x4 (hoặc chụp trực tiếp bằng camera trước).</p>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Ảnh chân dung 3x4 <span style={{ fontWeight: 'normal', fontSize: '12px' }}>(Tùy chọn)</span></label>
+            <div className="camera-box avatar-box" style={{ margin: 0 }}>
+              <label className="camera-placeholder avatar-placeholder" style={{ cursor: 'pointer', overflow: 'hidden' }}>
+                {previewAvatar ? (
+                  <img src={previewAvatar} alt="Avatar Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ textAlign: 'center' }}>
+                    <Camera size={28} className="camera-icon" />
+                    <p className="camera-instruction">Chụp / tải ảnh 3x4</p>
+                  </div>
+                )}
+                <input type="file" name="avatar" accept="image/*" capture="user" onChange={handleInputChange} style={{ display: 'none' }} />
+              </label>
+            </div>
+            <p className="field-note" style={{ marginTop: 4 }}>Khuyến nghị nền sáng, nhìn thẳng, rõ khuôn mặt.</p>
+          </div>
+        </div>
+
+      </div>
 
       {/* CCCD SECTION */}
       <div className="form-section">

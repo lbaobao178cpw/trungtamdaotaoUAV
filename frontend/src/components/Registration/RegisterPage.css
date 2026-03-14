@@ -281,6 +281,18 @@
     border: 2px solid var(--border-color);
 }
 
+.avatar-box {
+    max-width: 210px;
+}
+
+.avatar-placeholder {
+    width: 180px;
+    height: 240px;
+    aspect-ratio: 3 / 4;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
 .camera-icon {
     color: var(--border-color);
 }
@@ -594,6 +606,17 @@
 
     .camera-placeholder {
         height: 300px;
+    }
+
+    .avatar-box {
+        max-width: 100%;
+    }
+
+    .avatar-placeholder {
+        width: 150px;
+        height: 200px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
