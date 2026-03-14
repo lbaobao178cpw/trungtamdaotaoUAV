@@ -9,7 +9,8 @@ const getApiBaseUrl = () => {
         return window.__API_BASE_URL__;
     }
 
-    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    // ƯU TIÊN: Biến môi trường -> Domain thật -> Localhost (cuối cùng)
+    return import.meta.env.VITE_API_BASE_URL || 'https://api.uavtrainningcenter.vn/api';
 };
 
 const getMediaBaseUrl = () => {
@@ -17,7 +18,7 @@ const getMediaBaseUrl = () => {
         return window.__MEDIA_BASE_URL__;
     }
 
-    return import.meta.env.VITE_MEDIA_BASE_URL || 'http://localhost:5000';
+    return import.meta.env.VITE_MEDIA_BASE_URL || 'https://api.uavtrainningcenter.vn';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

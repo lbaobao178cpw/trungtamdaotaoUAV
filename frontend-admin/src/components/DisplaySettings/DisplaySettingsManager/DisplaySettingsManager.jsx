@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './DisplaySettingsManager.css';
 import '../LegalManagement/LegalManagement.css'; // Thêm CSS cho legal management
-import { notifyWarning, notifyError } from '../../../lib/notifications';
+import { notifySuccess, notifyWarning, notifyError } from '../../../lib/notifications';
 import { apiClient } from '../../../lib/apiInterceptor';
 import { API_ENDPOINTS } from '../../../config/apiConfig';
 
@@ -220,7 +220,14 @@ export default function DisplaySettingsManager() {
 
   // --- NOTIFICATION HANDLERS ---
   const handleEditNoti = (item) => {
-    setNotiForm({ ...item, isNew: item.isNew });
+    setNotiForm({
+      id: item.id ?? null,
+      title: item.title || "",
+      date: item.date || "",
+      description: item.description || "",
+      link: item.link || "",
+      isNew: item.isNew === true || item.is_new === 1
+    });
     setIsEditingNoti(true);
     setActiveTab('notifications');
   };
@@ -228,7 +235,7 @@ export default function DisplaySettingsManager() {
   const handleDeleteNoti = async (id) => {
     if (!window.confirm("Bạn chắc chắn xóa?")) return;
     try {
-      await fetch(`${API_URL}/notifications/${id}`, { method: "DELETE" });
+      await apiClient.delete(`${API_URL}/notifications/${id}`);
       fetchNotis();
       if (notiForm.id === id) { setNotiForm(initialNotiFormState); setIsEditingNoti(false); }
     } catch (err) { notifyError("Lỗi xóa: " + err.message); }
@@ -236,14 +243,31 @@ export default function DisplaySettingsManager() {
 
   const handleSubmitNoti = async (e) => {
     e.preventDefault();
+    if (!notiForm.title?.trim()) {
+      notifyWarning("Vui lòng nhập tiêu đề thông báo.");
+      return;
+    }
+
     setLoading(true);
     const method = isEditingNoti ? "PUT" : "POST";
     const url = isEditingNoti ? `${API_URL}/notifications/${notiForm.id}` : `${API_URL}/notifications`;
+
+    const payload = {
+      title: notiForm.title?.trim() || "",
+      date: notiForm.date?.trim() || "",
+      description: notiForm.description?.trim() || "",
+      link: notiForm.link?.trim() || "",
+      isNew: !!notiForm.isNew,
+    };
+
     try {
-      const res = await fetch(url, {
-        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(notiForm)
+      const res = await apiClient({
+        method,
+        url,
+        data: payload,
       });
-      if (res.ok) {
+
+      if (res.status >= 200 && res.status < 300) {
         notifySuccess(isEditingNoti ? "Cập nhật xong!" : "Đã thêm mới!");
         setNotiForm(initialNotiFormState);
         setIsEditingNoti(false);
@@ -516,6 +540,16 @@ export default function DisplaySettingsManager() {
                   </div>
                 </div>
                 <div className="ds-form-group"><label className="ds-form-label">Link</label><input type="text" className="ds-form-control" value={notiForm.link} onChange={e => setNotiForm({ ...notiForm, link: e.target.value })} /></div>
+                <div className="ds-form-group">
+                  <label className="ds-form-label">Nội dung</label>
+                  <textarea
+                    className="ds-form-control"
+                    rows="5"
+                    value={notiForm.description}
+                    onChange={e => setNotiForm({ ...notiForm, description: e.target.value })}
+                    placeholder="Nhập nội dung thông báo hiển thị ở giao diện client"
+                  />
+                </div>
                 <button type="submit" className="btn btn-primary btn-block" style={{ width: '100%', padding: '10px' }} disabled={loading}>
                   {loading ? "Đang xử lý..." : (isEditingNoti ? "CẬP NHẬT" : "ĐĂNG")}
                 </button>

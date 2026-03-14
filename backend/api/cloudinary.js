@@ -270,10 +270,11 @@ router.post('/upload', upload.single('file'), verifyTokenOptional, async (req, r
           baseUrl = process.env.BACKEND_URL.replace(/\/$/, ''); // Remove trailing slash
           console.log("Using production BACKEND_URL:", baseUrl);
         } else {
-          // Local development
-          const port = req.socket.localPort || process.env.PORT || 5000;
-          baseUrl = `http://localhost:${port}`;
-          console.log("Using local baseUrl:", baseUrl);
+          // Use request protocol and host as fallback (works for both localhost and production)
+          const protocol = req.protocol || 'http';
+          const host = req.get('host') || 'localhost:5000';
+          baseUrl = `${protocol}://${host}`;
+          console.log("Using baseUrl from request:", baseUrl);
         }
 
         uploadResult = {

@@ -11,6 +11,9 @@ const UPLOAD_ROOT = process.env.UPLOAD_DIR
 
 const THUMB_ROOT = path.join(UPLOAD_ROOT, "thumbs");
 
+
+
+
 // Kiểm tra thư viện Sharp
 let sharp;
 try {

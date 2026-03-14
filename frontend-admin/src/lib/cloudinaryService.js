@@ -235,8 +235,8 @@ export const listModel3Ds = async (folder = "uav-training/models") => {
     if (allModels.length === 0) {
       console.log("No Cloudinary models, trying local storage...");
       try {
-        const localResult = await apiClient.get('/files/files', { 
-          params: { folder: 'course-uploads' } 
+        const localResult = await apiClient.get('/files', {
+          params: { folder: 'model-3d' }
         });
         console.log("Local API result:", localResult.data);
         

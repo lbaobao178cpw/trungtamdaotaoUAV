@@ -46,7 +46,7 @@ Thumbs.db
 *.tar.gz
 
 # 3D & Design files
-*.glb
+
 *.gltf
 *.obj
 *.blend
@@ -56,7 +56,7 @@ Thumbs.db
 # Directories with heavy files
 media-server/uploads/
 frontend/public/course-video/
-frontend/public/models/
+
 frontend/public/document/
 backend/uploads/* - Cho phép upload folder lên Git
 !backend/uploads/.gitkeep
@@ -104,3 +104,4 @@ temp
 *.log
 npm-debug.log*
 yarn-error.log*
+backend/uploads/

@@ -5,11 +5,25 @@ import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 import { MonitorX } from 'lucide-react';
 import "../admin/Admin/Admin.css";
 import { API_ENDPOINTS } from '../../config/apiConfig';
+import { normalizeMediaUrl, toMediaRelativePath } from '../../lib/mediaUrl';
 
 const DRAG_THRESHOLD = 5;
 const API_SETTINGS = API_ENDPOINTS.SETTINGS;
 const API_POINTS = API_ENDPOINTS.POINTS;
 const DRACO_URL = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/';
+
+const getPreviewModelUrl = (src) => {
+    if (!src) return src;
+    const normalized = normalizeMediaUrl(src);
+    const sourceForProxy = toMediaRelativePath(normalized);
+    const pathname = String(sourceForProxy || "");
+
+    if (pathname.startsWith('/uploads/') || pathname.startsWith('uploads/') || pathname.startsWith('/api/uploads/')) {
+        return `${API_SETTINGS}/model-proxy?src=${encodeURIComponent(sourceForProxy)}`;
+    }
+
+    return normalized;
+};
 
 // === WEBGL SUPPORT CHECK ===
 const checkWebGLSupport = () => {
@@ -129,8 +143,8 @@ function MapPicker({ onPick, onClose }) {
     useEffect(() => {
         fetch(`${API_SETTINGS}/current_model_url`)
             .then(res => res.json())
-            .then(data => setModelUrl(data.value || '/models/scene.glb'))
-            .catch(() => setModelUrl('/models/scene.glb'));
+            .then(data => setModelUrl(getPreviewModelUrl(data.value || '/models/scene.glb')))
+            .catch(() => setModelUrl(getPreviewModelUrl('/models/scene.glb')));
     }, []);
 
     if (!modelUrl) return <div className="map-loading-container">Đang tải cấu hình...</div>;

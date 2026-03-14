@@ -3,21 +3,38 @@
  * Uses environment variables with fallback to localhost for development
  */
 
+const PROD_API_BASE_URL = 'https://api.uavtrainningcenter.vn/api';
+const PROD_MEDIA_BASE_URL = 'https://api.uavtrainningcenter.vn';
+
 const getApiBaseUrl = () => {
     if (typeof window !== 'undefined' && window.__API_BASE_URL__) {
         return window.__API_BASE_URL__;
     }
 
-    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    if (import.meta.env.VITE_API_BASE_URL) {
+        return import.meta.env.VITE_API_BASE_URL;
+    }
+
+    return import.meta.env.MODE === 'production' ? PROD_API_BASE_URL : 'http://localhost:5000/api';
 };
+
+
+
+
 
 const getMediaBaseUrl = () => {
     if (typeof window !== 'undefined' && window.__MEDIA_BASE_URL__) {
         return window.__MEDIA_BASE_URL__;
     }
 
-    return import.meta.env.VITE_MEDIA_BASE_URL || 'http://localhost:5000';
+    if (import.meta.env.VITE_MEDIA_BASE_URL) {
+        return import.meta.env.VITE_MEDIA_BASE_URL;
+    }
+
+    return import.meta.env.MODE === 'production' ? PROD_MEDIA_BASE_URL : 'http://localhost:5000';
 };
+
+
 
 export const API_BASE_URL = getApiBaseUrl();
 export const MEDIA_BASE_URL = getMediaBaseUrl();

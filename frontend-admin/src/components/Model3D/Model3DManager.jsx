@@ -8,6 +8,7 @@ import { API_ENDPOINTS, MESSAGES, VALIDATION } from "../../constants/api";
 import { STYLES, ANIMATIONS } from "../../constants/styles";
 import { notifyWarning, notifyError, notifySuccess } from "../../lib/notifications";
 import { uploadModel3D, listModel3Ds } from "../../lib/cloudinaryService";
+import { normalizeMediaUrl, toMediaRelativePath } from "../../lib/mediaUrl";
 import "./Model3DManager.css";
 
 // === 0. WEBGL SUPPORT CHECK ===
@@ -167,7 +168,9 @@ export default function Model3DManager() {
 
   // Initialize model and camera view from API data
   useEffect(() => {
-    if (currentModelData?.value) setCurrentModel(currentModelData.value);
+    if (currentModelData?.value) {
+      setCurrentModel(normalizeMediaUrl(currentModelData.value));
+    }
   }, [currentModelData]);
 
   useEffect(() => {
@@ -183,17 +186,36 @@ export default function Model3DManager() {
   // Memoized API mutation for saving settings
   const { mutate: saveSettings, loading } = useApiMutation();
 
+  const getPreviewModelUrl = useCallback((src) => {
+    if (!src) return "";
+    const normalized = normalizeMediaUrl(src);
+    const sourceForProxy = toMediaRelativePath(normalized);
+    const pathname = String(sourceForProxy || "");
+
+    // Only local upload paths need backend proxy for cross-origin/static headers.
+    // Remote URLs (e.g., Cloudinary) should be used directly.
+    if (pathname.startsWith("/uploads/") || pathname.startsWith("uploads/") || pathname.startsWith("/api/uploads/")) {
+      return `${API_ENDPOINTS.SETTINGS}/model-proxy?src=${encodeURIComponent(sourceForProxy)}`;
+    }
+
+    return normalized;
+  }, []);
+
   const handleSelectModel = useCallback(async (url) => {
-    if (!VALIDATION.GLB_ONLY(url)) return notifyWarning("Chỉ chọn file .glb!");
+    const normalizedUrl = normalizeMediaUrl(url);
+    const storableValue = toMediaRelativePath(normalizedUrl);
+    const fileToCheck = String(storableValue || normalizedUrl).split("?")[0];
+
+    if (!VALIDATION.GLB_ONLY(fileToCheck)) return notifyWarning("Chỉ chọn file .glb!");
 
     const result = await saveSettings({
       url: API_ENDPOINTS.SETTINGS,
       method: "POST",
-      data: { key: "current_model_url", value: url },
+      data: { key: "current_model_url", value: storableValue },
     });
 
     if (result.success) {
-      setCurrentModel(url);
+      setCurrentModel(normalizeMediaUrl(storableValue));
       notifySuccess("Đã đổi Model!");
       setShowMediaModal(false);
     } else {
@@ -221,14 +243,17 @@ export default function Model3DManager() {
   }, []);
 
   const handleSelectFromModelLibrary = useCallback(async (model) => {
+    const normalizedUrl = normalizeMediaUrl(model.url);
+    const storableValue = toMediaRelativePath(normalizedUrl);
+
     const result = await saveSettings({
       url: API_ENDPOINTS.SETTINGS,
       method: "POST",
-      data: { key: "current_model_url", value: model.url },
+      data: { key: "current_model_url", value: storableValue },
     });
 
     if (result.success) {
-      setCurrentModel(model.url);
+      setCurrentModel(normalizeMediaUrl(storableValue));
       notifySuccess("Đã chọn model từ thư viện!");
       setShowModelLibrary(false);
     } else {
@@ -251,16 +276,18 @@ export default function Model3DManager() {
       const result = await uploadModel3D(file);
       if (result.success) {
         notifySuccess("Upload model thành công!");
+        const normalizedUrl = normalizeMediaUrl(result.url);
+        const storableValue = toMediaRelativePath(normalizedUrl);
         
         // Auto select the uploaded model
         const saveResult = await saveSettings({
           url: API_ENDPOINTS.SETTINGS,
           method: "POST",
-          data: { key: "current_model_url", value: result.url },
+          data: { key: "current_model_url", value: storableValue },
         });
 
         if (saveResult.success) {
-          setCurrentModel(result.url);
+          setCurrentModel(normalizeMediaUrl(storableValue));
           notifySuccess("Đã đặt làm model hiện tại!");
         }
       } else {
@@ -383,7 +410,7 @@ export default function Model3DManager() {
                   <directionalLight intensity={5} color={0xdad5ff} position={[25, 35, 25]} />
                   <directionalLight intensity={0.5} color={0xf0ecff} position={[-20, 25, -20]} />
 
-                  <ModelPreview url={currentModel} />
+                  <ModelPreview url={getPreviewModelUrl(currentModel)} />
                   <PointsLayer points={points} />
                 </Suspense>
               </ErrorBoundary3D>

@@ -2,8 +2,11 @@ import axios from 'axios';
 
 // === CẬP NHẬT QUAN TRỌNG: Cả API và MEDIA đều dùng cổng 5000 ===
 // Đảm bảo rằng bạn không còn dùng cổng 5001 nữa
-const getApiBase = () => import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-const getMediaBase = () => import.meta.env.VITE_MEDIA_BASE_URL || 'http://localhost:5000/api';
+const PROD_API_BASE_URL = 'https://api.uavtrainningcenter.vn/api';
+const PROD_MEDIA_BASE_URL = 'https://api.uavtrainningcenter.vn/api';
+
+const getApiBase = () => import.meta.env.VITE_API_BASE_URL || (import.meta.env.MODE === 'production' ? PROD_API_BASE_URL : 'http://localhost:5000/api');
+const getMediaBase = () => import.meta.env.VITE_MEDIA_BASE_URL || (import.meta.env.MODE === 'production' ? PROD_MEDIA_BASE_URL : 'http://localhost:5000/api');
 
 const API_BASE = getApiBase();
 const MEDIA_BASE = getMediaBase();

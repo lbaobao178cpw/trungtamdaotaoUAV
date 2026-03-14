@@ -15,7 +15,9 @@ function MediaUploader({ onUploadSuccess, type = 'both' }) {
     image: 'image/*',
     video: 'video/*',
     both: 'image/*,video/*'
-  };
+  }; 
+
+  
 
   const getFolder = () => {
     if (type === 'image') return 'uav-training/images';

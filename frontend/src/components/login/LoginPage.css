@@ -12,7 +12,7 @@
     justify-content: center;
     /* Nền tối giống Landing Page */
     background-color: #222222;
-    background-image: url("/images/hero_background.webp"); /* Có thể dùng lại background nếu muốn */
+    background-image: url("/images/pattern.webp"); /* Có thể dùng lại background nếu muốn */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -6,7 +6,53 @@ import { Experience } from "../components/3d/Experience"; // Đảm bảo đư�
 import { useNavigate, Link } from "react-router-dom";
 import { useActivate } from "react-activation";
 import { apiClient } from "../lib/apiInterceptor";
+import { API_BASE_URL, MEDIA_BASE_URL } from "../config/apiConfig";
 import "./UAVLandingPage.css";
+
+const LOCAL_HOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i;
+const trimTrailingSlash = (value) => (value || "").replace(/\/+$/, "");
+
+const buildModelProxyUrl = (source) => {
+  const apiBase = trimTrailingSlash(API_BASE_URL);
+  return `${apiBase}/settings/model-proxy?src=${encodeURIComponent(source)}`;
+};
+
+const normalizeModelUrl = (value) => {
+  if (typeof value !== "string" || !value) return value;
+  if (value.startsWith("data:") || value.startsWith("blob:")) return value;
+
+  const base = trimTrailingSlash(MEDIA_BASE_URL);
+  if (!base) return value;
+
+  if (LOCAL_HOST_RE.test(value)) {
+    try {
+      const parsed = new URL(value);
+      let pathname = parsed.pathname || "";
+      if (pathname.startsWith("/api/uploads/")) {
+        pathname = pathname.replace(/^\/api/, "");
+      }
+      if (pathname.startsWith("/uploads/")) {
+        return buildModelProxyUrl(`${pathname}${parsed.search || ""}`);
+      }
+      return `${base}${pathname}${parsed.search || ""}`;
+    } catch (_) {
+      return value;
+    }
+  }
+
+  if (value.startsWith("/api/uploads/")) {
+    const normalizedPath = value.replace(/^\/api/, "");
+    return buildModelProxyUrl(normalizedPath);
+  }
+  if (value.startsWith("/uploads/")) {
+    return buildModelProxyUrl(value);
+  }
+  if (value.startsWith("uploads/")) {
+    return buildModelProxyUrl(`/${value}`);
+  }
+
+  return value;
+};
 
 // =====================================================================
 // LOADING SCREEN COMPONENT
@@ -323,7 +369,8 @@ useEffect(() => {
 
         // Handle model URL
         if (modelRes.status === 'fulfilled') {
-          setModelUrl(modelRes.value.data.value || "/models/scene.glb");
+          const rawModelUrl = modelRes.value.data.value || "/models/scene.glb";
+          setModelUrl(normalizeModelUrl(rawModelUrl));
         } else {
           setModelUrl("/models/scene.glb");
         }
@@ -584,7 +631,7 @@ useEffect(() => {
             và mở ra cơ hội nghề nghiệp trong lĩnh vực công nghệ bay không người lái đang phát triển mạnh mẽ.</p>
           </div>
           <div className="intro-stats">
-            <div className="intro-stat-item"><div className="intro-stat-number">XXX+</div><div className="intro-stat-label">Học viên</div></div>
+            <div className="intro-stat-item"><div className="intro-stat-number">9670</div><div className="intro-stat-label">Học viên</div></div>
             <div className="intro-stat-item"><div className="intro-stat-number">100%</div><div className="intro-stat-label">Công nhận</div></div>
             <div className="intro-stat-item"><div className="intro-stat-number">24/7</div><div className="intro-stat-label">Hỗ trợ</div></div>
           </div>
@@ -832,7 +879,7 @@ useEffect(() => {
       </section>
 
       {/* 5. Courses */}
-      <section className="section section-gray">
+      <section className="section section-white">
         <div className="container">
           <h2 className="section-title">Khóa học mới nhất</h2>
           <div className="courses-grid">
@@ -899,7 +946,7 @@ useEffect(() => {
       </section>
 
       {/* 7. GIẢI PHÁP */}
-      <section className="section section-white" style={{ padding: "60px 0" }}>
+      {/* <section className="section section-white" style={{ padding: "60px 0" }}>
         <div className="container">
           <h2 className="section-title solutions-section-title">Giải pháp cho các ngành nghề khác nhau</h2>
           {solutions.length === 0 ? (
@@ -921,10 +968,10 @@ useEffect(() => {
             </div>
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* 8. THÔNG BÁO CHÍNH THỨC */}
-      <section className="section section-gray">
+      <section className="section section-white">
         <div className="container">
           <h2 className="section-title">Thông báo chính thức</h2>
           {notifications.length === 0 ? (

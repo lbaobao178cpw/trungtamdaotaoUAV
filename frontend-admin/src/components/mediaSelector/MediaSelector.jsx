@@ -6,6 +6,7 @@ import {
 } from '@dnd-kit/core';
 import "../admin/Admin/Admin.css";
 import { API_BASE_URL } from '../../config/apiConfig';
+import { normalizeMediaUrl } from '../../lib/mediaUrl';
 
 const MEDIA_API_URL = API_BASE_URL;
 
@@ -192,7 +193,14 @@ export default function MediaSelector({ onSelect, onClose }) {
         fetch(`${MEDIA_API_URL}/files?folder=${encodedPath}`)
             .then(res => res.json())
             .then(data => {
-                setFiles(Array.isArray(data) ? data : []);
+                const normalized = Array.isArray(data)
+                    ? data.map((item) => ({
+                        ...item,
+                        url: item?.url ? normalizeMediaUrl(item.url) : item?.url,
+                        thumbUrl: item?.thumbUrl ? normalizeMediaUrl(item.thumbUrl) : item?.thumbUrl,
+                    }))
+                    : [];
+                setFiles(normalized);
                 setSelectedPaths(new Set());
                 setActiveMenuId(null);
             })
@@ -378,7 +386,7 @@ export default function MediaSelector({ onSelect, onClose }) {
 
                     {/* --- FOOTER --- */}
                     <div className="media-footer">
-                        <button className="btn-select-confirm" disabled={selectedPaths.size === 0} onClick={() => { const last = Array.from(selectedPaths).pop(); const file = files.find(f => f.path === last); if (file && file.type !== 'folder') { onSelect(file.url); onClose(); } }}> Xác nhận chọn ({selectedPaths.size}) </button>
+                        <button className="btn-select-confirm" disabled={selectedPaths.size === 0} onClick={() => { const last = Array.from(selectedPaths).pop(); const file = files.find(f => f.path === last); if (file && file.type !== 'folder') { onSelect(file.path ? `/uploads/${file.path}` : file.url); onClose(); } }}> Xác nhận chọn ({selectedPaths.size}) </button>
                     </div>
 
                     {/* --- GLOBAL DROPDOWN MENU (NO EMOJI) --- */}

@@ -11,9 +11,11 @@ const COMMENTS_API = API_ENDPOINTS.COMMENTS;
 // --- DANH SÁCH ẢNH BANNER SLIDER ---
 // Bạn thay thế bằng link ảnh thực tế của bạn nhé
 const BANNER_IMAGES = [
-  "https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=2000&auto=format&fit=crop", // Ảnh 1: Drone trên trời
-  "https://images.unsplash.com/photo-1506947411487-a56738267384?q=80&w=2000&auto=format&fit=crop", // Ảnh 2: Phong cảnh núi
-  "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?q=80&w=2000&auto=format&fit=crop", // Ảnh 3: Người điều khiển
+  // "https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=2000&auto=format&fit=crop", // Ảnh 1: Drone trên trời
+  // "https://images.unsplash.com/photo-1506947411487-a56738267384?q=80&w=2000&auto=format&fit=crop", // Ảnh 2: Phong cảnh núi
+  
+  // "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?q=80&w=2000&auto=format&fit=crop", // Ảnh 3: Người điều khiển
+  "https://enterprise-insights.dji.com/hubfs/Artboard@1xlearning%20center.png"
 ];
 
 // Icon Components
