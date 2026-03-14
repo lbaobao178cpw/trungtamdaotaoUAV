@@ -1,9 +1,13 @@
 name: Deploy Node.js Backend
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main # Hoặc master
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
 
 jobs:
   deploy:
@@ -19,10 +23,16 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./backend/
+          # Đổ thẳng vào thư mục gốc của FTP account backend
+          server-dir: ./
           protocol: ftp # <--- Bổ sung dòng này để tránh lỗi handshake bảo mật
+          port: 21
+          timeout: 900000
           exclude: |
             **/node_modules/**
             **/uploads/**
             .git/**
             .github/**
+            **/.env
+            **/.env.*
           dangerous-clean-slate: false

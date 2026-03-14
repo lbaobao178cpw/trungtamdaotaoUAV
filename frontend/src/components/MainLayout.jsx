@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './landing/Header';
 import Footer from './landing/Footer';
+import CookieConsentBanner from './cookie/CookieConsentBanner';
 
 const MainLayout = () => {
     return (
@@ -12,6 +13,7 @@ const MainLayout = () => {
                 <Outlet />
             </main>
             <Footer />
+            <CookieConsentBanner />
         </>
     );
 };

@@ -22,6 +22,10 @@ function normalizeGenderForStorage(g) {
   }
 }
 
+
+
+
+
 // Setup multer for avatar upload
 const avatarUpload = multer({
   storage: multer.memoryStorage(),

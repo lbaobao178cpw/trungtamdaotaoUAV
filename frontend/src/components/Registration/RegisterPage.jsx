@@ -883,12 +883,13 @@ function RegisterPage() {
             {!!taxLookupStatus && <p className="field-note" style={{ marginTop: 4 }}>{isLookingUpTaxCode ? "Đang xử lý..." : taxLookupStatus}</p>}
           </div>
         </div>
-        <div className="form-row">
-          <div className="form-group">
+        {/* <div className="form-row">
+          
+        </div> */}
+        <div className="form-group">
             <label>Đơn vị công tác <span style={{ fontWeight: 'normal', fontSize: '12px' }}>(Tùy chọn)</span></label>
             <input type="text" name="workPlace" value={formData.workPlace} onChange={handleInputChange} className="form-input" />
           </div>
-        </div>
       </div>
 
       {/* PERMANENT ADDRESS SECTION */}
