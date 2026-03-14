@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./RegisterPage.css";
 import { toast } from "react-toastify";
@@ -37,6 +37,9 @@ function RegisterPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
+  const [uploadedMedia, setUploadedMedia] = useState({ avatar: null, cccdFront: null, cccdBack: null });
+  const [uploadingMedia, setUploadingMedia] = useState({ avatar: false, cccdFront: false, cccdBack: false });
+  const uploadTasksRef = useRef({ avatar: null, cccdFront: null, cccdBack: null });
 
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
@@ -466,14 +469,50 @@ function RegisterPage() {
     const uploadFormData = new FormData();
     uploadFormData.append("file", preparedFile);
 
-    const response = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
-      method: "POST",
-      body: uploadFormData,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || errorMessage);
-    return data.secure_url;
+    try {
+      const response = await fetch(`${API_ENDPOINTS.CLOUDINARY}/upload-cccd`, {
+        method: "POST",
+        body: uploadFormData,
+        signal: controller.signal,
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || errorMessage);
+      return data.secure_url;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error(`${errorMessage} (timeout)`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  const uploadMediaInBackground = (field, file, errorMessage) => {
+    if (!file) return;
+
+    setUploadingMedia((prev) => ({ ...prev, [field]: true }));
+    setUploadedMedia((prev) => ({ ...prev, [field]: null }));
+
+    const task = (async () => {
+      try {
+        const uploadedUrl = await uploadImageToCloudinary(file, errorMessage);
+        setUploadedMedia((prev) => ({ ...prev, [field]: uploadedUrl }));
+        return uploadedUrl;
+      } catch (error) {
+        console.warn(`Background upload failed (${field}):`, error?.message || error);
+        return null;
+      } finally {
+        setUploadingMedia((prev) => ({ ...prev, [field]: false }));
+        uploadTasksRef.current[field] = null;
+      }
+    })();
+
+    uploadTasksRef.current[field] = task;
   };
 
   // --- CHECK TRÙNG LẶP ---
@@ -529,13 +568,22 @@ function RegisterPage() {
     } else if (type === "file") {
       const file = files[0];
       if (file) {
-        if (name === "avatar") { setFormData(prev => ({ ...prev, avatar: file })); setPreviewAvatar(URL.createObjectURL(file)); }
+        if (name === "avatar") {
+          setFormData(prev => ({ ...prev, avatar: file }));
+          setPreviewAvatar(URL.createObjectURL(file));
+          uploadMediaInBackground("avatar", file, "Không thể upload ảnh đại diện");
+        }
         else if (name === "cccdFront") {
           setFormData(prev => ({ ...prev, cccdFront: file }));
           setPreviewFront(URL.createObjectURL(file));
           autoFillFromFrontCccdQr(file);
+          uploadMediaInBackground("cccdFront", file, "Không thể upload CCCD mặt trước");
         }
-        else if (name === "cccdBack") { setFormData(prev => ({ ...prev, cccdBack: file })); setPreviewBack(URL.createObjectURL(file)); }
+        else if (name === "cccdBack") {
+          setFormData(prev => ({ ...prev, cccdBack: file }));
+          setPreviewBack(URL.createObjectURL(file));
+          uploadMediaInBackground("cccdBack", file, "Không thể upload CCCD mặt sau");
+        }
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -684,58 +732,46 @@ function RegisterPage() {
       }
 
       setSubmitProgress(20);
+      setSubmitProgress(30);
 
-      const uploadQueue = [];
-      if (formData.avatar) {
-        uploadQueue.push({
-          key: "avatar",
+      const resolveUploadedUrl = async ({ field, file, errorMessage, required }) => {
+        if (uploadedMedia[field]) return uploadedMedia[field];
+
+        if (uploadTasksRef.current[field]) {
+          const pendingUrl = await uploadTasksRef.current[field];
+          if (pendingUrl) return pendingUrl;
+        }
+
+        if (!file) {
+          if (required) throw new Error(errorMessage);
+          return null;
+        }
+
+        return uploadImageToCloudinary(file, errorMessage);
+      };
+
+      const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
+        resolveUploadedUrl({
+          field: "avatar",
           file: formData.avatar,
-          errorMessage: "Không thể upload ảnh đại diện"
-        });
-      }
-      if (formData.cccdFront) {
-        uploadQueue.push({
-          key: "cccdFront",
+          errorMessage: "Không thể upload ảnh đại diện",
+          required: false,
+        }),
+        resolveUploadedUrl({
+          field: "cccdFront",
           file: formData.cccdFront,
-          errorMessage: "Không thể upload CCCD mặt trước"
-        });
-      }
-      if (formData.cccdBack) {
-        uploadQueue.push({
-          key: "cccdBack",
+          errorMessage: "Không thể upload CCCD mặt trước",
+          required: true,
+        }),
+        resolveUploadedUrl({
+          field: "cccdBack",
           file: formData.cccdBack,
-          errorMessage: "Không thể upload CCCD mặt sau"
-        });
-      }
+          errorMessage: "Không thể upload CCCD mặt sau",
+          required: true,
+        }),
+      ]);
 
-      let avatarUrl = null;
-      let cccdFrontUrl = null;
-      let cccdBackUrl = null;
-
-      if (uploadQueue.length > 0) {
-        let completedUploads = 0;
-        const totalUploads = uploadQueue.length;
-
-        const uploadedResults = await Promise.all(
-          uploadQueue.map(async (item) => {
-            const url = await uploadImageToCloudinary(item.file, item.errorMessage);
-            completedUploads += 1;
-
-            const progressByUpload = 25 + Math.round((completedUploads / totalUploads) * 55);
-            setSubmitProgress(progressByUpload);
-
-            return { key: item.key, url };
-          })
-        );
-
-        uploadedResults.forEach((result) => {
-          if (result.key === "avatar") avatarUrl = result.url;
-          if (result.key === "cccdFront") cccdFrontUrl = result.url;
-          if (result.key === "cccdBack") cccdBackUrl = result.url;
-        });
-      } else {
-        setSubmitProgress(80);
-      }
+      setSubmitProgress(80);
 
       setSubmitProgress(90);
 
@@ -836,6 +872,7 @@ function RegisterPage() {
               </label>
             </div>
             <p className="field-note" style={{ marginTop: 4 }}>Khuyến nghị nền sáng, nhìn thẳng, rõ khuôn mặt.</p>
+            {uploadingMedia.avatar && <p className="field-note" style={{ marginTop: 4 }}>Đang tải ảnh đại diện...</p>}
           </div>
         </div>
 
@@ -861,6 +898,7 @@ function RegisterPage() {
                 <input type="file" name="cccdFront" accept="image/*" onChange={handleInputChange} style={{ display: 'none' }} />
               </label>
               {!!frontQrStatus && <p className="field-note" style={{ textAlign: 'center', marginTop: 8 }}>{isDecodingFrontQr ? "Đang xử lý ảnh..." : frontQrStatus}</p>}
+              {uploadingMedia.cccdFront && <p className="field-note" style={{ textAlign: 'center', marginTop: 6 }}>Đang tải CCCD mặt trước...</p>}
               {errors.cccdFront && <p className="error-text" style={{ textAlign: 'center' }}>{errors.cccdFront}</p>}
             </div>
           </div>
@@ -878,6 +916,7 @@ function RegisterPage() {
                 )}
                 <input type="file" name="cccdBack" accept="image/*" onChange={handleInputChange} style={{ display: 'none' }} />
               </label>
+              {uploadingMedia.cccdBack && <p className="field-note" style={{ textAlign: 'center', marginTop: 6 }}>Đang tải CCCD mặt sau...</p>}
               {errors.cccdBack && <p className="error-text" style={{ textAlign: 'center' }}>{errors.cccdBack}</p>}
             </div>
           </div>
