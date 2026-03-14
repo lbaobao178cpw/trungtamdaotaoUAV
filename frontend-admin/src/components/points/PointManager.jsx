@@ -92,14 +92,12 @@ export default function PointManager() {
 
     setPointForm(editingData);
     setIsEditingPoint(true);
-    setMessage(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const handleCancelEditPoint = useCallback(() => {
     setPointForm(initialPointState);
     setIsEditingPoint(false);
-    setMessage(null);
   }, []);
 
   const handleDescriptionChange = useCallback((val) => {
