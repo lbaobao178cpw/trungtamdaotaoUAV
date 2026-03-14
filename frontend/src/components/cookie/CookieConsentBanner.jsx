@@ -19,7 +19,7 @@ export default function CookieConsentBanner() {
     <div className="cookie-wrap" role="dialog" aria-live="polite" aria-label="Thông báo cookie">
       <div className="cookie-card">
         <div className="cookie-head">
-          <h3>Trung Tâm Đào  UAV Sử Dụng Cookie</h3>
+          <h3>Trung Tâm Đào Tạo UAV Sử Dụng Cookie</h3>
           <p>
             Chúng tôi chỉ sử dụng cookie cần thiết để duy trì đăng nhập, bảo mật phiên và đảm bảo website hoạt động ổn định.
           </p>
