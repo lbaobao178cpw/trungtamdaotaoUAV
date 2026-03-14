@@ -36,6 +36,8 @@ function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
+  const [submitStage, setSubmitStage] = useState("");
 
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
@@ -623,11 +625,19 @@ function RegisterPage() {
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
 
-  const handleBack = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
+  const handleBack = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (!isLoading) {
+      setSubmitProgress(0);
+      setSubmitStage("");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setSubmitProgress(5);
+    setSubmitStage("Đang kiểm tra dữ liệu...");
 
     try {
       // === VALIDATE TẤT CẢ CÁC STEPS TRƯỚC KHI SUBMIT ===
@@ -671,22 +681,70 @@ function RegisterPage() {
         setErrors(allErrors);
         const missingFields = Object.values(allErrors).join('\n');
         toast.error(`❌ Vui lòng kiểm tra lại:\n\n${missingFields}`);
+        setSubmitProgress(0);
+        setSubmitStage("");
         setIsLoading(false);
         return;
       }
 
-      // Upload song song để giảm thời gian chờ ở bước hoàn tất.
-      const [avatarUrl, cccdFrontUrl, cccdBackUrl] = await Promise.all([
-        formData.avatar
-          ? uploadImageToCloudinary(formData.avatar, "Không thể upload ảnh đại diện")
-          : Promise.resolve(null),
-        formData.cccdFront
-          ? uploadImageToCloudinary(formData.cccdFront, "Không thể upload CCCD mặt trước")
-          : Promise.resolve(null),
-        formData.cccdBack
-          ? uploadImageToCloudinary(formData.cccdBack, "Không thể upload CCCD mặt sau")
-          : Promise.resolve(null),
-      ]);
+      setSubmitProgress(20);
+      setSubmitStage("Đang chuẩn bị upload ảnh...");
+
+      const uploadQueue = [];
+      if (formData.avatar) {
+        uploadQueue.push({
+          key: "avatar",
+          file: formData.avatar,
+          errorMessage: "Không thể upload ảnh đại diện"
+        });
+      }
+      if (formData.cccdFront) {
+        uploadQueue.push({
+          key: "cccdFront",
+          file: formData.cccdFront,
+          errorMessage: "Không thể upload CCCD mặt trước"
+        });
+      }
+      if (formData.cccdBack) {
+        uploadQueue.push({
+          key: "cccdBack",
+          file: formData.cccdBack,
+          errorMessage: "Không thể upload CCCD mặt sau"
+        });
+      }
+
+      let avatarUrl = null;
+      let cccdFrontUrl = null;
+      let cccdBackUrl = null;
+
+      if (uploadQueue.length > 0) {
+        let completedUploads = 0;
+        const totalUploads = uploadQueue.length;
+
+        const uploadedResults = await Promise.all(
+          uploadQueue.map(async (item) => {
+            const url = await uploadImageToCloudinary(item.file, item.errorMessage);
+            completedUploads += 1;
+
+            const progressByUpload = 25 + Math.round((completedUploads / totalUploads) * 55);
+            setSubmitProgress(progressByUpload);
+            setSubmitStage(`Đang tải ảnh ${completedUploads}/${totalUploads}...`);
+
+            return { key: item.key, url };
+          })
+        );
+
+        uploadedResults.forEach((result) => {
+          if (result.key === "avatar") avatarUrl = result.url;
+          if (result.key === "cccdFront") cccdFrontUrl = result.url;
+          if (result.key === "cccdBack") cccdBackUrl = result.url;
+        });
+      } else {
+        setSubmitProgress(80);
+      }
+
+      setSubmitProgress(90);
+      setSubmitStage("Đang gửi hồ sơ đăng ký...");
 
       const submitData = {
         ...formData,
@@ -710,10 +768,13 @@ function RegisterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại");
+      setSubmitProgress(100);
+      setSubmitStage("Đăng ký thành công");
       console.log("Đăng ký thành công, hiển thị toast");
       toast.success("Đăng ký thành công! Tài khoản của bạn đang chờ kiểm duyệt từ quản trị viên.");
       setTimeout(() => navigate("/dang-nhap"), 1000); // Delay 1s để toast hiện
     } catch (err) {
+      setSubmitStage("Đăng ký thất bại");
       toast.error(err.message);
     } finally {
       setIsLoading(false);
@@ -1136,12 +1197,24 @@ function RegisterPage() {
           </label>
         </div>
 
+        {(isLoading || submitProgress > 0) && (
+          <div className="submit-progress-wrap" aria-live="polite">
+            <div className="submit-progress-meta">
+              <span>{submitStage || "Đang xử lý..."}</span>
+              <strong>{submitProgress}%</strong>
+            </div>
+            <div className="submit-progress-track">
+              <div className="submit-progress-fill" style={{ width: `${submitProgress}%` }}></div>
+            </div>
+          </div>
+        )}
+
         <div className="form-actions">
           <button type="button" onClick={handleBack} className="btn btn-secondary" disabled={isLoading}>
             <ArrowLeft size={20} /> Quay lại
           </button>
           <button type="submit" className="btn btn-primary" disabled={isLoading || formData.confirmations.length === 0}>
-            {isLoading ? "Đang xử lý..." : "Hoàn tất đăng ký"} <ArrowRight size={20} />
+            {isLoading ? `Đang xử lý... ${submitProgress}%` : "Hoàn tất đăng ký"} <ArrowRight size={20} />
           </button>
         </div>
       </div>
