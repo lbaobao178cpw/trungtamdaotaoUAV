@@ -192,7 +192,9 @@ export default function Model3DManager() {
     const sourceForProxy = toMediaRelativePath(normalized);
     const pathname = String(sourceForProxy || "");
 
-    if (pathname.startsWith("/uploads/") || pathname.startsWith("uploads/") || pathname.startsWith("http")) {
+    // Only local upload paths need backend proxy for cross-origin/static headers.
+    // Remote URLs (e.g., Cloudinary) should be used directly.
+    if (pathname.startsWith("/uploads/") || pathname.startsWith("uploads/") || pathname.startsWith("/api/uploads/")) {
       return `${API_ENDPOINTS.SETTINGS}/model-proxy?src=${encodeURIComponent(sourceForProxy)}`;
     }
 
