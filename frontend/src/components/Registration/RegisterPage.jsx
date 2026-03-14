@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./RegisterPage.css";
 import { toast } from "react-toastify";
 import { API_ENDPOINTS } from "../../config/apiConfig";
+import jsQR from "jsqr";
 
 import {
   ArrowLeft,
@@ -38,6 +39,8 @@ function RegisterPage() {
   const [previewFront, setPreviewFront] = useState(null);
   const [previewBack, setPreviewBack] = useState(null);
   const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [isDecodingFrontQr, setIsDecodingFrontQr] = useState(false);
+  const [frontQrStatus, setFrontQrStatus] = useState("");
 
   const preSelectedTier = location.state?.preSelectedTier || "";
   const examInfo = location.state?.examInfo || "";
@@ -116,6 +119,243 @@ function RegisterPage() {
     }
   };
 
+  const formatCccdDobToDateInput = (dobText) => {
+    const normalized = (dobText || "").replace(/[^0-9]/g, "");
+    if (normalized.length !== 8) return "";
+    const day = normalized.slice(0, 2);
+    const month = normalized.slice(2, 4);
+    const year = normalized.slice(4, 8);
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseGenderFromQr = (value) => {
+    const text = (value || "").trim().toLowerCase();
+    if (!text) return "";
+    if (text.includes("nam") || text === "male" || text === "m") return "Nam";
+    if (text.includes("nữ") || text.includes("nu") || text === "female" || text === "f") return "Nữ";
+    return "";
+  };
+
+  const parseCccdQrPayload = (rawData) => {
+    const parts = String(rawData || "").split("|").map((part) => part.trim());
+    if (parts.length < 4) return null;
+
+    const cccd = (parts[0] || "").replace(/\D/g, "");
+    const fullName = parts[2] || "";
+    const birthDate = formatCccdDobToDateInput(parts[3] || "");
+    const gender = parseGenderFromQr(parts[4] || "");
+
+    if (!cccd || !fullName || !birthDate) return null;
+
+    return {
+      cccd,
+      fullName,
+      birthDate,
+      gender,
+    };
+  };
+
+  const tryDecodeWithJsQr = (canvas) => {
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "attemptBoth",
+    });
+    return code?.data || null;
+  };
+
+  const tryDecodeWithBarcodeDetector = async (canvas) => {
+    if (typeof window === "undefined" || !("BarcodeDetector" in window)) return null;
+    try {
+      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+      const barcodes = await detector.detect(canvas);
+      return barcodes?.[0]?.rawValue || null;
+    } catch (error) {
+      console.warn("BarcodeDetector decode failed:", error);
+      return null;
+    }
+  };
+
+  const scaleCanvas = (sourceCanvas, scale = 1) => {
+    if (scale === 1) return sourceCanvas;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.floor(sourceCanvas.width * scale));
+    canvas.height = Math.max(1, Math.floor(sourceCanvas.height * scale));
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  };
+
+  const extractCanvasRegion = (sourceCanvas, region) => {
+    const sx = Math.max(0, Math.floor(sourceCanvas.width * region.x));
+    const sy = Math.max(0, Math.floor(sourceCanvas.height * region.y));
+    const sw = Math.max(1, Math.floor(sourceCanvas.width * region.w));
+    const sh = Math.max(1, Math.floor(sourceCanvas.height * region.h));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = sw;
+    canvas.height = sh;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+    return canvas;
+  };
+
+  const createThresholdCanvas = (sourceCanvas, threshold) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = sourceCanvas.width;
+    canvas.height = sourceCanvas.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(sourceCanvas, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      const value = gray > threshold ? 255 : 0;
+      data[i] = value;
+      data[i + 1] = value;
+      data[i + 2] = value;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  };
+
+  const createHighContrastCanvas = (sourceCanvas, contrast = 1.4) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = sourceCanvas.width;
+    canvas.height = sourceCanvas.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(sourceCanvas, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = Math.max(0, Math.min(255, factor * (data[i] - 128) + 128));
+      data[i + 1] = Math.max(0, Math.min(255, factor * (data[i + 1] - 128) + 128));
+      data[i + 2] = Math.max(0, Math.min(255, factor * (data[i + 2] - 128) + 128));
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  };
+
+  const decodeQrFromImageFile = async (file) => {
+    const imageUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+
+      const baseCanvas = document.createElement("canvas");
+      const maxSize = 2200;
+      const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+      baseCanvas.width = Math.max(1, Math.floor(image.width * scale));
+      baseCanvas.height = Math.max(1, Math.floor(image.height * scale));
+
+      const baseCtx = baseCanvas.getContext("2d", { willReadFrequently: true });
+      baseCtx.drawImage(image, 0, 0, baseCanvas.width, baseCanvas.height);
+
+      const rotationDegrees = [0, 90, 180, 270];
+      const candidateRegions = [
+        { x: 0, y: 0, w: 1, h: 1 },
+        { x: 0.45, y: 0.0, w: 0.55, h: 0.55 },
+        { x: 0.55, y: 0.0, w: 0.45, h: 0.45 },
+        { x: 0.5, y: 0.1, w: 0.5, h: 0.6 },
+      ];
+
+      for (const degree of rotationDegrees) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+        if (degree === 90 || degree === 270) {
+          canvas.width = baseCanvas.height;
+          canvas.height = baseCanvas.width;
+        } else {
+          canvas.width = baseCanvas.width;
+          canvas.height = baseCanvas.height;
+        }
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((degree * Math.PI) / 180);
+        ctx.drawImage(baseCanvas, -baseCanvas.width / 2, -baseCanvas.height / 2);
+        ctx.restore();
+
+        for (const region of candidateRegions) {
+          const regionCanvas = extractCanvasRegion(canvas, region);
+          const processedCandidates = [
+            regionCanvas,
+            createHighContrastCanvas(regionCanvas),
+            createThresholdCanvas(regionCanvas, 120),
+            createThresholdCanvas(regionCanvas, 150),
+            createThresholdCanvas(regionCanvas, 180),
+          ];
+
+          for (const processedCanvas of processedCandidates) {
+            const scaledCandidates = [
+              scaleCanvas(processedCanvas, 1),
+              scaleCanvas(processedCanvas, 1.5),
+              scaleCanvas(processedCanvas, 2),
+            ];
+
+            for (const candidate of scaledCandidates) {
+              const barcodeDetectorResult = await tryDecodeWithBarcodeDetector(candidate);
+              if (barcodeDetectorResult) return barcodeDetectorResult;
+
+              const jsQrResult = tryDecodeWithJsQr(candidate);
+              if (jsQrResult) return jsQrResult;
+            }
+          }
+        }
+      }
+
+      return null;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  };
+
+  const autoFillFromFrontCccdQr = async (file) => {
+    setIsDecodingFrontQr(true);
+    setFrontQrStatus("Đang quét mã QR từ ảnh mặt trước...");
+
+    try {
+      const qrText = await decodeQrFromImageFile(file);
+      if (!qrText) {
+        setFrontQrStatus("Không phát hiện mã QR. Bạn hãy nhập thủ công bên dưới.");
+        return;
+      }
+
+      const parsed = parseCccdQrPayload(qrText);
+      if (!parsed) {
+        setFrontQrStatus("Đã đọc QR nhưng không đúng định dạng CCCD để tự điền.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        cccd: prev.cccd?.trim() ? prev.cccd : parsed.cccd,
+        fullName: prev.fullName?.trim() ? prev.fullName : parsed.fullName,
+        birthDate: prev.birthDate ? prev.birthDate : parsed.birthDate,
+        gender: prev.gender ? prev.gender : parsed.gender,
+      }));
+
+      setFrontQrStatus("Đã quét QR và tự điền thông tin cơ bản từ CCCD.");
+      toast.success("Đã tự điền thông tin từ mã QR CCCD");
+    } catch (error) {
+      console.error("Lỗi quét QR CCCD:", error);
+      setFrontQrStatus("Lỗi khi quét QR. Bạn hãy nhập thủ công bên dưới.");
+    } finally {
+      setIsDecodingFrontQr(false);
+    }
+  };
+
   // --- CHECK TRÙNG LẶP ---
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -170,7 +410,11 @@ function RegisterPage() {
       const file = files[0];
       if (file) {
         if (name === "avatar") { setFormData(prev => ({ ...prev, avatar: file })); setPreviewAvatar(URL.createObjectURL(file)); }
-        else if (name === "cccdFront") { setFormData(prev => ({ ...prev, cccdFront: file })); setPreviewFront(URL.createObjectURL(file)); }
+        else if (name === "cccdFront") {
+          setFormData(prev => ({ ...prev, cccdFront: file }));
+          setPreviewFront(URL.createObjectURL(file));
+          autoFillFromFrontCccdQr(file);
+        }
         else if (name === "cccdBack") { setFormData(prev => ({ ...prev, cccdBack: file })); setPreviewBack(URL.createObjectURL(file)); }
       }
     } else {
@@ -478,6 +722,7 @@ function RegisterPage() {
                 )}
                 <input type="file" name="cccdFront" accept="image/*" onChange={handleInputChange} style={{ display: 'none' }} />
               </label>
+              {!!frontQrStatus && <p className="field-note" style={{ textAlign: 'center', marginTop: 8 }}>{isDecodingFrontQr ? "Đang xử lý ảnh..." : frontQrStatus}</p>}
               {errors.cccdFront && <p className="error-text" style={{ textAlign: 'center' }}>{errors.cccdFront}</p>}
             </div>
           </div>
