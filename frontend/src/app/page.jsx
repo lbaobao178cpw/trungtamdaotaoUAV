@@ -656,12 +656,7 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 1→2 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-right" aria-hidden="true"></div>
 
             {/* Step 2 */}
             <div className="step-item">
@@ -674,12 +669,7 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 2→3 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-right" aria-hidden="true"></div>
 
             {/* Step 3 */}
             <div className="step-item">
@@ -692,15 +682,10 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 3→4 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-right" aria-hidden="true"></div>
 
             {/* Step 4 */}
-            <div className="step-item">
+            <div className="step-item step-item-payment">
               <div className="step-icon">
                 <img src="/images/4.png" alt="Step 4" onError={(e) => (e.target.src = "https://via.placeholder.com/80")} />
               </div>
@@ -731,12 +716,7 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 8←7 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-left" aria-hidden="true"></div>
 
             {/* Step 7 */}
             <div className="step-item">
@@ -749,12 +729,7 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 7←6 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-left" aria-hidden="true"></div>
 
             {/* Step 6 */}
             <div className="step-item">
@@ -767,12 +742,7 @@ useEffect(() => {
             <div className="step-arrow-vertical">↓</div>
 
             {/* Arrow 6←5 */}
-            <div className="step-arrow">
-              <svg width="70" height="16" viewBox="0 0 200 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
-                <rect x="0" y="9" width="150" height="6" fill="#0050b8"></rect>
-                <polygon points="150,4 150,20 165,12" fill="#0050b8"></polygon>
-              </svg>
-            </div>
+            <div className="step-arrow step-arrow-left" aria-hidden="true"></div>
 
             {/* Step 5 */}
             <div className="step-item">
